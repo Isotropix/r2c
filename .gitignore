@@ -1,0 +1,8 @@
+# ignore a few IDEs folders/files
+.vs
+.vscode
+CMakeSettings.json
+CMakeLists.txt.user
+
+# ignore generated documentation
+docs/doxydocs

@@ -1,0 +1,63 @@
+//
+// Copyright 2020 - present Isotropix SAS. See License.txt for license information
+//
+
+class "LayerRedshift" "Layer" {
+    #version 1.0
+    doc "The Redshift allows to render a scene using a Redshift renderer."
+
+    set "comp_mode" {
+        value 0
+        hidden yes
+    }
+
+    attribute_group "rendering" {
+        reference "camera" {
+            filter "Camera"
+            doc "Set the render camera."
+        }
+        reference "renderer" {
+            filter "RendererRedshift"
+            doc "Set the redshift renderer."
+        }
+    }
+    attribute_group "rendering>scene" {
+        group "geometries" {
+            filter "SceneObject"
+            null_label "Use Current Context"
+            input "motion" "geometry" "shading" "parenting"
+            dirtiness_pass_through yes
+            doc "Set the geometries that will be rendered."
+        }
+        reference "__scene_geometries__" {
+            filter "Group"
+            hidden yes
+            input "motion" "geometry" "shading" "parenting"
+            dirtiness_pass_through yes
+            saveable no
+            private yes
+        }
+        group "lights" {
+            filter "RedshiftLight"
+            null_label "Use Current Context"
+            input "shading_light"
+            dirtiness_pass_through yes
+            doc "Set the lights that will be rendered."
+        }
+
+        reference "__scene_lights__" {
+            filter "Group"
+            hidden yes
+            input "shading_light"
+            dirtiness_pass_through yes
+            saveable no
+            private yes
+        }
+
+        reference "shading_layer" {
+            filter "ShadingLayer"
+            output "shading_material" "shading_group_visibility"
+            doc "The selected shading layer will override materials of the scene according to its name mapping rules."
+        }
+    }
+}

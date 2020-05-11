@@ -1,0 +1,87 @@
+//
+// Copyright 2020 - present Isotropix SAS. See License.txt for license information
+//
+
+class "LightRedshift" "Light" {
+    #version 0.9
+    abstract yes
+    category "/Light/Redshift"
+    doc "An abstract Redshift light defining common attribute of Redshift lights."
+    attribute_group "common>ray_contribution" {
+        collapsed yes
+        bool "affects_diffuse" {
+            value yes
+            animatable yes
+            output "shading_light"
+        doc "Enable or disable diffuse contribution on shaders. By default physical lights affect the diffuse component of shaders."
+        }
+        bool "affects_specular" {
+            value yes
+            animatable yes
+            output "shading_light"
+        doc "Enable or disable specular contribution on shaders. By default physical lights affect the specular component of shaders."
+        }
+        bool "matte_shadow_illuminator" {
+            value no
+            animatable yes
+            output "shading_light"
+        doc "Specifies whether the light can illuminate 'Matte Shadow' surfaces"
+        }
+        long "affected_by_refraction" {
+            value 1
+            presets "Never" "0"
+            presets "Auto" "1"
+            presets "Always" "2"
+            doc "Control how specular reflections are affected by rough/refractive objects that block the light and whether or not the light rays bend as they pass through. Prior to 2.6.10 this option was not available and the light rays would never bend. Specular ray bending is an important effect for rendering realistic-looking glass and lenses. Never - Specular rays do not bend. This is the legacy lighting behavior. Auto - Specular rays bend through refractions if they are not too rough and bias towards not bending if they are rough. Always - Specular rays bend through refractions regardless of ray roughness."
+        }
+        long "GI Max Trace Depth" {
+            value 999
+            doc "This option lets you override the maximum trace depth for GI rays on a per-light basis."
+        }
+        percentage "diffuse_scale" {
+            value 1.0
+            animatable yes
+            output "shading_light"
+            doc "Scales the intensity of the light's diffuse contribution."
+        }
+        percentage "glossy_scale" {
+            value 1.0
+            animatable yes
+            output "shading_light"
+            doc "Scales the intensity of the light when seen through reflections/specular or refractions."
+        }
+        percentage "single_scattering_scale" {
+            value 1.0
+            animatable yes
+            output "shading_light"
+            doc "Scales the intensity of the light when seen through sub-surface single scattered materials. A value of 0.0 disables single scattered lighting."
+        }
+        percentage "multiple_scattering_scale" {
+            value 1.0
+            animatable yes
+            output "shading_light"
+            doc "Scales the intensity of the light when seen through sub-surface multiple scattered materials. A value of 0.0 disables multiple scattered lighting."
+        }
+        percentage "gi_scattering_scale" {
+            value 1.0
+            animatable yes
+            output "shading_light"
+            doc "Scales the intensity of the light's global illumination contribution. A value of 0.0 disables global illumination lighting."
+        }
+    }
+    attribute_group "common>shadow" {
+        collapsed yes
+        bool "enable_shadows" {
+            value yes
+            animatable yes
+            output "shading_light"
+            doc "Enable or disable shadow casting."
+        }
+        percentage "shadow_transparency" {
+            value 0
+            animatable yes
+            output "shading_light"
+            doc "Specify the transparency of the shadows cast by the light. Smaller values yield darker shadows. The default value of 0% will produce a completely black shadow. A value of 100% will produce no shadow at all."
+        }
+    }
+}

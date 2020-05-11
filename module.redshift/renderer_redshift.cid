@@ -1,0 +1,74 @@
+//
+// Copyright 2020 - present Isotropix SAS. See License.txt for license information
+//
+
+class "RendererRedshift" "RendererBase" {
+    #version 0.9
+    category "/Renderer"
+    doc "Define Redshift render settings."
+
+    attribute_group "sampling" {
+        collapsed no
+        sample_per_pixel "min_samples" {
+            value 8
+            numeric_range_min yes 1
+            ui_range yes 1 256
+            slider yes
+            animatable yes
+        }
+        sample_per_pixel "max_samples" {
+            value 64
+            numeric_range_min yes 1
+            ui_range yes 1 2048
+            slider yes
+            animatable yes
+        }
+        double "adaptive_error_threshold" {
+            value 0.005
+            numeric_range yes 0.0 1.0
+            ui_range yes 0.0 1.0
+            slider yes
+            animatable yes
+        }
+        bool "enable_progressive_rendering" {
+            value no
+            animatable yes
+        }
+        sample_per_pixel "progressive_rendering_samples" {
+            value 64
+            numeric_range_min yes 1
+            ui_range yes 1 65535
+            slider yes
+            animatable yes
+        }
+        bool "randomize_pattern_on_each_frame" {
+            value yes
+            animatable yes
+        }
+    }
+    attribute_group "sample_filtering" {
+        collapsed no
+        string "filter_type" {
+            value "RS_AAFILTER_GAUSS"
+            preset "Box" "RS_AAFILTER_BOX"
+            preset "Triangle" "RS_AAFILTER_TRIANGLE"
+            preset "Gaussian" "RS_AAFILTER_GAUSS"
+            preset "Mitchell" "RS_AAFILTER_MITCHELL"
+            preset "Lanczos" "RS_AAFILTER_LANCZOS"
+        }
+        subpixel "filter_size" {
+            value 2.0
+            numeric_range_min yes 1.0
+            ui_range yes 1.0 8.0
+            slider yes
+            animatable yes
+        }
+        double "max_subsample_intensity" {
+            value 2.0
+            numeric_range_min yes 0.0
+            ui_range yes 0.0 20.0
+            slider yes
+            animatable yes
+        }
+    }
+}

@@ -1,0 +1,10 @@
+//
+// Copyright 2020 - present Isotropix SAS. See License.txt for license information
+//
+
+class "RendererBase" "ProjectItem" {
+    #version 0.9
+    abstract yes
+    category "/Renderer"
+    doc "Define an abstract renderer used to store render settings for a spefic renderer."
+}
