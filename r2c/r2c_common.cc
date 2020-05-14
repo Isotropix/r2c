@@ -30,6 +30,10 @@ R2cItemDescriptor::get_type_name(const Type& type)
             return "TYPE_LIGHT";
         case TYPE_MATERIAL:
             return "TYPE_MATERIAL";
+        case TYPE_DISPLACEMENT:
+            return "TYPE_DISPLACEMENT";
+        case TYPE_TEXTURE:
+            return "TYPE_TEXTURE";
         case TYPE_CAMERA:
             return "TYPE_CAMERA";
         case TYPE_GROUP:

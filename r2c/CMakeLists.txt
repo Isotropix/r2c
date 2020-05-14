@@ -17,7 +17,6 @@ set (HEADERS
     r2c_scene_delegate.h
     r2c_render_buffer.h
     r2c_export.h
-    r2c.h
 )
 
 add_clarisse_library (ix_r2c

@@ -64,6 +64,8 @@ public:
         TYPE_GEOMETRY,      //!< \brief The item is a renderable geometry (inherits from SceneObject)
         TYPE_LIGHT,         //!< \brief The item is a light (inherits from Light)
         TYPE_MATERIAL,      //!< \brief The item is a material (inherits from Material)
+        TYPE_DISPLACEMENT,  //!< \brief The item is a displacement (inherits from Displacement)
+        TYPE_TEXTURE,       //!< \brief The item is a texture (inherits from Texture)
         TYPE_CAMERA,        //!< \brief The item is a camera (inherits from Camera)
         TYPE_GROUP,         //!< \brief The item is a group (collection of items)
         TYPE_UNKNOWN,       //!< \brief The item is of an unknown type
@@ -104,6 +106,10 @@ public:
     inline bool is_light() const { return m_type == TYPE_LIGHT; }
     /*! \brief Return true if the item is a material */
     inline bool is_material() const { return m_type == TYPE_MATERIAL; }
+    /*! \brief Return true if the item is a displacement */
+    inline bool is_displacement() const { return m_type == TYPE_DISPLACEMENT; }
+    /*! \brief Return true if the item is a texture */
+    inline bool is_texture() const { return m_type == TYPE_TEXTURE; }
     /*! \brief Return true if the item defines a transform ie (a scene item) */
     inline bool has_transform() const { return is_instancer() || is_geometry() || is_light(); }
 
@@ -126,6 +132,28 @@ private:
     CoreString m_full_name;
     int m_refcount;
     Type m_type;
+};
+
+/*! \class R2cShadingGroupInfo
+    \brief This class implements a helper to get information about what's assigned to a shading group of a geometry. */
+class R2C_EXPORT R2cShadingGroupInfo {
+public:
+
+    R2cShadingGroupInfo() {}
+
+    /*! \brief Return the material associated to the shading group */
+    inline const R2cItemDescriptor& get_material() const { return m_material; }
+    /*! \brief Return the clip map associated to the shading group */
+    inline const R2cItemDescriptor& get_clip_map() { return m_clip_map; }
+    /*! \brief Return the displacement associated to the shading group */
+    inline const R2cItemDescriptor& get_displacement() { return m_displacement; }
+
+private:
+
+    friend class R2cSceneDelegate;
+    R2cItemDescriptor m_material;
+    R2cItemDescriptor m_clip_map;
+    R2cItemDescriptor m_displacement;
 };
 
 #endif

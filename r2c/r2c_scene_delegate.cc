@@ -10,6 +10,7 @@
 #include <module_scene_object.h>
 #include <module_scene_object_tree.h>
 #include <module_geometry.h>
+#include <module_texture.h>
 #include <geometry_object.h>
 #include <app_object.h>
 
@@ -324,35 +325,59 @@ R2cSceneDelegate::get_geometry_resource(R2cItemId id) const
     return R2cGeometryResource();
 }
 
-R2cItemDescriptor
-R2cSceneDelegate::get_material(R2cItemId scene_object_id, const unsigned int& shading_group_id) const
+R2cShadingGroupInfo
+R2cSceneDelegate::get_shading_group_info(R2cItemId scene_object_id, const unsigned int& shading_group_id) const
 {
     // FIXME: Should be extended to support shading layer and the shading table instead
     R2cItemDescriptor *item = m_render_item_dependencies.is_key_exists(scene_object_id);
-    R2cItemDescriptor assigned_material;
-    assigned_material.set_type(R2cItemDescriptor::TYPE_MATERIAL);
+    R2cShadingGroupInfo shading_group_info;
+    shading_group_info.m_material.set_type(R2cItemDescriptor::TYPE_MATERIAL);
+    shading_group_info.m_clip_map.set_type(R2cItemDescriptor::TYPE_TEXTURE);
+    shading_group_info.m_displacement.set_type(R2cItemDescriptor::TYPE_DISPLACEMENT);
+
     if (item != nullptr) {
         ModuleSceneObject *scene_object = static_cast<ModuleSceneObject *>(item->get_item()->get_module());
+
+        if (shading_group_id < scene_object->get_shading_groups().get_count()) {
+            ModuleMaterial *material_module = scene_object->get_material(shading_group_id);
+            ModuleDisplacement *displacement_module = scene_object->get_displacement(shading_group_id);
+            ModuleTexture *clip_map_module = scene_object->get_clip_map(shading_group_id);
+            // making sure a supported material is assigned
+            if (material_module != nullptr && is_class_supported(material_module->get_object(), m_supported_classes.materials)) {
+                OfObject *material = material_module->get_object();
+                shading_group_info.m_material.set_id(material);
+                shading_group_info.m_material.set_full_name(material->get_full_name());
+                shading_group_info.m_material.set_refcount(1);
+            }
+
+            // making sure a supported displacement is assigned
+            if (displacement_module != nullptr && is_class_supported(displacement_module->get_object(), m_supported_classes.materials)) {
+                OfObject *displacement = displacement_module->get_object();
+                shading_group_info.m_displacement.set_id(displacement);
+                shading_group_info.m_displacement.set_full_name(displacement->get_full_name());
+                shading_group_info.m_displacement.set_refcount(1);
+            }
+
+            // making sure a supported clip map texture is assigned
+            if (clip_map_module != nullptr && is_class_supported(clip_map_module->get_object(), m_supported_classes.materials)) {
+                OfObject *clip_map = clip_map_module->get_object();
+                shading_group_info.m_clip_map.set_id(clip_map);
+                shading_group_info.m_clip_map.set_full_name(clip_map->get_full_name());
+                shading_group_info.m_clip_map.set_refcount(1);
+            }
+
+        }
+
+        // handling override material
         ModuleMaterial *material_module = scene_object->get_override_material();
         OfObject *material = material_module != nullptr ? material_module->get_object() : nullptr;
         if (is_class_supported(material, m_supported_classes.materials)) {
-            assigned_material.set_id(material);
-            assigned_material.set_full_name(material->get_full_name());
-            assigned_material.set_refcount(1);
-        } else { // no valid material override then we need to look at the shading groups
-            if (shading_group_id < scene_object->get_shading_groups().get_count()) {
-                material_module = scene_object->get_material(shading_group_id);
-                // making sure a supported material is assigned
-                if (material_module != nullptr && is_class_supported(material_module->get_object(), m_supported_classes.materials)) {
-                    material = material_module->get_object();
-                    assigned_material.set_id(material);
-                    assigned_material.set_full_name(material->get_full_name());
-                    assigned_material.set_refcount(1);
-                }
-            }
+            shading_group_info.m_material.set_id(material);
+            shading_group_info.m_material.set_full_name(material->get_full_name());
+            shading_group_info.m_material.set_refcount(1);
         }
     }
-    return assigned_material;
+    return shading_group_info;
 }
 
 void

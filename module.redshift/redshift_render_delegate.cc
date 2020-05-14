@@ -359,8 +359,8 @@ void
 sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cgeometryid, RSGeometryInfo& rgeometry)
 {
     for (unsigned int i = 0; i < rgeometry.materials->GetNumMaterials(); i++) {
-        R2cItemDescriptor material = delegate.get_material(cgeometryid, i);
-        rgeometry.materials->SetMaterial(i, material.is_null() ? RedshiftUtils::get_default_material() : static_cast<ModuleMaterialRedshift *>(material.get_item()->get_module())->get_material());
+        const R2cShadingGroupInfo&  shading_group = delegate.get_shading_group_info(cgeometryid, i);
+        rgeometry.materials->SetMaterial(i, shading_group.get_material().is_null() ? RedshiftUtils::get_default_material() : static_cast<ModuleMaterialRedshift *>(shading_group.get_material().get_item()->get_module())->get_material());
     }
 }
 
@@ -543,8 +543,8 @@ sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cinstancerid, RS
     unsigned int shading_group_offset = 0;
     for (auto instancer : rinstancer.ptrs) {
         for (unsigned int sgindex = 0; sgindex < instancer->GetNumMaterials(); sgindex++) {
-            R2cItemDescriptor material = delegate.get_material(cinstancerid, sgindex + shading_group_offset);
-            instancer->SetMaterial(sgindex, material.is_null() ? RedshiftUtils::get_default_material() : static_cast<ModuleMaterialRedshift *>(material.get_item()->get_module())->get_material());
+            const R2cShadingGroupInfo& shading_group = delegate.get_shading_group_info(cinstancerid, sgindex + shading_group_offset);
+            instancer->SetMaterial(sgindex, shading_group.get_material().is_null() ? RedshiftUtils::get_default_material() : static_cast<ModuleMaterialRedshift *>(shading_group.get_material().get_item()->get_module())->get_material());
         }
         shading_group_offset += instancer->GetNumMaterials();
     }

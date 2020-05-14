@@ -102,7 +102,9 @@ public:
     /*! \brief Returns the geometry resource associated with the item. */
     R2cGeometryResource get_geometry_resource(R2cItemId id) const;
 
-    /*! \brief Returns the associated material to the specified scene object.
+    /*! \brief Returns the shading group info associated to the specified scene object.
+     * The shading group info gathers all information such as which material, displacement or clip map
+     * texture are bound to the shading group of the geometry.
      * The number of shading group is defined by the R2cGeometryResource. However,
      * in the event of an instancer the number of shading groups is the sum of the
      * shading groups of the prototypes. The index matches the order of the prototypes as they appear
@@ -110,9 +112,8 @@ public:
      * prototypes[0] defines 5 shading groups, index between [0, 4] are the ones related
      * to prototypes[0]. The first shading group index of prototypes[1] will then be 5.
      *  \param scene_object_id id of the geometry/instancer
-     *  \param shading_group_id Index to the shading group defined by the geometry.
-     *  \note May return a null descriptor when no supported material is found. */
-    R2cItemDescriptor get_material(R2cItemId scene_object_id, const unsigned int& shading_group_id) const;
+     *  \param shading_group_id Index to the shading group defined by the geometry. */
+    R2cShadingGroupInfo get_shading_group_info(R2cItemId scene_object_id, const unsigned int& shading_group_id) const;
 
     /*! \brief Returns the render delegate associated with the scene.
      *  \note Can be nullptr if no render delegate was set. */
