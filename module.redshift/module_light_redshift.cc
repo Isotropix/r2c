@@ -4,8 +4,6 @@
 
 #include <of_app.h>
 
-#include <RS.h>
-
 #include "module_light_redshift.h"
 
 IMPLEMENT_CLASS(ModuleLightRedshift, ModuleLight)
