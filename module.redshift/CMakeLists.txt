@@ -82,3 +82,9 @@ if (WIN32)
         DESTINATION .
     )
 endif ()
+
+# patch a few things needed on Windows to allow building r2c in Debug while still
+# working correctly with the release version of Clarisse.
+# (in the future this will be done by the add_clarisse_module helper function)
+target_compile_definitions (redshift PRIVATE $<$<PLATFORM_ID:Windows>:NDEBUG>)
+target_compile_options (redshift PRIVATE $<$<PLATFORM_ID:Windows>:/MD>)
