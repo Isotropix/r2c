@@ -19,6 +19,11 @@ set (HEADERS
     r2c_export.h
 )
 
+# fix for a bug in our add_clarisse_library helper macro (without this, the output directory
+# is not set and ix_r2c is not built in the correct folder, resulting in potential build
+# errors later on)
+set (TARGET_NAME ix_r2c)
+
 add_clarisse_library (ix_r2c
     "${SOURCES}"
     "${HEADERS}"
