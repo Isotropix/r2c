@@ -18,6 +18,7 @@ include (cmake/Setup.cmake)
 
 add_subdirectory (r2c)
 add_subdirectory (module.renderer.base)
+add_subdirectory (module.layer.r2c.scene)
 
 #-------------------------------------------------------------------------------
 # Documentation

@@ -1,0 +1,16 @@
+//
+// Copyright 2020 - present Isotropix SAS. See License.txt for license information
+//
+
+class "LayerR2cScene" "LayerScene" {
+    #version 1.0
+	abstract yes
+	doc "An abstract image layer with an attached scene to render. You have to define a module inheriting from this class if you want to integrate an external renderer."
+
+    attribute_group "rendering" {
+        reference "renderer" {
+            filter "RendererBase"
+            doc "Set the renderer."
+        }
+    }
+}

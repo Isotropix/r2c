@@ -88,6 +88,12 @@ RedshiftRenderDelegate::~RedshiftRenderDelegate()
     delete m;
 }
 
+CoreString 
+RedshiftRenderDelegate::get_class_name() const
+{
+	return "RendererRedshift";
+}
+
 bool
 RedshiftRenderDelegate::sync_render_settings(const float& sampling_quality)
 {

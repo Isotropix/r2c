@@ -27,6 +27,9 @@ public:
     R2cRenderDelegate();
     virtual ~R2cRenderDelegate() {}
 
+	/*! \brief Return the name of the clarisse class of the renderer */
+	virtual CoreString get_class_name() const = 0;
+
     /*! \brief Called by the Scene Delegate with a geometry is inserted to the scene
      *  \param item item descriptor of the inserted geometry */
     virtual void insert_geometry(R2cItemDescriptor item) = 0;

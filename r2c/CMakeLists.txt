@@ -4,6 +4,7 @@
 
 set (SOURCES
     r2c_instancer.cc
+    r2c_module_layer_scene.cc
     r2c_render_delegate.cc
     r2c_scene_delegate.cc
     r2c_common.cc
@@ -13,6 +14,7 @@ set (SOURCES
 set (HEADERS
     r2c_common.h
     r2c_instancer.h
+    r2c_module_layer_scene.h
     r2c_render_delegate.h
     r2c_scene_delegate.h
     r2c_render_buffer.h

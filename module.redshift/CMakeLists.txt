@@ -37,6 +37,7 @@ set (CID_FILES
 
 set (CID_DEPENDS
     renderer_base
+	layer_r2c_scene
 )
 
 add_clarisse_module (redshift
@@ -62,11 +63,9 @@ target_link_libraries (redshift
         # Clarisse SDK
         ${CLARISSE_IX_CORE_LIBRARY}
         ${CLARISSE_IX_GEOMETRY_LIBRARY}
-        ${CLARISSE_IX_IMAGE_LIBRARY}
         ${CLARISSE_IX_MODULE_LIBRARY}
         ${CLARISSE_IX_OF_LIBRARY}
         ${CLARISSE_IX_POLY_LIBRARY}
-        ${CLARISSE_IX_RESOURCE_LIBRARY}
 
         # Redshift SDK
         $<$<PLATFORM_ID:Windows>:${REDSHIFT_SDK_DIR}/lib/x64/redshift-core-vc100.lib>
