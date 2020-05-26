@@ -12,7 +12,7 @@ endif ()
 
 # avoid CMake conflicts with potentially already installed modules
 set (CLARISSE_IGNORED_LIBRARIES IX_R2C)
-set (CLARISSE_IGNORED_MODULES RENDERER_BASE LAYER_R2C_SCENE REDSHIFT)
+set (CLARISSE_IGNORED_MODULES LAYER_R2C_SCENE REDSHIFT)
 
 # load our helper script and a few required packages
 list (APPEND CMAKE_MODULE_PATH ${CLARISSE_SDK_DIR}/cmake)

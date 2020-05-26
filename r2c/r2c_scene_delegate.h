@@ -44,10 +44,10 @@ public:
     /*! \brief Returns the render camera */
     inline R2cItemDescriptor get_camera() const { return get_item_descriptor(m_camera);}
 
-    /*! \brief Sets the render settings which must inherit from the class RendererBase
+    /*! \brief Sets the render settings which must inherit from the class Renderer
         \param render_settings defines the render_settins used in the scene. It should be a class known by the render delegate
-        \note The input must inherit RendererBase otherwise the renderer is set to nullptr */
-    inline void set_render_settings(OfObject *render_settings) { set_input(&m_render_settings, render_settings, "RendererBase"); }
+        \note The input must inherit Renderer otherwise the renderer is set to nullptr */
+    inline void set_render_settings(OfObject *render_settings) { set_input(&m_render_settings, render_settings, "Renderer"); }
 
     /*! \brief Returns the render settings */
     inline R2cItemDescriptor get_render_settings() const { return get_item_descriptor(m_render_settings);}

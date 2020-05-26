@@ -49,14 +49,14 @@ ModuleLayerR2cScene::module_constructor(OfObject& object)
 		const CoreString renderer_class_name = m_render_delegate->get_class_name();
 		OfClass *renderer_class = get_application().get_factory().get_classes().get(renderer_class_name);
 
-		if (renderer_class != nullptr && renderer_class->is_kindof("RendererBase")) {
+		if (renderer_class != nullptr && renderer_class->is_kindof("Renderer")) {
 			// Specify that the attribute "renderer" supports only the specified renderer class type
 			OfAttr *renderer_attr = object.get_attribute("renderer");
 			CoreArray<CoreString> filter = { renderer_class_name };
 			renderer_attr->set_object_filters(filter);
 		} else {
 			LOG_WARNING("ModuleLayerR2cScene.module_constructor: The method \'" << m_render_delegate->get_class_info_name() << "::get_class_name()\'"
-						"must return the Clarisse class name of the supported renderer, which have to inherit from RendererBase.");
+						"must return the Clarisse class name of the supported renderer, which have to inherit from the class Renderer.");
 		}
 	}
 

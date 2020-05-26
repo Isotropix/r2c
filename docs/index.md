@@ -36,7 +36,7 @@ These articles describe fundamental concepts of Clarisse you need to understand 
 
 ## R2cSceneDelegate the Render Scene Hub
 
-The scene delegate manages a render scene defined by a camera, a render settings (which must inherit from the *OfClass* *RendererBase*), a set of lights and a set of geometries inputs which can be easily set through its class members. The *R2cSceneDelegate* acts a render scene hub by notifying the associated render delegate what happens in the scene. In fact, each time an input or its dependencies are modified by the user in Clarisse, the render delegate gets a notification so that it can update its own internal scene representation accordingly.
+The scene delegate manages a render scene defined by a camera, a render settings (which must inherit from the *OfClass* *Renderer*), a set of lights and a set of geometries inputs which can be easily set through its class members. The *R2cSceneDelegate* acts a render scene hub by notifying the associated render delegate what happens in the scene. In fact, each time an input or its dependencies are modified by the user in Clarisse, the render delegate gets a notification so that it can update its own internal scene representation accordingly.
 
 ### Types of scene updates
 

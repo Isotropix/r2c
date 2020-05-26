@@ -9,7 +9,7 @@ class "LayerR2cScene" "LayerScene" {
 
     attribute_group "rendering" {
         reference "renderer" {
-            filter "RendererBase"
+            filter "Renderer"
             doc "Set the renderer."
         }
     }

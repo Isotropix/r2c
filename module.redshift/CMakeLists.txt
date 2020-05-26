@@ -36,7 +36,6 @@ set (CID_FILES
 )
 
 set (CID_DEPENDS
-    renderer_base
 	layer_r2c_scene
 )
 
