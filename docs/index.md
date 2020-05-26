@@ -96,7 +96,7 @@ The R2C library currently provide only one implementation *ClarisseLayerRenderBu
 
 ## The Redshift example
 
-The R2C library provides a working example of a Redshift integration, found in the `module.redshift.base` directory.
+The R2C library provides a working example of a Redshift integration, found in the `module.redshift` directory.
 
 The Redshift integration consists of a *LayerRedshift* which serves as a render scene hub that defines 5 attributes/inputs: 
 - A *Camera* where users set the render viewpoint.
