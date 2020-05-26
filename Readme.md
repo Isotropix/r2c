@@ -18,7 +18,7 @@ described in the [license](./License.txt).
 - `docs`: Documentation folder (will be generated, see Builds instructions)
 - `r2c`: Helper library, stands for "your Renderer to Clarisse"
 - `module.renderer.base`: Base module needed for integration of renderers into Clarisse.
-- `module.redshift`: Exemple integration of the Redshift renderer into Clarisse, using the 2 previous folders.
+- `module.redshift`: Example integration of the Redshift renderer into Clarisse, using the 2 previous folders.
 
 More information is available once the documentation has been built. See next section.
 
@@ -31,7 +31,7 @@ $ git clone git@github.com:Isotropix/r2c.git
 $ mkdir build
 ```
 
-Then you can create a `build.sh` with the following content:
+Then you can create a `build.sh` file with the following content:
 
 ```sh
 # go to our build folder
@@ -54,9 +54,10 @@ cmake --build . --config Release --target install
 
 Don't forget to replace the paths. By default this will build the `R2C`
 library, the Redshift renderer example which uses it, and generate the
-documentation using Doxygen (provided everything was correctdly installed)
+documentation using Doxygen (provided everything was correctly installed)
 
-You can disable building the documentation and/or the Redshift example module using:
+You can disable building the documentation and/or the Redshift example module using
+the following variable during configuration:
 
 - `-DBUILD_DOC=OFF`
 - `-DBUILD_REDSHIFT=OFF`
@@ -66,7 +67,7 @@ correct rights to write into it (on Windows, the UAC might kick in, on Linux you
 access)
 
 Also, the CMake scripts will try to install the needed runtime libraries of Redshift in the
-install prefix. You can disable in case your Redshift runtime libraries are already installed:
+install prefix on Windows. You can disable this using the following variable during configuration:
 
 - `-DINSTALL_REDSHIFT_LIBRARIES=OFF`
 
@@ -75,7 +76,7 @@ install prefix. You can disable in case your Redshift runtime libraries are alre
 The easiest way is to run the CMake install target directly with the install prefix
 being set to your Clarisse installation directory.
 
-If you can't, then still run the CMake install target, but in some other prefix. Then,
+If you can't, then still run the CMake install target using some other prefix. Then,
 you can run Clarisse using the following script (as usual, replacing the paths where
 necessary)
 
@@ -91,6 +92,6 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"<r2c_install_dir>"
 # Documentation
 
 More information in [docs/index.md](./docs/index.md) and if you built the documentation (which you should have,
-if Doxygen is correctly installed on your system) you'll have even more in [docs/doxydocs/html/index.html](./docs/doxydocs/html/index.html)
+if Doxygen was correctly installed on your system) you'll have even more in [docs/doxydocs/html/index.html](./docs/doxydocs/html/index.html)
 
 Copyright (c) 2020 Isotropix SAS. All rights reserved.
