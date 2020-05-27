@@ -1,0 +1,14 @@
+//
+// Copyright 2020 - present Isotropix SAS. See License.txt for license information
+//
+
+class "TextureRedshift" "TextureOperator" {
+    // WARNING DO NOT CHANGE THIS CLASS NAME SINCE WE HEAVILY RELY ON IT.
+    // IF YOU DO SO MAKE SURE TO SEARCH IN THE CODE WHERE WE MAKE
+    // REFERENCE TO IT!
+
+    #version 0.9
+    abstract yes
+    category "/Texture/Redshift"
+    doc "An abstract Redshift texture."
+}

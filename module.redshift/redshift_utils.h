@@ -151,6 +151,9 @@ namespace RedshiftUtils {
     inline RSNormal ToRSNormal(const GMathVec3d& v) { return RSNormal(static_cast<float>(v[0]), static_cast<float>(v[1]), static_cast<float>(v[2])); }
     inline RSNormal ToRSNormal(const GMathVec3f& v) { return RSNormal(v[0], v[1], v[2]); }
 
+	/*! \brief Helper to use in the module callback on_attribute_change() to control dirtiness between a Clarisse object and the corresponding Redshift shader */
+	void on_attribute_change(RSShaderNode& shader, const OfAttr& attr, int& dirtiness, const int& dirtiness_flags);
+
     //
     /*! \brief Return the default material which is set to look like the default Clarisse one. */
     RSMaterial *get_default_material();

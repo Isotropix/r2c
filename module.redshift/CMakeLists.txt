@@ -16,8 +16,10 @@ set (SOURCES
     module_material_redshift.cc
     module_renderer_redshift.cc
     redshift_render_delegate.cc
+	module_texture_redshift.cc
     redshift_utils.cc
     renderer_redshift.cc
+	texture_redshift.cc
 )
 
 set (HEADERS
@@ -25,6 +27,7 @@ set (HEADERS
     module_material_redshift.h
     module_renderer_redshift.h
     redshift_render_delegate.h
+	module_texture_redshift.h
     redshift_utils.h
 )
 
@@ -33,6 +36,7 @@ set (CID_FILES
     light_redshift.cid
     material_redshift.cid
     renderer_redshift.cid
+	texture_redshift.cid
 )
 
 set (CID_DEPENDS
