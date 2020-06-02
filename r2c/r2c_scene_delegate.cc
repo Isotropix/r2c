@@ -13,6 +13,8 @@
 #include <module_texture.h>
 #include <geometry_object.h>
 #include <app_object.h>
+#include <ctx_shader.h>
+#include <ctx_helpers.h>
 
 #include "r2c_instancer.h"
 #include "r2c_render_delegate.h"
@@ -88,7 +90,8 @@ R2cSceneDelegate::R2cSceneDelegate() : EventObject(),
                                                  m_camera(nullptr),
                                                  m_geometries(nullptr),
                                                  m_lights(nullptr),
-                                                 m_shading_layer(nullptr)
+                                                 m_shading_layer(nullptr),
+	                                             m_shading_table(nullptr)
 {
 }
 
@@ -116,7 +119,9 @@ R2cSceneDelegate::set_input(OfObject **m_input, OfObject *new_input, const CoreS
                 dirty_geometry_index();
             } else if (*m_input == m_lights) {
                 dirty_light_index();
-            }
+            } else if (*m_input == m_shading_layer) {
+				dirty_shading();
+			}
         }
 
         if (new_input != nullptr && new_input->is_kindof(class_name)) {
@@ -128,7 +133,10 @@ R2cSceneDelegate::set_input(OfObject **m_input, OfObject *new_input, const CoreS
                     connect(*new_input->get_module(), EVT_ID_MODULE_GROUP_VISIBILITY, EVENT_INFO_METHOD(R2cSceneDelegate::on_geometries_group_update));
                 } else if (*m_input == m_lights) {
                     connect(*new_input->get_module(), EVT_ID_MODULE_GROUP_VISIBILITY, EVENT_INFO_METHOD(R2cSceneDelegate::on_lights_group_update));
-                }
+				} else if (*m_input == m_shading_layer) {
+					dirty_shading();
+					connect(*new_input, EVT_ID_OF_OBJECT_ATTR_CHANGE, EVENT_INFO_METHOD(R2cSceneDelegate::dispatch_shading_layer_dirtiness));
+				}
             }
         }
     }
@@ -203,6 +211,9 @@ R2cSceneDelegate::dispatch_scene_object_dirtiness(EventObject& sender, const Eve
     if (attr->get_event_info().type != OfAttrEvent::TYPE_PROPAGATE) {
         if (dirtiness & OfAttr::DIRTINESS_SHADING_MATERIAL) transmitted_dirtiness |=  DIRTINESS_SHADING_GROUP;
         //if (attr->get_name() == "override_material") transmitted_dirtiness |=  DIRTINESS_SHADING_GROUP;
+		if (m_shading_layer != nullptr) {
+			dirty_shading_table();
+		}
     }
     if (dirtiness & OfAttr::DIRTINESS_MOTION) transmitted_dirtiness |=  DIRTINESS_KINEMATIC;
     if (dirtiness & OfAttr::DIRTINESS_SHADING_GROUP) transmitted_dirtiness |=  DIRTINESS_SHADING_GROUP;
@@ -257,6 +268,18 @@ R2cSceneDelegate::dispatch_scene_object_dirtiness(EventObject& sender, const Eve
         // propagating the dirtiness on the instancer
         m_render_delegate->dirty_instancer(descriptor, transmitted_dirtiness);
     }
+}
+
+void 
+R2cSceneDelegate::dispatch_shading_layer_dirtiness(EventObject& sender, const EventInfo& evtid, void *data)
+{
+	OfObject *item = static_cast<OfObject *>(&sender);
+	CORE_ASSERT(item->is_kindof("ShadingLayer"));
+	const OfAttr *changing_attr = item->get_changing_attr();
+	CORE_ASSERT(changing_attr != 0);
+	if (changing_attr->get_event_info().type != OfAttrEvent::TYPE_PROPAGATE) {
+		dirty_shading();
+	}
 }
 
 /*! \brief converting Clarisse dirtiness to light dirtiness for the render delegate */
@@ -326,10 +349,10 @@ R2cSceneDelegate::get_geometry_resource(R2cItemId id) const
 }
 
 R2cShadingGroupInfo
-R2cSceneDelegate::get_shading_group_info(R2cItemId scene_object_id, const unsigned int& shading_group_id) const
+R2cSceneDelegate::get_shading_group_info(R2cItemId id, const unsigned int& shading_group_id) const
 {
     // FIXME: Should be extended to support shading layer and the shading table instead
-    R2cItemDescriptor *item = m_render_item_dependencies.is_key_exists(scene_object_id);
+    R2cItemDescriptor *item = m_render_item_dependencies.is_key_exists(id);
     R2cShadingGroupInfo shading_group_info;
     shading_group_info.m_material.set_type(R2cItemDescriptor::TYPE_MATERIAL);
     shading_group_info.m_clip_map.set_type(R2cItemDescriptor::TYPE_TEXTURE);
@@ -337,45 +360,39 @@ R2cSceneDelegate::get_shading_group_info(R2cItemId scene_object_id, const unsign
 
     if (item != nullptr) {
         ModuleSceneObject *scene_object = static_cast<ModuleSceneObject *>(item->get_item()->get_module());
+		
+		if (unsigned int *scene_object_index = m_scene_object_index.is_key_exists(scene_object)) {
+			ShadingGroupLinks sg_links;
+			CtxHelpers::get_shading(m_shading_table, GeometrySource(*scene_object_index, scene_object), shading_group_id, sg_links);
 
-        if (shading_group_id < scene_object->get_shading_groups().get_count()) {
-            ModuleMaterial *material_module = scene_object->get_material(shading_group_id);
-            ModuleDisplacement *displacement_module = scene_object->get_displacement(shading_group_id);
-            ModuleTexture *clip_map_module = scene_object->get_clip_map(shading_group_id);
-            // making sure a supported material is assigned
-            if (material_module != nullptr && is_class_supported(material_module->get_object(), m_supported_classes.materials)) {
-                OfObject *material = material_module->get_object();
-                shading_group_info.m_material.set_id(material);
-                shading_group_info.m_material.set_full_name(material->get_full_name());
-                shading_group_info.m_material.set_refcount(1);
-            }
+			ModuleMaterial *material_module = sg_links.get_material();
+			ModuleDisplacement *displacement_module = sg_links.get_displacement();
+			ModuleTexture *clip_map_module = sg_links.get_clip_map();
 
-            // making sure a supported displacement is assigned
-            if (displacement_module != nullptr && is_class_supported(displacement_module->get_object(), m_supported_classes.materials)) {
-                OfObject *displacement = displacement_module->get_object();
-                shading_group_info.m_displacement.set_id(displacement);
-                shading_group_info.m_displacement.set_full_name(displacement->get_full_name());
-                shading_group_info.m_displacement.set_refcount(1);
-            }
+			// making sure a supported material is assigned
+			if (material_module != nullptr && is_class_supported(material_module->get_object(), m_supported_classes.materials)) {
+				OfObject *material = material_module->get_object();
+				shading_group_info.m_material.set_id(material);
+				shading_group_info.m_material.set_full_name(material->get_full_name());
+				shading_group_info.m_material.set_refcount(1);
+			}
 
-            // making sure a supported clip map texture is assigned
-            if (clip_map_module != nullptr && is_class_supported(clip_map_module->get_object(), m_supported_classes.materials)) {
-                OfObject *clip_map = clip_map_module->get_object();
-                shading_group_info.m_clip_map.set_id(clip_map);
-                shading_group_info.m_clip_map.set_full_name(clip_map->get_full_name());
-                shading_group_info.m_clip_map.set_refcount(1);
-            }
+			// making sure a supported displacement is assigned
+			if (displacement_module != nullptr && is_class_supported(displacement_module->get_object(), m_supported_classes.materials)) {
+				OfObject *displacement = displacement_module->get_object();
+				shading_group_info.m_displacement.set_id(displacement);
+				shading_group_info.m_displacement.set_full_name(displacement->get_full_name());
+				shading_group_info.m_displacement.set_refcount(1);
+			}
 
-        }
-
-        // handling override material
-        ModuleMaterial *material_module = scene_object->get_override_material();
-        OfObject *material = material_module != nullptr ? material_module->get_object() : nullptr;
-        if (is_class_supported(material, m_supported_classes.materials)) {
-            shading_group_info.m_material.set_id(material);
-            shading_group_info.m_material.set_full_name(material->get_full_name());
-            shading_group_info.m_material.set_refcount(1);
-        }
+			// making sure a supported clip map texture is assigned
+			if (clip_map_module != nullptr && is_class_supported(clip_map_module->get_object(), m_supported_classes.materials)) {
+				OfObject *clip_map = clip_map_module->get_object();
+				shading_group_info.m_clip_map.set_id(clip_map);
+				shading_group_info.m_clip_map.set_full_name(clip_map->get_full_name());
+				shading_group_info.m_clip_map.set_refcount(1);
+			}
+		}
     }
     return shading_group_info;
 }
@@ -521,6 +538,13 @@ R2cSceneDelegate::sync()
         for (auto item : removed) remove_geometry(item);
         // adding new items to the render scene
         for (auto item : inserted) insert_geometry(item);
+
+		ModuleGroup *geometries_group = static_cast<ModuleGroup *>(m_geometries->get_module());
+		CoreArray<ModuleSceneObject *> scene_objects = geometries_group->get_filtered_objects<ModuleSceneObject>();
+		m_scene_object_index.remove_all();
+		for (unsigned int i = 0; i < scene_objects.get_count(); i++) {
+			m_scene_object_index.add(scene_objects[i], i);
+		}
     }
 
     // check if our light index is dirty, otherwise there's nothing to do
@@ -535,6 +559,19 @@ R2cSceneDelegate::sync()
         for (auto item : inserted) insert_light(item);
     }
 
+	if (m_shading_table_dirty) {
+		if (m_shading_layer != nullptr) {
+			ModuleGroup *geometries_group = static_cast<ModuleGroup *>(m_geometries->get_module());
+			ModuleShadingLayer *shading_layer = static_cast<ModuleShadingLayer *>(m_shading_layer->get_module());
+			CtxGas ctx_gas;
+			geometries_group->get_shading_gas_ctx(shading_layer, ctx_gas);
+			m_shading_table = ctx_gas.shading;
+		} else {
+			m_shading_table = nullptr;
+		}
+
+		m_shading_table_dirty = false;
+	}
 }
 
 R2cItemDescriptor
@@ -640,12 +677,33 @@ void
 R2cSceneDelegate::dirty_geometry_index()
 {
     m_geometry_index_dirty = true;
+	m_shading_table_dirty = true;
 }
 
 void
 R2cSceneDelegate::dirty_light_index()
 {
     m_light_index_dirty = true;
+}
+
+void 
+R2cSceneDelegate::dirty_shading()
+{
+	for (auto render_item : m_render_item_dependencies) {
+		const R2cItemDescriptor& item_desc = render_item.get_value();
+		if (item_desc.is_geometry()) {
+			m_render_delegate->dirty_geometry(item_desc, DIRTINESS_SHADING_GROUP);
+		} else if (item_desc.is_instancer()) {
+			m_render_delegate->dirty_instancer(item_desc, DIRTINESS_SHADING_GROUP);
+		}
+	}
+	m_shading_table_dirty = true;
+}
+
+void
+R2cSceneDelegate::dirty_shading_table()
+{
+	m_shading_table_dirty = true;
 }
 
 void

@@ -10,10 +10,13 @@
 #include <r2c_common.h>
 
 class R2cInstancer;
+class ModuleSceneObject;
+class SceneObjectShading;
 
 typedef CoreHashTable<OfObject *, bool> OfObjectIndex;
 typedef CoreHashTable<R2cItemId, R2cItemDescriptor> RenderItemDependencyMap;
 typedef CoreHashTable<OfObject *, CoreArray<OfObject *> *> InstancerPrototypesMap;
+typedef CoreHashTable<ModuleSceneObject *, unsigned int> SceneObjectIndexMap;
 
 /*! \class R2cSceneDelegate
     \brief This class implements a Clarisse Scene Delegate to work along a R2cRenderDelegate which must set using R2cSceneDelegate::set_render_delegate.
@@ -111,9 +114,9 @@ public:
      * in the array returned by R2cSceneDelegate::get_prototypes such as if
      * prototypes[0] defines 5 shading groups, index between [0, 4] are the ones related
      * to prototypes[0]. The first shading group index of prototypes[1] will then be 5.
-     *  \param scene_object_id id of the geometry/instancer
+     *  \param id id of the geometry/instancer
      *  \param shading_group_id Index to the shading group defined by the geometry. */
-    R2cShadingGroupInfo get_shading_group_info(R2cItemId scene_object_id, const unsigned int& shading_group_id) const;
+    R2cShadingGroupInfo get_shading_group_info(R2cItemId id, const unsigned int& shading_group_id) const;
 
     /*! \brief Returns the render delegate associated with the scene.
      *  \note Can be nullptr if no render delegate was set. */
@@ -173,11 +176,14 @@ private:
 
     void dirty_geometry_index();
     void dirty_light_index();
+	void dirty_shading();
+	void dirty_shading_table();
     void dirty_all();
 
     /*!\brief Dispatching Clarisse dirtiness to the render delegate */
     void dispatch_scene_object_dirtiness(EventObject& sender, const EventInfo& evtid, void *data);
     void dispatch_light_dirtiness(EventObject& sender, const EventInfo& evtid, void *data);
+	void dispatch_shading_layer_dirtiness(EventObject& sender, const EventInfo& evtid, void *data);
 
     R2cRenderDelegate *m_render_delegate;
 
@@ -203,6 +209,10 @@ private:
 
     // list of propotypes per instancer
     InstancerPrototypesMap m_instancer_prototypes;
+
+	SceneObjectIndexMap m_scene_object_index;
+	const SceneObjectShading *m_shading_table;
+	bool m_shading_table_dirty;
 
     // Clarisse classes supported by the render delegate
     struct {

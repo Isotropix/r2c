@@ -90,6 +90,12 @@ ModuleLayerR2cScene::on_attribute_change(const OfAttr& attr, int& dirtiness, con
 	} else if (aname == "__lights__") {
 		// embedded group referencing all the lights inside the current context when no group is connected into the attribute "lights"
 		dirty = true;
+	} else if (aname == "shading_layer") {
+		OfObject *shading_layer = attr.get_object();
+		OfObject *current_shading_layer = m_scene_delegate->get_shading_layer().get_item();
+		if (attr.get_event_info().type != OfAttrEvent::TYPE_PROPAGATE && shading_layer != current_shading_layer) {
+			m_scene_delegate->set_shading_layer(shading_layer);
+		}
 	}
 	if (dirty) {
 		// dirty current image buffer to re-evaluate the render
