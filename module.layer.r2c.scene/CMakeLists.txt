@@ -30,15 +30,15 @@ target_include_directories (layer_r2c_scene
 
 target_link_libraries (layer_r2c_scene
     PRIVATE
-	    # helper library
+        # helper library
         ix_r2c
 
-		# Clarisse SDK
+        # Clarisse SDK
         ${CLARISSE_IX_CORE_LIBRARY}
+        ${CLARISSE_IX_IMAGE_LIBRARY}
         ${CLARISSE_IX_MODULE_LIBRARY}
         ${CLARISSE_IX_OF_LIBRARY}
-		${CLARISSE_IX_IMAGE_LIBRARY}
-		${CLARISSE_IX_RESOURCE_LIBRARY}
+        ${CLARISSE_IX_RESOURCE_LIBRARY}
 )
 
 # patch a few things needed on Windows to allow building r2c in Debug while still

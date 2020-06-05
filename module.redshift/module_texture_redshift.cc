@@ -15,14 +15,14 @@ static const char *base_class_name = "TextureRedshift";
 
 ModuleTextureRedshift::ModuleTextureRedshift() : ModuleTextureOperator()
 {
-	m_shader = nullptr;
+    m_shader = nullptr;
 }
 
 ModuleTextureRedshift::~ModuleTextureRedshift()
 {
-	if (m_shader != nullptr) {
-		RS_ShaderNode_Release(m_shader);
-	}
+    if (m_shader != nullptr) {
+        RS_ShaderNode_Release(m_shader);
+    }
 }
 
 void

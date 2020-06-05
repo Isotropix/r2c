@@ -14,7 +14,7 @@ class RSShaderNode;
 class ModuleTextureRedshift : public ModuleTextureOperator {
 public:
 
-	ModuleTextureRedshift();
+    ModuleTextureRedshift();
     virtual ~ModuleTextureRedshift() override;
 
     /*! \brief return the Redshift shader attached to the Clarisse texture item.
@@ -34,11 +34,11 @@ protected:
 
 private:
 
-	ModuleTextureRedshift(const ModuleTextureRedshift&) = delete;
-	ModuleTextureRedshift& operator=(const ModuleTextureRedshift&) = delete;
+    ModuleTextureRedshift(const ModuleTextureRedshift&) = delete;
+    ModuleTextureRedshift& operator=(const ModuleTextureRedshift&) = delete;
 
     CoreString m_shader_class_name;
-	RSShaderNode *m_shader;
+    RSShaderNode *m_shader;
     DECLARE_CLASS
 };
 

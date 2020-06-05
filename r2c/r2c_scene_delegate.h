@@ -176,14 +176,14 @@ private:
 
     void dirty_geometry_index();
     void dirty_light_index();
-	void dirty_shading();
-	void dirty_shading_table();
+    void dirty_shading();
+    void dirty_shading_table();
     void dirty_all();
 
     /*!\brief Dispatching Clarisse dirtiness to the render delegate */
     void dispatch_scene_object_dirtiness(EventObject& sender, const EventInfo& evtid, void *data);
     void dispatch_light_dirtiness(EventObject& sender, const EventInfo& evtid, void *data);
-	void dispatch_shading_layer_dirtiness(EventObject& sender, const EventInfo& evtid, void *data);
+    void dispatch_shading_layer_dirtiness(EventObject& sender, const EventInfo& evtid, void *data);
 
     R2cRenderDelegate *m_render_delegate;
 
@@ -210,9 +210,9 @@ private:
     // list of propotypes per instancer
     InstancerPrototypesMap m_instancer_prototypes;
 
-	SceneObjectIndexMap m_scene_object_index;
-	const SceneObjectShading *m_shading_table;
-	bool m_shading_table_dirty;
+    SceneObjectIndexMap m_scene_object_index;
+    const SceneObjectShading *m_shading_table;
+    bool m_shading_table_dirty;
 
     // Clarisse classes supported by the render delegate
     struct {

@@ -18,7 +18,7 @@ IX_END_DECLARE_MODULE_CALLBACKS(ModuleLayerRedshift)
 R2cRenderDelegate *
 IX_MODULE_CLBK::get_render_delegate(OfObject& object)
 {
-	return new RedshiftRenderDelegate;
+    return new RedshiftRenderDelegate;
 }
 
 namespace LayerRedshift

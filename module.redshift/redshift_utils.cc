@@ -191,7 +191,7 @@ RedshiftUtils::CreateGeometry(const R2cSceneDelegate& delegate, R2cItemId geomet
 
 
 template <typename T>
-inline void	SetVertexData(void *vtx_data_struct, unsigned int attribute_byte_offset, const T& data)
+inline void SetVertexData(void *vtx_data_struct, unsigned int attribute_byte_offset, const T& data)
 {
     memcpy((static_cast<char *>(vtx_data_struct)) + attribute_byte_offset, &data, sizeof(T));
 }
@@ -231,7 +231,7 @@ RedshiftUtils::CreatePolymesh(const PolyMesh& polymesh, RSMaterial *material)
         if (pMyVertexFormatData->IsAttributeUsed(originalAttributeIndex))
             vtx_attr_offsets[originalAttributeIndex] = pMyVertexFormatData->GetAttributeOffsetBytes(originalAttributeIndex);
         else
-            vtx_attr_offsets[originalAttributeIndex] = 0xFFFF;	// an invalid offset (see AddTrianglesToMesh for usage)
+            vtx_attr_offsets[originalAttributeIndex] = 0xFFFF; // an invalid offset (see AddTrianglesToMesh for usage)
     }
 
     unsigned int p_offset = vtx_attr_offsets[positionStreamOriginalIndex];
@@ -330,7 +330,7 @@ RedshiftUtils::CreateGeometryPolymesh(const GeometryObject& geometry, RSMaterial
         if (pMyVertexFormatData->IsAttributeUsed(originalAttributeIndex))
             vtx_attr_offsets[originalAttributeIndex] = pMyVertexFormatData->GetAttributeOffsetBytes(originalAttributeIndex);
         else
-            vtx_attr_offsets[originalAttributeIndex] = 0xFFFF;	// an invalid offset (see AddTrianglesToMesh for usage)
+            vtx_attr_offsets[originalAttributeIndex] = 0xFFFF; // an invalid offset (see AddTrianglesToMesh for usage)
     }
 
     unsigned int p_offset = vtx_attr_offsets[positionStreamOriginalIndex];
@@ -489,7 +489,7 @@ RedshiftUtils::CreateBox(const GMathVec3d& size, RSMaterial *material)
         if (pMyVertexFormatData->IsAttributeUsed(originalAttributeIndex))
             vtx_attr_offsets[originalAttributeIndex] = pMyVertexFormatData->GetAttributeOffsetBytes(originalAttributeIndex);
         else
-            vtx_attr_offsets[originalAttributeIndex] = 0xFFFF;	// an invalid offset (see AddTrianglesToMesh for usage)
+            vtx_attr_offsets[originalAttributeIndex] = 0xFFFF; // an invalid offset (see AddTrianglesToMesh for usage)
     }
 
     unsigned int p_offset = vtx_attr_offsets[positionStreamOriginalIndex];
@@ -624,7 +624,7 @@ RedshiftUtils::CreateBbox(const GMathBbox3d& bbox, RSMaterial *material)
         if (pMyVertexFormatData->IsAttributeUsed(originalAttributeIndex))
             vtx_attr_offsets[originalAttributeIndex] = pMyVertexFormatData->GetAttributeOffsetBytes(originalAttributeIndex);
         else
-            vtx_attr_offsets[originalAttributeIndex] = 0xFFFF;	// an invalid offset (see AddTrianglesToMesh for usage)
+            vtx_attr_offsets[originalAttributeIndex] = 0xFFFF; // an invalid offset (see AddTrianglesToMesh for usage)
     }
 
     unsigned int p_offset = vtx_attr_offsets[positionStreamOriginalIndex];
@@ -735,26 +735,26 @@ RedshiftUtils::CreateLight(const R2cSceneDelegate& delegate, R2cItemId lightid, 
     R2cItemDescriptor clight = delegate.get_render_item(lightid);
 
     //Create a light shader
-    light.shader = RS_ShaderNode_Get(RedshiftUtils::get_new_unique_name(clight.get_item()->get_class_name()).get_data(), "Light" );	// "Light" is an RS Physical Light shader node
+    light.shader = RS_ShaderNode_Get(RedshiftUtils::get_new_unique_name(clight.get_item()->get_class_name()).get_data(), "Light" ); // "Light" is an RS Physical Light shader node
     if (light.shader != nullptr) {
         /* Physical light input parameters:
 
-            INPUT	"on"					bool		STATIC	GUINAME("On")						DEFAULTVAL(true)
-            INPUT	"color"					colorRGB			GUINAME("Color")					DEFAULTVAL(1.f,1.f,1.f)
-            INPUT   "temperature"			float				GUINAME("Temperature")				DEFAULTVAL(6500.f)	SOFTLIMIT(1667.f,25000.f)
-            INPUT   "colorMode"				int			STATIC	GUINAME("Mode")						DEFAULTVAL(0)		GUIENUM("Color",0,"Temperature",1)
-            INPUT	"intensity"				float				GUINAME("Intensity Multiplier")		DEFAULTVAL(100.f)	SOFTLIMIT(0.f,10000.f)
-            INPUT	"unitsType"				int			STATIC	GUINAME("Unit Type")				DEFAULTVAL(0)		GUIENUM("Image",0,"Luminous Power (lm)",1,"Luminance (cd/m^2)",2,"Radiant Power (W)",3,"Radiance (W/sr/m^2)",4)
-            INPUT	"lumensperwatt"			float		STATIC	GUINAME("Luminous Efficacy (lm/w)")	DEFAULTVAL(17.f)
-            INPUT	"decayType"				int			STATIC	GUINAME("Type")						DEFAULTVAL(0)		GUIENUM("Inverse-square",0,"None",1,"Linear",2)
-            INPUT	"falloffStart"			wfloat		STATIC	GUINAME("Falloff Start")			DEFAULTVAL(0.0f)
-            INPUT	"falloffStop"			wfloat		STATIC	GUINAME("Falloff Stop")				DEFAULTVAL(100.0f)
-            INPUT	"shadow"				bool		STATIC	GUINAME("Enable")					DEFAULTVAL(true)
-            INPUT	"shadowTransparency"	float				GUINAME("Transparency")				DEFAULTVAL(0.0f)	SOFTLIMIT(0.f,1.f)		HARDLIMIT(0.f,1.f)
-            INPUT	"spotConeFalloffAngle"	float				GUINAME("Fall-off Angle")			DEFAULTVAL(5.0f)	SOFTLIMIT(0.f,180.f)	HARDLIMIT(0.f,180.f)
+            INPUT   "on"                    bool        STATIC  GUINAME("On")                       DEFAULTVAL(true)
+            INPUT   "color"                 colorRGB            GUINAME("Color")                    DEFAULTVAL(1.f,1.f,1.f)
+            INPUT   "temperature"           float               GUINAME("Temperature")              DEFAULTVAL(6500.f)      SOFTLIMIT(1667.f,25000.f)
+            INPUT   "colorMode"             int         STATIC  GUINAME("Mode")                     DEFAULTVAL(0)           GUIENUM("Color",0,"Temperature",1)
+            INPUT   "intensity"             float               GUINAME("Intensity Multiplier")     DEFAULTVAL(100.f)       SOFTLIMIT(0.f,10000.f)
+            INPUT   "unitsType"             int         STATIC  GUINAME("Unit Type")                DEFAULTVAL(0)           GUIENUM("Image",0,"Luminous Power (lm)",1,"Luminance (cd/m^2)",2,"Radiant Power (W)",3,"Radiance (W/sr/m^2)",4)
+            INPUT   "lumensperwatt"         float       STATIC  GUINAME("Luminous Efficacy (lm/w)") DEFAULTVAL(17.f)
+            INPUT   "decayType"             int         STATIC  GUINAME("Type")                     DEFAULTVAL(0)           GUIENUM("Inverse-square",0,"None",1,"Linear",2)
+            INPUT   "falloffStart"          wfloat      STATIC  GUINAME("Falloff Start")            DEFAULTVAL(0.0f)
+            INPUT   "falloffStop"           wfloat      STATIC  GUINAME("Falloff Stop")             DEFAULTVAL(100.0f)
+            INPUT   "shadow"                bool        STATIC  GUINAME("Enable")                   DEFAULTVAL(true)
+            INPUT   "shadowTransparency"    float               GUINAME("Transparency")             DEFAULTVAL(0.0f)        SOFTLIMIT(0.f,1.f)      HARDLIMIT(0.f,1.f)
+            INPUT   "spotConeFalloffAngle"  float               GUINAME("Fall-off Angle")           DEFAULTVAL(5.0f)        SOFTLIMIT(0.f,180.f)    HARDLIMIT(0.f,180.f)
 
             // Maya Only
-            INPUT	"dropoff"	float	DEFAULTVAL(0.f)
+            INPUT   "dropoff"   float   DEFAULTVAL(0.f)
 
         */
 
@@ -933,55 +933,55 @@ get_attribute_definition(const RSShaderInputParamInfo& input,
 {
     switch (input.GetGUIType()) {
         // Basic types
-        case RS_GUISHADERPARAMTYPE_COLOR_RGB:	// RSColor
+        case RS_GUISHADERPARAMTYPE_COLOR_RGB:       // RSColor
             type = OfAttr::TYPE_DOUBLE;
             container = OfAttr::CONTAINER_ARRAY;
             hint = OfAttr::VISUAL_HINT_RGB;
             size = 3;
             break;
-        case RS_GUISHADERPARAMTYPE_COLOR_RGBA:		// RSColor
+        case RS_GUISHADERPARAMTYPE_COLOR_RGBA:      // RSColor
             type = OfAttr::TYPE_DOUBLE;
             container = OfAttr::CONTAINER_ARRAY;
             hint = OfAttr::VISUAL_HINT_RGBA;
             size = 4;
             break;
-        case RS_GUISHADERPARAMTYPE_FLOAT4:			// RSVector4
+        case RS_GUISHADERPARAMTYPE_FLOAT4:          // RSVector4
             type = OfAttr::TYPE_DOUBLE;
             container = OfAttr::CONTAINER_ARRAY;
             hint = OfAttr::VISUAL_HINT_DEFAULT;
             size = 4;
             break;
-        case RS_GUISHADERPARAMTYPE_FLOAT3:			// RSVector3
+        case RS_GUISHADERPARAMTYPE_FLOAT3:          // RSVector3
             type = OfAttr::TYPE_DOUBLE;
             container = OfAttr::CONTAINER_ARRAY;
             hint = OfAttr::VISUAL_HINT_DEFAULT;
             size = 3;
             break;
-        case RS_GUISHADERPARAMTYPE_FLOAT2:			// RSVector2
+        case RS_GUISHADERPARAMTYPE_FLOAT2:          // RSVector2
             type = OfAttr::TYPE_DOUBLE;
             container = OfAttr::CONTAINER_ARRAY;
             hint = OfAttr::VISUAL_HINT_DEFAULT;
             size = 2;
             break;
-        case RS_GUISHADERPARAMTYPE_FLOAT:			// float
+        case RS_GUISHADERPARAMTYPE_FLOAT:           // float
             type = OfAttr::TYPE_DOUBLE;
             container = OfAttr::CONTAINER_SINGLE;
             hint = OfAttr::VISUAL_HINT_DEFAULT;
             size = 1;
             break;
-        case RS_GUISHADERPARAMTYPE_BOOL:				// bool
+        case RS_GUISHADERPARAMTYPE_BOOL:            // bool
             type = OfAttr::TYPE_BOOL;
             container = OfAttr::CONTAINER_SINGLE;
             hint = OfAttr::VISUAL_HINT_DEFAULT;
             size = 1;
             break;
-        case RS_GUISHADERPARAMTYPE_INT:				// int
+        case RS_GUISHADERPARAMTYPE_INT:             // int
             type = OfAttr::TYPE_LONG;
             container = OfAttr::CONTAINER_SINGLE;
             hint = OfAttr::VISUAL_HINT_DEFAULT;
             size = 1;
             break;
-        case RS_GUISHADERPARAMTYPE_UINT4:			// RSUInt4
+        case RS_GUISHADERPARAMTYPE_UINT4:           // RSUInt4
             type = OfAttr::TYPE_LONG;
             container = OfAttr::CONTAINER_SINGLE;
             hint = OfAttr::VISUAL_HINT_DEFAULT;
@@ -990,9 +990,9 @@ get_attribute_definition(const RSShaderInputParamInfo& input,
 
             // Resource types2
             // Other
-        case RS_GUISHADERPARAMTYPE_STRING:			// RSString
-        case RS_GUISHADERPARAMTYPE_AOVNAME:			// RSString
-        case RS_GUISHADERPARAMTYPE_LAYERNAME:		// RSString
+        case RS_GUISHADERPARAMTYPE_STRING:          // RSString
+        case RS_GUISHADERPARAMTYPE_AOVNAME:         // RSString
+        case RS_GUISHADERPARAMTYPE_LAYERNAME:       // RSString
             type = OfAttr::TYPE_STRING;
             container = OfAttr::CONTAINER_SINGLE;
             hint = OfAttr::VISUAL_HINT_DEFAULT;
@@ -1002,17 +1002,17 @@ get_attribute_definition(const RSShaderInputParamInfo& input,
         // unsupported attributes for now
             // Resource types
             // Texture/Color map space
-        case RS_GUISHADERPARAMTYPE_TSPACE:			// Use with AddVertexAttributeMeshAssociation()
-        case RS_GUISHADERPARAMTYPE_CSPACE:			// Use with AddVertexAttributeMeshAssociation()
+        case RS_GUISHADERPARAMTYPE_TSPACE:          // Use with AddVertexAttributeMeshAssociation()
+        case RS_GUISHADERPARAMTYPE_CSPACE:          // Use with AddVertexAttributeMeshAssociation()
             // Special shader node connections only
-        case RS_GUISHADERPARAMTYPE_UV:				// For connecting a UV projection node
-        case RS_GUISHADERPARAMTYPE_UVW:				// For connecting a UVW projection node
-        case RS_GUISHADERPARAMTYPE_COLORRAMP:		// RSCurve* (where curve type is RS_CURVETYPE_COLOR)
-        case RS_GUISHADERPARAMTYPE_CAMERAPICKER:		// requires custom call-back code (a string or node picker in the GUI)
-        case RS_GUISHADERPARAMTYPE_CURVE:			// RSCurve*
-        case RS_GUISHADERPARAMTYPE_TEXTURE:			// RSTexture*, RSUDIMTexture*, RSUVTILETexture*	(a filename string in the GUI)
-        case RS_GUISHADERPARAMTYPE_LIGHT:			// RSLight*
-        case RS_GUISHADERPARAMTYPE_MATRIX4X4:		// RSMatrix4x4
+        case RS_GUISHADERPARAMTYPE_UV:              // For connecting a UV projection node
+        case RS_GUISHADERPARAMTYPE_UVW:             // For connecting a UVW projection node
+        case RS_GUISHADERPARAMTYPE_COLORRAMP:       // RSCurve* (where curve type is RS_CURVETYPE_COLOR)
+        case RS_GUISHADERPARAMTYPE_CAMERAPICKER:    // requires custom call-back code (a string or node picker in the GUI)
+        case RS_GUISHADERPARAMTYPE_CURVE:           // RSCurve*
+        case RS_GUISHADERPARAMTYPE_TEXTURE:         // RSTexture*, RSUDIMTexture*, RSUVTILETexture* (a filename string in the GUI)
+        case RS_GUISHADERPARAMTYPE_LIGHT:           // RSLight*
+        case RS_GUISHADERPARAMTYPE_MATRIX4X4:       // RSMatrix4x4
         default:
             return false;
     }
@@ -1066,14 +1066,14 @@ register_attribute(OfClass& cls, const RSShaderInputParamInfo *input, const Core
                     }
                 }
                 attr->set_animatable(true);
-				attr->set_texturable(input->IsTexturable());
+                attr->set_texturable(input->IsTexturable());
 
-				// The texture filters must be specified so it is only possible to connect
-				// redshift textures in texturable attributes of redshift objects in Clarisse
-				if (input->IsTexturable()) {
-					CoreArray<CoreString> texture_filters = { "TextureRedshift" };
-					attr->set_texture_filters(texture_filters);
-				}
+                // The texture filters must be specified so it is only possible to connect
+                // redshift textures in texturable attributes of redshift objects in Clarisse
+                if (input->IsTexturable()) {
+                    CoreArray<CoreString> texture_filters = { "TextureRedshift" };
+                    attr->set_texture_filters(texture_filters);
+                }
 
                 attr->set_slider(input->IsLogarithmicSlider());
             }
@@ -1132,7 +1132,7 @@ register_shader(OfApp& application, OfClass& redshift_class, const CoreString& n
 void register_shaders(OfApp& application)
 {
     static OfClass *redshift_material = application.get_factory().get_classes().get("MaterialRedshift");
-	static OfClass *redshift_texture = application.get_factory().get_classes().get("TextureRedshift");
+    static OfClass *redshift_texture = application.get_factory().get_classes().get("TextureRedshift");
     //static OfClass *redshift_light = application.get_factory().get_classes().get("LightRedshift");
 
     CoreSet<CoreString> deprecated_materials;
@@ -1165,12 +1165,12 @@ void register_shaders(OfApp& application)
 //                        register_shader(application, *redshift_light, cls_name, *shader, deprecated_lights);
 //                    }
 //                    break;
-				case RS_GUISHADERTYPE_TEXTURE:
-					if (redshift_texture != nullptr) {
-						cls_name = ModuleTextureRedshift::mangle_class(shader->GetName());
-						register_shader(application, *redshift_texture, cls_name, *shader);
-					}
-					break;
+                case RS_GUISHADERTYPE_TEXTURE:
+                    if (redshift_texture != nullptr) {
+                        cls_name = ModuleTextureRedshift::mangle_class(shader->GetName());
+                        register_shader(application, *redshift_texture, cls_name, *shader);
+                    }
+                    break;
                 default:
                     break;
             }
@@ -1269,42 +1269,42 @@ RedshiftUtils::get_default_material()
 RSColor
 get_color3(const OfAttr& attr)
 {
-	return RSColor(static_cast<float>(attr.get_double(0)),
-				   static_cast<float>(attr.get_double(1)),
-				   static_cast<float>(attr.get_double(2)));
+    return RSColor(static_cast<float>(attr.get_double(0)),
+                   static_cast<float>(attr.get_double(1)),
+                   static_cast<float>(attr.get_double(2)));
 }
 
 inline RSColor
 get_color4(const OfAttr& attr)
 {
-	return RSColor(static_cast<float>(attr.get_double(0)),
-				   static_cast<float>(attr.get_double(1)),
-				   static_cast<float>(attr.get_double(2)),
-				   static_cast<float>(attr.get_double(3)));
+    return RSColor(static_cast<float>(attr.get_double(0)),
+                   static_cast<float>(attr.get_double(1)),
+                   static_cast<float>(attr.get_double(2)),
+                   static_cast<float>(attr.get_double(3)));
 }
 
 inline RSVector2
 get_vec2(const OfAttr& attr)
 {
-	return RSVector2(static_cast<float>(attr.get_double(0)),
-					 static_cast<float>(attr.get_double(1)));
+    return RSVector2(static_cast<float>(attr.get_double(0)),
+                     static_cast<float>(attr.get_double(1)));
 }
 
 inline RSVector3
 get_vec3(const OfAttr& attr)
 {
-	return RSVector3(static_cast<float>(attr.get_double(0)),
-					 static_cast<float>(attr.get_double(1)),
-					 static_cast<float>(attr.get_double(2)));
+    return RSVector3(static_cast<float>(attr.get_double(0)),
+                     static_cast<float>(attr.get_double(1)),
+                     static_cast<float>(attr.get_double(2)));
 }
 
 inline RSVector4
 get_vec4(const OfAttr& attr)
 {
-	return RSVector4(static_cast<float>(attr.get_double(0)),
-					 static_cast<float>(attr.get_double(1)),
-					 static_cast<float>(attr.get_double(2)),
-					 static_cast<float>(attr.get_double(3)));
+    return RSVector4(static_cast<float>(attr.get_double(0)),
+                     static_cast<float>(attr.get_double(1)),
+                     static_cast<float>(attr.get_double(2)),
+                     static_cast<float>(attr.get_double(3)));
 }
 
 inline float
@@ -1315,10 +1315,10 @@ get_int(const OfAttr& attr) { return static_cast<int>(attr.get_long(0)); }
 
 inline RSUInt4
 get_uint4(const OfAttr& attr) {
-	return RSUInt4(static_cast<unsigned int>(attr.get_long(0)),
-				   static_cast<unsigned int>(attr.get_long(1)),
-				   static_cast<unsigned int>(attr.get_long(2)),
-				   static_cast<unsigned int>(attr.get_long(3)));
+    return RSUInt4(static_cast<unsigned int>(attr.get_long(0)),
+                   static_cast<unsigned int>(attr.get_long(1)),
+                   static_cast<unsigned int>(attr.get_long(2)),
+                   static_cast<unsigned int>(attr.get_long(3)));
 }
 
 inline const char *
@@ -1330,31 +1330,31 @@ get_bool(const OfAttr& attr) { return attr.get_bool(); }
 inline RSShaderNode *
 get_texture(const OfAttr& attr)
 {
-	ModuleTextureRedshift *texture = static_cast<ModuleTextureRedshift *>(attr.get_texture()->get_module());
-	return texture->get_shader();
+    ModuleTextureRedshift *texture = static_cast<ModuleTextureRedshift *>(attr.get_texture()->get_module());
+    return texture->get_shader();
 }
 
 void 
 RedshiftUtils::on_attribute_change(RSShaderNode& shader, const OfAttr& attr, int& dirtiness, const int& dirtiness_flags)
 {
-	const char *name = attr.get_name().get_data();
+    const char *name = attr.get_name().get_data();
     unsigned int idx = shader.GetParameterIndex(name);
     shader.BeginUpdate();
 
     switch (attr.get_visual_hint()) {
         case OfAttr::VISUAL_HINT_RGB:
-			if (attr.is_textured()) {
-				shader.SetParameterNode(idx, get_texture(attr));
-			} else {
-				shader.SetParameterData(idx, get_color3(attr));
-			}
+            if (attr.is_textured()) {
+                shader.SetParameterNode(idx, get_texture(attr));
+            } else {
+                shader.SetParameterData(idx, get_color3(attr));
+            }
             break;
         case OfAttr::VISUAL_HINT_RGBA:
-			if (attr.is_textured()) {
-				shader.SetParameterNode(idx, get_texture(attr));
-			} else {
-				shader.SetParameterData(idx, get_color4(attr));
-			}
+            if (attr.is_textured()) {
+                shader.SetParameterNode(idx, get_texture(attr));
+            } else {
+                shader.SetParameterData(idx, get_color4(attr));
+            }
             break;
         case OfAttr::VISUAL_HINT_DEFAULT:
             switch (attr.get_type()) {

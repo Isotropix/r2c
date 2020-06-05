@@ -91,7 +91,7 @@ RedshiftRenderDelegate::~RedshiftRenderDelegate()
 CoreString 
 RedshiftRenderDelegate::get_class_name() const
 {
-	return "RendererRedshift";
+    return "RendererRedshift";
 }
 
 bool

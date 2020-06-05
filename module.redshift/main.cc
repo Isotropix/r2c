@@ -21,7 +21,7 @@ IX_BEGIN_EXTERN_C
     on_register_module(OfApp& app, CoreVector<OfClass *>& new_classes) {
         // register module classes
         MaterialRedshift::on_register(app, new_classes);
-		TextureRedshift::on_register(app, new_classes);
+        TextureRedshift::on_register(app, new_classes);
         LightRedshift::on_register(app, new_classes);
         RendererRedshift::on_register(app, new_classes);
         LayerRedshift::on_register(app, new_classes);

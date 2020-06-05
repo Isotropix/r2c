@@ -5,7 +5,7 @@
 R2C (which stands for *your Renderer to Clarisse*) is a helper library designed to simplify the work of 3rd party developers that need to tightly integrate an external rendering engine into Clarisse. R2C provides a few specialized helper classes that are largely inspired from the scene and render delegate design pattern introduced by Pixar in USD Imaging Library (Hydra). It delivers a simplified API hiding the complexity of  scene item and their life-cycle/resource data management as well as render output buffers and interactive rendering.
 
 > **Note:** R2C has been entirely built using the standard SDK shipped with Clarisse. It was exclusively written outside Clarisse's development trunk and there was no secret API involved :-)
-> In other words **any** 3rd party developers experienced with Clarisse API would have been able to write R2C! 
+> In other words **any** 3rd party developers experienced with Clarisse API would have been able to write R2C!
 
 R2C is really reducing the learning curve of Clarisse API to 3rd party developers that have no or very little experience in Clarisse. Using R2C they can quickly focus on translating Clarisse's scenes and geometry structures into their renderers instead of spending time learning the intricacies of Clarisse API.
 
@@ -13,15 +13,15 @@ R2C is really reducing the learning curve of Clarisse API to 3rd party developer
 
 # Package Description
 
-R2C package is an external module that is not (yet) part of the standard SDK of Clarisse. It comes with a fully doxygen style documented source code as well as cmake files to build the library. In the package, you'll  also find a working example of a non-feature complete integration of Redshift renderer in Clarisse. 
+R2C package is an external module that is not (yet) part of the standard SDK of Clarisse. It comes with a fully doxygen style documented source code as well as cmake files to build the library. In the package, you'll  also find a working example of a non-feature complete integration of Redshift renderer in Clarisse.
 
 We strongly recommend you to use this example as reference when integrating your renderer into Clarisse. It comes with a full documentation and can even be compiled and run provided you have access to a license of Redshift and its Redshift SDK.
 
-R2C library source code can be found in `r2c` directory. 
+R2C library source code can be found in `r2c` directory.
 
 # Using the R2C API
 
-As mentioned in the introduction, R2C API is largely inspired by the scene and render delegates design pattern introduced by Pixar in their USD Imaging Library. 
+As mentioned in the introduction, R2C API is largely inspired by the scene and render delegates design pattern introduced by Pixar in their USD Imaging Library.
 
 The way R2C API works is that you have to provide an implementation of your renderer by deriving from the abstract *R2cRenderDelegate* class. The class has to be associated to an instance of a *R2cSceneDelegate*. The *R2cSceneDelegate* defines and manages internally a full Clarisse render scene. It also drives the render delegate according to the updates of the scene.
 
@@ -40,7 +40,7 @@ The scene delegate manages a render scene defined by a camera, a render settings
 
 ### Types of scene updates
 
-There are a 3 distinct types of scene updates the scene delegate propagates to the render delegate: 
+There are a 3 distinct types of scene updates the scene delegate propagates to the render delegate:
 - geometry modifications
 - instancer modifications
 - lights modifications
@@ -48,7 +48,7 @@ There are a 3 distinct types of scene updates the scene delegate propagates to t
 For each of these updates, items can be either be inserted, removed or modified in such way that:
 - when an item is inserted into the scene, the scene delegate calls *R2cRenderDelegate::insert*.
 - when an item is removed from the scene, it calls *R2cRenderDelegate::remove*
-- when an item is modified it calls *R2cRenderDelegate::dirty* 
+- when an item is modified it calls *R2cRenderDelegate::dirty*
 
 Since it is very likely that the render delegate needs to do specific operations for geometries, instancers and lights, the render delegate interface specializes these methods for each type of items:
 ```cpp
@@ -72,9 +72,9 @@ class R2C_EXPORT R2cRenderDelegate : public CoreBaseObject {
 The scene delegate can always be accessed by the render delegate. As a matter of fact they always work in tandem.  Actually when creating a scene delegate, you must associate it with a render delegate using *R2cSceneDelegate::set_render_delegate* in order to be notified. Since they have such a close relationship, they both store back pointers to each other respectively.
 > **Note:** It is possible to set a render delegate after the scene delegate has been populated.  In that case, the render delegate still gets properly synchronized. In the same way, it is possible to remove a render delegate from a scene delegate by passing a *nullptr* to *R2cSceneDelegate::set_render_delegate*. When doing so, the scene delegate automatically calls *R2cRenderDelegate::clear*.
 
-#### Item descriptors, IDs and good practice 
+#### Item descriptors, IDs and good practice
 
-Each time the scene delegate notifies the render delegate from a scene update, it passes a *R2cItemDescriptor*. describing a unique item of the scene.  Depending on the context, this id can identify a geometry, an instancer, a light, a material etc. The *R2cItemDescriptor* class actually abstracts an *OfObject* which can be easily retrieved using *R2cItemDescriptor::get_item*. The reason why R2C API introduces this abstraction is to simplify the work of the renderer plugin writers. 
+Each time the scene delegate notifies the render delegate from a scene update, it passes a *R2cItemDescriptor*. describing a unique item of the scene.  Depending on the context, this id can identify a geometry, an instancer, a light, a material etc. The *R2cItemDescriptor* class actually abstracts an *OfObject* which can be easily retrieved using *R2cItemDescriptor::get_item*. The reason why R2C API introduces this abstraction is to simplify the work of the renderer plugin writers.
 
 > However, we do not recommend you to store *R2cItemDescriptor*. **Their life cycle should be considered valid only within the call of a method in the render delegate.**
 
@@ -90,15 +90,15 @@ The good practice is to store/use ids in dedicated lists in the implementation o
 
 ## R2cRenderBuffer
 
-The  *R2cRenderBuffer* is an abstract class that manages Clarisse render buffers. It is used to pass the actual rendered images and AOVs to Clarisse. The interface is pretty straight forward and we invite you to refer to the documentation for more information.
+The *R2cRenderBuffer* is an abstract class that manages Clarisse render buffers. It is used to pass the actual rendered images and AOVs to Clarisse. The interface is pretty straight forward and we invite you to refer to the documentation for more information.
 
-The R2C library currently provide only one implementation *ClarisseLayerRenderBuffer* which is specialized to fill the render buffer of a ImageLayer.  
+The R2C library currently provide only one implementation *ClarisseLayerRenderBuffer* which is specialized to fill the render buffer of a ImageLayer.
 
 ## The Redshift example
 
 The R2C library provides a working example of a Redshift integration, found in the `module.redshift` directory.
 
-The Redshift integration consists of a *LayerRedshift* which serves as a render scene hub that defines 5 attributes/inputs: 
+The Redshift integration consists of a *LayerRedshift* which serves as a render scene hub that defines 5 attributes/inputs:
 - A *Camera* where users set the render viewpoint.
 - A *Renderer* where users set render settings by creating an item of class *RendererRedshift*
 - A group of *Geometries* where users can specify a group of geometries (*SceneObjects*) defining what to render
@@ -121,7 +121,7 @@ The Redshift integration example is a prototype to serve as an example for rende
 
 - no curve/hair geometry support
 - no motion blur support but can easily be implemented
-- no AOVs support 
+- no AOVs support
 - no progress reporter implemented
 - minimal *Camera* support (only *CameraPerspective* works)
 - minimal Redshift render settings support
@@ -148,7 +148,7 @@ color "diffuse" {
 ```
 - Implement the non-flattened version of Instancers (pretty straight forward)
 - Multithreaded version of the *RedshiftRenderDelegate::sync* to create geometries and synchronize index in parallel to speed up sync.
-- Add progress bar in *RedshiftRenderDelegate::sync* to notify the application of what's currently happening  
+- Add progress bar in *RedshiftRenderDelegate::sync* to notify the application of what's currently happening
 - Change how Clarisse reports render progress so that it is completely driven by the renderer since it knows what's it current progress.
 - Create a new *Layer3d* abstract class that allows orbiting, picking items, drag and drop materials in the *Image View* so that renderer plugins could offer these features too.
 - Move `module.renderer.base` into the built-in Clarisse module an derive Clarisse *Renderer* *OfClass* from it.

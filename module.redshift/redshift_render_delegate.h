@@ -34,7 +34,7 @@ public:
     RedshiftRenderDelegate();
     virtual ~RedshiftRenderDelegate() override;
 
-	CoreString get_class_name() const override;
+    CoreString get_class_name() const override;
 
     void insert_geometry(R2cItemDescriptor item) override;
     void remove_geometry(R2cItemDescriptor item) override;

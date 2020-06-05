@@ -33,7 +33,7 @@ ModuleMaterialRedshift::on_attribute_change(const OfAttr& attr, int& dirtiness, 
     ModuleMaterial::on_attribute_change(attr, dirtiness, dirtiness_flags);
 
     if (RSShaderNode *shader = get_material()->GetSurfaceShaderNodeGraph()) {
-		RedshiftUtils::on_attribute_change(*shader, attr, dirtiness, dirtiness_flags);
+        RedshiftUtils::on_attribute_change(*shader, attr, dirtiness, dirtiness_flags);
     }
 }
 

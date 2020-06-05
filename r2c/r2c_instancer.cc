@@ -24,8 +24,8 @@ public:
                     for (unsigned int i = 0; i < prototypes.get_count(); i++) indexmap.add(prototypes[i], i);
                     // populating the instancer
                     ModuleSceneObjectTree *sot = static_cast<ModuleSceneObjectTree *>(item->get_module());
-					GMathMatrix4x4d inv_global_matrix;
-					GMathMatrix4x4d::get_inverse(sot->get_global_matrix(), inv_global_matrix);
+                    GMathMatrix4x4d inv_global_matrix;
+                    GMathMatrix4x4d::get_inverse(sot->get_global_matrix(), inv_global_matrix);
                     CoreArray<ModuleSceneObjectGeometry> geometries;
                     // getting all instances flattened
                     sot->get_geometries(geometries, nullptr);
@@ -34,7 +34,7 @@ public:
                     // building internal array to abstract ModuleSceneObjectTree implementation
                     for (unsigned int i = 0; i < geometries.get_count(); i++) {
                         indices[i] = indexmap[geometries[i].get_scene_object()->get_object()];
-						GMathMatrix4x4d::multiply(matrices[i], inv_global_matrix, geometries[i].get_global_matrix());
+                        GMathMatrix4x4d::multiply(matrices[i], inv_global_matrix, geometries[i].get_global_matrix());
                     }
                 }
                 init = true;
