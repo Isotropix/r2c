@@ -6,14 +6,15 @@
 #define REDSHIFT_UTILS_H
 
 #include <core_hash_table.h>
-
-#include <gmath_vec3.h>
 #include <gmath_bbox3.h>
 #include <gmath_matrix4x4.h>
+#include <gmath_vec3.h>
+#include <r2c_scene_delegate.h>
 
 #include <RS.h>
 
-#include <r2c_scene_delegate.h>
+class OfAttr;
+
 
 /*! \class RSLightInfo
     \brief internal class holding Redshift light data */

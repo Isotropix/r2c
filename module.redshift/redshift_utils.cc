@@ -2,31 +2,29 @@
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
 
-#include <core_log.h>
-#include <sys_thread_lock.h>
+#include "redshift_utils.h"
 
+#include <core_log.h>
+#include <gmath_matrix3x3.h>
 #include <image_canvas.h>
 #include <image_map_channel.h>
-#include <of_app.h>
 #include <module_camera.h>
-#include <module_layer.h>
 #include <module_geometry.h>
+#include <module_layer.h>
+#include <module_light_redshift.h>
+#include <module_material_redshift.h>
 #include <module_scene_object_tree.h>
-#include <poly_mesh.h>
+#include <module_texture_redshift.h>
+#include <of_app.h>
 #include <poly_mesh_smoothed.h>
-
-#include <gmath_matrix3x3.h>
+#include <poly_mesh.h>
+#include <r2c_instancer.h>
+#include <r2c_render_buffer.h>
+#include <sys_globals.h>
+#include <sys_thread_lock.h>
 
 #include <RS.h>
 
-#include <module_material_redshift.h>
-#include <module_texture_redshift.h>
-#include <module_light_redshift.h>
-
-#include <r2c_instancer.h>
-#include <r2c_render_buffer.h>
-
-#include "redshift_utils.h"
 
 #define CLARISSE_SINK 0
 
@@ -1202,8 +1200,9 @@ RedshiftUtils::initialize(OfApp& application)
         RS_Renderer_SetProceduralPath(proceduralsPath);
 
         unsigned int textureCacheBudgetMB = static_cast<unsigned int>(RS_Renderer_GetDefaultTextureCacheBudgetGB() * 1024);
-        if (const char* var = getenv("REDSHIFT_TEXTURECACHEBUDGET")) {
-            int textureCacheBudgetGB_query = atoi(var);
+        CoreString var = sys_get_env("REDSHIFT_TEXTURECACHEBUDGET");
+        if (var.is_empty() == false) {
+            int textureCacheBudgetGB_query = static_cast<int>(var);
             RSLogMessage(Debug, "Querying texture cache buget from REDSHIFT_TEXTURECACHEBUDGET: %d GB", textureCacheBudgetGB_query);
             textureCacheBudgetMB = static_cast<unsigned int>(textureCacheBudgetGB_query * 1024);
         } else {
@@ -1214,8 +1213,9 @@ RedshiftUtils::initialize(OfApp& application)
         }
 
         RSString cacheFolder_query;
-        if (const char* var = getenv("REDSHIFT_CACHEPATH")) {
-            cacheFolder_query = var;
+        var = sys_get_env("REDSHIFT_CACHEPATH");
+        if (var.is_empty() == false) {
+            cacheFolder_query = var.get_data();
             RSLogMessage(Debug, "Querying cache path from REDSHIFT_CACHEPATH: %s", static_cast<const char *>(cacheFolder_query));
         } else {
             RS_Renderer_GetPreferenceValue("CacheFolder", cacheFolder_query, RS_Renderer_GetDefaultCacheFolder());

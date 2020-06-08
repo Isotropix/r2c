@@ -69,6 +69,7 @@ target_link_libraries (redshift
         ${CLARISSE_IX_MODULE_LIBRARY}
         ${CLARISSE_IX_OF_LIBRARY}
         ${CLARISSE_IX_POLY_LIBRARY}
+        ${CLARISSE_IX_SYS_LIBRARY}
 
         # Redshift SDK
         $<$<PLATFORM_ID:Windows>:${REDSHIFT_SDK_DIR}/lib/x64/redshift-core-vc100.lib>
