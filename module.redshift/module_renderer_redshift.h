@@ -5,7 +5,7 @@
 #ifndef MODULE_RENDERER_REDSHIFT_H
 #define MODULE_RENDERER_REDSHIFT_H
 
-#include <module_project_item.h>
+#include <module_renderer.h>
 
 class OfObject;
 
@@ -15,7 +15,7 @@ class OfObject;
            Redshift renderer specific attributes/properties. The role of the module
            is to implement what happends when users edit attributes of the renderer
            item in Clarisse. */
-class ModuleRendererRedshift : public ModuleProjectItem { // FIXME: CLARISSEAPI should inherit from an abstract ModuleRenderer
+class ModuleRendererRedshift : public ModuleRenderer {
 public:
 
     ModuleRendererRedshift();

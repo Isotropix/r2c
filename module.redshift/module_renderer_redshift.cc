@@ -11,9 +11,9 @@
 #include "module_renderer_redshift.h"
 
 
-IMPLEMENT_CLASS(ModuleRendererRedshift, ModuleProjectItem)
+IMPLEMENT_CLASS(ModuleRendererRedshift, ModuleRenderer)
 
-ModuleRendererRedshift::ModuleRendererRedshift() : ModuleProjectItem() {}
+ModuleRendererRedshift::ModuleRendererRedshift() : ModuleRenderer() {}
 
 ModuleRendererRedshift::~ModuleRendererRedshift() {}
 
