@@ -26,7 +26,21 @@
 #include <RS.h>
 
 
-#define CLARISSE_SINK 0
+#define CLARISSE_SINK 1
+
+
+bool
+RenderingAbortChecker::ShouldAbort()
+{
+    return m_application.must_stop_evaluation();
+}
+
+void
+RenderingProgress::DisplayProgress(const char *message, unsigned int percentage)
+{
+    CORE_UNUSED(message);
+    m_progress = static_cast<float>(percentage) / 100.f;
+}
 
 RenderingBlockSink::RenderingBlockSink() : RSBlockSink(), m_render_buffer(nullptr)
 {}
@@ -105,33 +119,26 @@ RenderingBlockSink::NotifyWillRenderBlock(unsigned int offsetX, unsigned int off
 void
 RenderingBlockSink::PreRender()
 {
-    //LOG_INFO("RenderingBlockSink::PreRender()\n");
 }
 
 void
 RenderingBlockSink::PostRender()
 {
-    //LOG_INFO("RenderingBlockSink::PostRender()\n");
 }
 
 void
 ClarisseLogSink::Log(RSLogLevel level, const char *msg, size_t nCharsMSG)
 {
-    RSString strippedTags;
+    RSString strippedTags(msg);
+    RS_Utility_StripHTMLTags(strippedTags);
     switch(level) {
         case Error:
-            strippedTags = msg;
-            RS_Utility_StripHTMLTags(strippedTags);
             LOG_ERROR(strippedTags);
             break;
         case Warning:
-            strippedTags = msg;
-            RS_Utility_StripHTMLTags(strippedTags);
             LOG_WARNING(strippedTags);
             break;
         case Info:
-            strippedTags = msg;
-            RS_Utility_StripHTMLTags(strippedTags);
             LOG_INFO(strippedTags);
             break;
         case Detailed:
@@ -1226,7 +1233,10 @@ RedshiftUtils::initialize(OfApp& application)
 
         // initialize the redshift renderer
         RSArray<int> selectedCudaDeviceOrdinals;
-        RS_Renderer_GetSelectedCudaDeviceOrdinalsFromPreferences(selectedCudaDeviceOrdinals);
+        if (RS_Renderer_GetSelectedCudaDeviceOrdinalsFromPreferences(selectedCudaDeviceOrdinals) == false) {
+            LOG_ERROR("Redshift - Couldn't get selected Cuda Device Ordinals.\n");
+            return false;
+        }
         RS_Renderer_Create(static_cast<unsigned int>(selectedCudaDeviceOrdinals.Length()), static_cast<int *>(&selectedCudaDeviceOrdinals[0]));
 
         // register Redshift shaders to Clarisse
@@ -1334,7 +1344,7 @@ get_texture(const OfAttr& attr)
     return texture->get_shader();
 }
 
-void 
+void
 RedshiftUtils::on_attribute_change(RSShaderNode& shader, const OfAttr& attr, int& dirtiness, const int& dirtiness_flags)
 {
     const char *name = attr.get_name().get_data();
@@ -1393,10 +1403,4 @@ RedshiftUtils::on_attribute_change(RSShaderNode& shader, const OfAttr& attr, int
         default: break;
     }
     shader.EndUpdate();
-}
-
-bool
-RenderingAbortChecker::ShouldAbort()
-{
-    return m_application.must_stop_evaluation();
 }

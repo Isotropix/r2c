@@ -80,6 +80,8 @@ public:
      *  \param sampling_quality a percentage that defines a global multiplier to all sampling values (lights, material, AA etc...)
      *  \note  The scene descriptor is synched prior the render call. */
     virtual void render(R2cRenderBuffer *render_buffer, const float& sampling_quality) = 0;
+    /*! \brief Return the current rendering progress, between 0 and 1. */
+    virtual float get_render_progress() const = 0;
 
     /*! \brief Return the names of the clarisse camera classes supported by the render delegate
      *  \note  Items for unsupported classes are simply skipped and not passed to the render delegate.

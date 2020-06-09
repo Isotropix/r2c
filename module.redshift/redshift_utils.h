@@ -87,6 +87,24 @@ private:
     OfApp& m_application;
 };
 
+/*! Redshift progress reporter. */
+class RenderingProgress : public RSProgressReporter {
+public:
+
+    //! Get the current progress in [0.-1.] range
+    inline float get_current_progress(void) const { return m_progress; }
+
+protected:
+
+    //! Reimplemented from RSProgressReporter, called whenever the progress changes.
+    void DisplayProgress(const char *message, unsigned int percentage) override;
+
+private:
+
+    //! Current progress
+    float m_progress;
+};
+
 /*! \class RenderingBlockSink
     \brief Redshift render buffer redirection class. */
 class RenderingBlockSink : public RSBlockSink {

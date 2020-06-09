@@ -8,17 +8,20 @@
 #include <image_map_channel.h>
 #include <image_map_tile.h>
 #include <module_layer.h>
+#include <r2c_module_layer_scene.h>
+#include <r2c_render_delegate.h>
+#include <r2c_scene_delegate.h>
 
 class ClarisseLayerRenderBufferImpl {
 public:
 
-    ClarisseLayerRenderBufferImpl(ModuleLayer& ilayer, ImageCanvas& icanvas) : layer(&ilayer), canvas(&icanvas) {}
+    ClarisseLayerRenderBufferImpl(ModuleLayerR2cScene& ilayer, ImageCanvas& icanvas) : layer(&ilayer), canvas(&icanvas) {}
 
-    ModuleLayer *layer;
+    ModuleLayerR2cScene *layer;
     ImageCanvas *canvas;
 };
 
-ClarisseLayerRenderBuffer::ClarisseLayerRenderBuffer(ModuleLayer& layer, ImageCanvas& canvas) : R2cRenderBuffer(), m(new ClarisseLayerRenderBufferImpl(layer, canvas))
+ClarisseLayerRenderBuffer::ClarisseLayerRenderBuffer(ModuleLayerR2cScene& layer, ImageCanvas& canvas) : R2cRenderBuffer(), m(new ClarisseLayerRenderBufferImpl(layer, canvas))
 {
 }
 
@@ -87,6 +90,10 @@ ClarisseLayerRenderBuffer::fill_region(const unsigned int& layer_id, const float
 
         // FIXME: CLARISSEAPI We shouldn't have to do all that. It should be handled by the ModuleLayer
 
+        // get the current progress (used in update_region)
+        R2cRenderDelegate *render_delegate = m->layer->get_scene_delegate()->get_render_delegate();
+        const float progress = render_delegate->get_render_progress();
+
         // getting the tiles intersecting the region we updated
         CoreVector<ImageMapTileHandle> tiles;
         red->get_tiles(tiles, cregion);
@@ -107,7 +114,7 @@ ClarisseLayerRenderBuffer::fill_region(const unsigned int& layer_id, const float
             progress_region[2] = tx_end > rx_end ? rx_end - tile.get_x() : static_cast<int>(tile.get_width());
             progress_region[3] = ty_end > ry_end ? ry_end - tile.get_y() : static_cast<int>(tile.get_height());
             // notifying the subregion in the corresponding tile
-            m->layer->update_region(progress_region, true);
+            m->layer->update_region(progress_region, true, progress);
         }
         // Do we really have to call that? It messes up with the bucket display...
         //m->layer->bucket_render_end(cregion, 0);

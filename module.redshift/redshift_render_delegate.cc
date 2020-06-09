@@ -31,6 +31,7 @@ public:
     RSCamera *camera; // Redshift render camera
     RenderingBlockSink *sink; // Redshift BlockSink that fills the Clarisse's render buffer
     RenderingAbortChecker *abort_checker; // Redshift AbortChecker that notifies the renderer to stop
+    RenderingProgress *progress; // Redshift rendering progress
 
     struct {
         RSResourceIndex index; // the index of all current resources where we store deduplicated data
@@ -66,13 +67,16 @@ public:
 
     } instancers;
 
-    RSDelegateImpl() {
-        scene = nullptr;
-        camera = nullptr;
-        sink = nullptr;
-        abort_checker = nullptr;
+    inline RSDelegateImpl()
+        : scene(nullptr)
+        , camera(nullptr)
+        , sink(nullptr)
+        , abort_checker(nullptr)
+        , progress(nullptr) {
     }
-    ~RSDelegateImpl() {}
+
+    ~RSDelegateImpl() {
+    }
 };
 
 IMPLEMENT_CLASS(RedshiftRenderDelegate, R2cRenderDelegate);
@@ -211,11 +215,24 @@ RedshiftRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& samp
         if (m->abort_checker == nullptr) {
             m->abort_checker = new RenderingAbortChecker(get_scene_delegate()->get_application());
         }
+
+        // Create the progress class if it wasn't already
+        if (m->progress == nullptr) {
+            m->progress = new RenderingProgress();
+        }
+
         // make sure to synchronize the render scene with the scene delegate
         sync();
-        //LOG_INFO("UNIQUE RESOURCE COUNT " << m->resources.index.get_count() << '\n');
-        RS_Renderer_Render(m->camera, m->scene, true, m->abort_checker, nullptr);
+
+        // main rendering call.
+        RS_Renderer_Render(m->camera, m->scene, true, m->abort_checker, m->progress);
     }
+}
+
+float
+RedshiftRenderDelegate::get_render_progress() const
+{
+    return m->progress ? m->progress->get_current_progress() : 0.f;
 }
 
 void
@@ -316,14 +333,14 @@ RedshiftRenderDelegate::clear()
         m->camera = nullptr;
     }
 
-    if (m->sink != nullptr) {
-        delete m->sink;
-        m->sink = nullptr;
-    }
-    if (m->abort_checker != nullptr) {
-        delete m->abort_checker;
-        m->abort_checker = nullptr;
-    }
+    delete m->sink;
+    m->sink = nullptr;
+
+    delete m->abort_checker;
+    m->abort_checker = nullptr;
+
+    delete m->progress;
+    m->progress = nullptr;
 }
 
 void

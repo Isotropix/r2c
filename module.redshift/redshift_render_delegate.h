@@ -49,6 +49,7 @@ public:
     void dirty_instancer(R2cItemDescriptor item, const int& dirtiness) override;
 
     void render(R2cRenderBuffer *render_buffer, const float& sampling_quality) override;
+    float get_render_progress() const override;
 
     CoreVector<CoreString> get_supported_cameras() const override;
     CoreVector<CoreString> get_supported_lights() const override;

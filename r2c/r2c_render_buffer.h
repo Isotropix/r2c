@@ -7,6 +7,8 @@
 
 #include <r2c_export.h>
 
+class ModuleLayerR2cScene;
+
 /*! \class R2cRenderBuffer
     \brief Manages an abstract render buffer that is passed to a R2cRenderDelegate */
 class R2C_EXPORT R2cRenderBuffer {
@@ -64,7 +66,7 @@ class ClarisseLayerRenderBufferImpl;
 class R2C_EXPORT ClarisseLayerRenderBuffer : public R2cRenderBuffer {
 public:
 
-    ClarisseLayerRenderBuffer(ModuleLayer& layer, ImageCanvas& canvas);
+    ClarisseLayerRenderBuffer(ModuleLayerR2cScene& layer, ImageCanvas& canvas);
     virtual ~ClarisseLayerRenderBuffer() override;
     unsigned int get_width() const override;
     unsigned int get_height() const override;

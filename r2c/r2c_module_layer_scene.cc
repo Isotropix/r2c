@@ -30,7 +30,7 @@ ModuleLayerR2cSceneCallbacks::ModuleLayerR2cSceneCallbacks()
     cb_get_render_delegate = nullptr;
 }
 
-void 
+void
 ModuleLayerR2cScene::module_constructor(OfObject& object)
 {
     ModuleLayerScene::module_constructor(object);
@@ -64,7 +64,7 @@ ModuleLayerR2cScene::module_constructor(OfObject& object)
     m_scene_delegate->set_render_delegate(m_render_delegate);
 }
 
-void 
+void
 ModuleLayerR2cScene::on_attribute_change(const OfAttr& attr, int& dirtiness, const int& dirtiness_flags)
 {
     ModuleLayerScene::on_attribute_change(attr, dirtiness, dirtiness_flags);
