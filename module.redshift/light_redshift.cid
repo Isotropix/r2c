@@ -13,19 +13,19 @@ class "LightRedshift" "Light" {
             value yes
             animatable yes
             output "shading_light"
-        doc "Enable or disable diffuse contribution on shaders. By default physical lights affect the diffuse component of shaders."
+            doc "Enable or disable diffuse contribution on shaders. By default physical lights affect the diffuse component of shaders."
         }
         bool "affects_specular" {
             value yes
             animatable yes
             output "shading_light"
-        doc "Enable or disable specular contribution on shaders. By default physical lights affect the specular component of shaders."
+            doc "Enable or disable specular contribution on shaders. By default physical lights affect the specular component of shaders."
         }
         bool "matte_shadow_illuminator" {
             value no
             animatable yes
             output "shading_light"
-        doc "Specifies whether the light can illuminate 'Matte Shadow' surfaces"
+            doc "Specifies whether the light can illuminate 'Matte Shadow' surfaces"
         }
         long "affected_by_refraction" {
             value 1
