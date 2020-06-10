@@ -226,6 +226,9 @@ RedshiftRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& samp
 
         // main rendering call.
         RS_Renderer_Render(m->camera, m->scene, true, m->abort_checker, m->progress);
+
+        // finalize the render buffer
+        render_buffer->finalize();
     }
 }
 

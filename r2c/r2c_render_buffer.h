@@ -51,6 +51,9 @@ public:
      *  \param lock if true, the implementation of this method must garantee thread safety since there will be concurrent calls. */
     virtual void notify_start_render_region(const Region& region, const bool& lock) const {}
 
+    /*! \brief This should be called after rendering is done, and used to finalize the render buffer when necessary. */
+    virtual void finalize() {};
+
 private:
 
     R2cRenderBuffer(const R2cRenderBuffer&) = delete;
@@ -73,6 +76,7 @@ public:
 
     void fill_region(const unsigned int& layer_id, const float *src_data, const unsigned int& src_stride, const R2cRenderBuffer::Region& region, const bool& lock) override;
     void notify_start_render_region(const Region& region, const bool& lock) const override;
+    void finalize() override;
 
 private:
 

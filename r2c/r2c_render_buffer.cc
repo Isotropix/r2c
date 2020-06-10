@@ -81,10 +81,10 @@ ClarisseLayerRenderBuffer::fill_region(const unsigned int& layer_id, const float
 
         if (lock) m->canvas->lock();
 
-        red->fill_tiles(dest[0], cregion);
-        green->fill_tiles(dest[1], cregion);
-        blue->fill_tiles(dest[2], cregion);
-        alpha->fill_tiles(dest[3], cregion);
+        red->fill_tiles(dest[0], cregion, false);
+        green->fill_tiles(dest[1], cregion, false);
+        blue->fill_tiles(dest[2], cregion, false);
+        alpha->fill_tiles(dest[3], cregion, false);
 
         if (lock) m->canvas->unlock();
 
@@ -132,4 +132,15 @@ ClarisseLayerRenderBuffer::notify_start_render_region(const Region& region, cons
     GMathVec4i cregion(static_cast<int>(region.offset_x), static_cast<int>(region.offset_y), static_cast<int>(region.width), static_cast<int>(region.height));
     // the method is already thread safe
     m->layer->bucket_render_start(cregion, 0);
+}
+
+void
+ClarisseLayerRenderBuffer::finalize()
+{
+    ImageEvalContext image_ctx(*m->canvas, 0);
+    GMathVec4i region{ 0, 0, m->canvas->get_width(), m->canvas->get_height() };
+    ImageMap *image = m->canvas->get_image();
+    for (ImageMapChannel *channel : image->get_channels()) {
+        channel->finalize(image_ctx, region);
+    }
 }
