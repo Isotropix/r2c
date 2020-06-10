@@ -26,7 +26,7 @@
 #include <RS.h>
 
 
-#define CLARISSE_SINK 1
+#define CLARISSE_SINK 0
 
 
 bool
