@@ -40,9 +40,3 @@ target_link_libraries (layer_r2c_scene
         ${CLARISSE_IX_OF_LIBRARY}
         ${CLARISSE_IX_RESOURCE_LIBRARY}
 )
-
-# patch a few things needed on Windows to allow building r2c in Debug while still
-# working correctly with the release version of Clarisse.
-# (in the future this will be done by the add_clarisse_module helper function)
-target_compile_definitions (layer_r2c_scene PRIVATE $<$<PLATFORM_ID:Windows>:NDEBUG>)
-target_compile_options (layer_r2c_scene PRIVATE $<$<PLATFORM_ID:Windows>:/MD>)

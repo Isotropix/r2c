@@ -51,13 +51,3 @@ target_link_libraries(ix_r2c
         ${CLARISSE_IX_OF_LIBRARY}
         ${CLARISSE_IX_SYS_LIBRARY}
 )
-
-# small fix for a bug in our helper add_clarisse_library function which will install the runtime libs
-# in a lib subdirectory of the install prefix, whereas we want it in the install prefix directly.
-install (TARGETS ix_r2c DESTINATION .)
-
-# patch a few things needed on Windows to allow building r2c in Debug while still
-# working correctly with the release version of Clarisse.
-# (in the future this will be done by the add_clarisse_module helper function)
-target_compile_definitions (ix_r2c PRIVATE $<$<PLATFORM_ID:Windows>:NDEBUG>)
-target_compile_options (ix_r2c PRIVATE $<$<PLATFORM_ID:Windows>:/MD>)
