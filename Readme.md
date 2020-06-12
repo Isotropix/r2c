@@ -17,7 +17,7 @@ described in the [license](./License.txt).
 
 - `docs`: Documentation folder (will be generated, see Builds instructions)
 - `r2c`: Helper library, stands for "your Renderer to Clarisse"
-- `module.renderer.base`: Base module needed for integration of renderers into Clarisse.
+- `module.layer.r2c.scene`: Base Clarisse image layer specialized for R2c compliant scene/renderers.
 - `module.redshift`: Example integration of the Redshift renderer into Clarisse, using the 2 previous folders.
 
 More information is available once the documentation has been built. See next section.
