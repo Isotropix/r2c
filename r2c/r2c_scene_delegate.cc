@@ -90,6 +90,7 @@ R2cSceneDelegate::R2cSceneDelegate() : EventObject(),
                                                  m_camera(nullptr),
                                                  m_geometries(nullptr),
                                                  m_lights(nullptr),
+	                                             m_override_material(nullptr),
                                                  m_shading_layer(nullptr),
                                                  m_shading_table(nullptr)
 {
@@ -119,7 +120,7 @@ R2cSceneDelegate::set_input(OfObject **m_input, OfObject *new_input, const CoreS
                 dirty_geometry_index();
             } else if (*m_input == m_lights) {
                 dirty_light_index();
-            } else if (*m_input == m_shading_layer) {
+            } else if (*m_input == m_override_material || *m_input == m_shading_layer) {
                 dirty_shading();
             }
         }
@@ -133,7 +134,9 @@ R2cSceneDelegate::set_input(OfObject **m_input, OfObject *new_input, const CoreS
                     connect(*new_input->get_module(), EVT_ID_MODULE_GROUP_VISIBILITY, EVENT_INFO_METHOD(R2cSceneDelegate::on_geometries_group_update));
                 } else if (*m_input == m_lights) {
                     connect(*new_input->get_module(), EVT_ID_MODULE_GROUP_VISIBILITY, EVENT_INFO_METHOD(R2cSceneDelegate::on_lights_group_update));
-                } else if (*m_input == m_shading_layer) {
+                } else if (*m_input == m_override_material) {
+					dirty_shading();
+				} else if (*m_input == m_shading_layer) {
                     dirty_shading();
                     connect(*new_input, EVT_ID_OF_OBJECT_ATTR_CHANGE, EVENT_INFO_METHOD(R2cSceneDelegate::dispatch_shading_layer_dirtiness));
                 }
@@ -365,7 +368,7 @@ R2cSceneDelegate::get_shading_group_info(R2cItemId id, const unsigned int& shadi
             ShadingGroupLinks sg_links;
             CtxHelpers::get_shading(m_shading_table, GeometrySource(*scene_object_index, scene_object), shading_group_id, sg_links);
 
-            ModuleMaterial *material_module = sg_links.get_material();
+            ModuleMaterial *material_module = m_override_material ? static_cast<ModuleMaterial *>(m_override_material->get_module()) : sg_links.get_material();
             ModuleDisplacement *displacement_module = sg_links.get_displacement();
             ModuleTexture *clip_map_module = sg_links.get_clip_map();
 

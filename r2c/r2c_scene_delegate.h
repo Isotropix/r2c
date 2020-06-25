@@ -71,6 +71,14 @@ public:
     /*! \brief Returns the group defining the lights of the scene. */
     inline R2cItemDescriptor get_lights() const { return get_item_descriptor(m_lights);}
 
+	/*! \brief Sets the override material to define material that override all the materials of the scene
+	\param override_material defines the material that override all the materials of the scene
+	\note The input must inherit from Material otherwise the override material is set to nullptr */
+	inline void set_override_material(OfObject *override_material) { set_input(&m_override_material, override_material, "Material"); }
+
+	/*! \brief Returns the associated override material. */
+	inline R2cItemDescriptor get_override_material() const { return get_item_descriptor(m_override_material);}
+
     /*! \brief Sets the shading layer to define material association override
         \param shading_layer defines the shading layer that defines material association
         \note The input must inherit from ShadingLayer otherwise the shading layer is set to nullptr */
@@ -193,6 +201,7 @@ private:
     OfObject *m_camera;
     OfObject *m_geometries;
     OfObject *m_lights;
+	OfObject *m_override_material;
     OfObject *m_shading_layer;
 
     // define all items dependencies used by the renderer (geometries, lights, prototypes)
