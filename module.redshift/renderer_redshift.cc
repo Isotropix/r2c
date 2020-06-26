@@ -10,11 +10,17 @@
 
 #include "renderer_redshift.cma"
 
+#if ISOTROPIX_VERSION_NUMBER >= IX_BUILD_VERSION_NUMBER(4, 0, 2, 0, 0, 0)
+#define MODULE_CLASS OfModule
+#else
+#define MODULE_CLASS ModuleObject
+#endif
+
 IX_BEGIN_DECLARE_MODULE_CALLBACKS(ModuleRendererRedshift, ModuleObjectCallbacks)
-    static ModuleObject *declare_module(OfObject& object, OfObjectFactory& objects);
+    static MODULE_CLASS *declare_module(OfObject& object, OfObjectFactory& objects);
 IX_END_DECLARE_MODULE_CALLBACKS(ModuleRendererRedshift)
 
-ModuleObject *
+MODULE_CLASS *
 IX_MODULE_CLBK::declare_module(OfObject& object, OfObjectFactory& objects)
 {
     ModuleRendererRedshift *settings = new ModuleRendererRedshift;

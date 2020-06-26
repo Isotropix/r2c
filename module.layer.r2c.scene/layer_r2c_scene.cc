@@ -13,6 +13,16 @@
 
 #include "layer_r2c_scene.cma"
 
+#if ISOTROPIX_VERSION_NUMBER >= IX_BUILD_VERSION_NUMBER(4, 0, 2, 0, 0, 0)
+#define MODULE_CLASS  OfModule
+#define QUALITY       ModuleImageQuality
+#define QUALITY_LEVEL ModuleImageQuality::Level
+#else
+#define MODULE_CLASS  ModuleObject
+#define QUALITY       ModuleImage
+#define QUALITY_LEVEL ModuleImage::Quality
+#endif
+
 static ImageCanvas *
 get_null_image()
 {
@@ -21,12 +31,12 @@ get_null_image()
 }
 
 IX_BEGIN_DECLARE_MODULE_CALLBACKS(ModuleLayerR2CScene, ModuleLayerR2cSceneCallbacks)
-static const ImageCanvas *get_image(OfObject& object, const ModuleImage::Quality& quality, const GMathVec4f* region);
-static ModuleObject *declare_module(OfObject& object, OfObjectFactory& objects);
-static bool destroy_module(OfObject& object, OfObjectFactory& objects, ModuleObject *module);
+static const ImageCanvas *get_image(OfObject& object, const QUALITY_LEVEL& quality, const GMathVec4f* region);
+static MODULE_CLASS *declare_module(OfObject& object, OfObjectFactory& objects);
+static bool destroy_module(OfObject& object, OfObjectFactory& objects, MODULE_CLASS *module);
 IX_END_DECLARE_MODULE_CALLBACKS(ModuleLayerR2CScene)
 
-ModuleObject*
+MODULE_CLASS *
 IX_MODULE_CLBK::declare_module(OfObject& object, OfObjectFactory& objects)
 {
     ModuleLayerR2cScene *layer = new ModuleLayerR2cScene();
@@ -35,14 +45,14 @@ IX_MODULE_CLBK::declare_module(OfObject& object, OfObjectFactory& objects)
 }
 
 bool
-IX_MODULE_CLBK::destroy_module(OfObject& object, OfObjectFactory& objects, ModuleObject *module)
+IX_MODULE_CLBK::destroy_module(OfObject& object, OfObjectFactory& objects, MODULE_CLASS *module)
 {
     delete static_cast<ModuleLayerR2cScene *>(module);
     return true;
 }
 
 const ImageCanvas *
-IX_MODULE_CLBK::get_image(OfObject& object, const ModuleImage::Quality& quality, const GMathVec4f *region)
+IX_MODULE_CLBK::get_image(OfObject& object, const QUALITY_LEVEL& quality, const GMathVec4f *region)
 {
     ModuleLayerR2cScene *layer = static_cast<ModuleLayerR2cScene *>(object.get_module());
     R2cSceneDelegate *scene = layer->get_scene_delegate();
@@ -53,11 +63,11 @@ IX_MODULE_CLBK::get_image(OfObject& object, const ModuleImage::Quality& quality,
 
         ModuleImage *parent_image = layer->get_parent_image();
         OfAttr *quality_attr = parent_image->get_object()->get_attribute("sampling_quality");
-        const double iq = ModuleImage::get_quality_level(quality);
+        const double iq = QUALITY::get_quality_level(quality);
         const double sq =  quality_attr == nullptr ? 1.0 : quality_attr->get_double();
         float sampling_quality = static_cast<float>(sq * iq * iq);
 
-        if (quality != ModuleImage::Quality::QUALITY_FULL) {
+        if (quality != QUALITY_LEVEL::QUALITY_FULL) {
             sampling_quality = 0.0;
         }
 
