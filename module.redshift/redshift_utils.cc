@@ -931,12 +931,12 @@ RedshiftUtils::is_initialized()
 
 // converts a Redshift parameter to a Clarisse attribute
 bool
-get_attribute_definition(const RSShaderInputParamInfo& input,
+get_attribute_definition(const EGUIShaderParamType& rs_type,
                          OfAttr::Type& type,
                          OfAttr::Container& container,
                          OfAttr::VisualHint& hint, unsigned int& size)
 {
-    switch (input.GetGUIType()) {
+    switch (rs_type) {
         // Basic types
         case RS_GUISHADERPARAMTYPE_COLOR_RGB:       // RSColor
             type = OfAttr::TYPE_DOUBLE;
@@ -1032,7 +1032,7 @@ register_attribute(OfClass& cls, const RSShaderInputParamInfo *input, const Core
     OfAttr::VisualHint hint;
     unsigned int size;
 
-    if (get_attribute_definition(*input, type, container, hint, size)) {
+    if (get_attribute_definition(input->GetGUIType(), type, container, hint, size)) {
 
         OfAttr *attr = cls.attribute_exists(input->GetInternalName());
         if (attr == nullptr) {
@@ -1125,12 +1125,41 @@ register_attributes(OfClass& cls, const RSShaderGUIInfo& shader)
     }
 }
 
+void
+register_output(OfClass& cls, const RSShaderOutputParamInfo *output)
+{
+	OfAttr::Type type;
+	OfAttr::Container container;
+	OfAttr::VisualHint hint;
+	unsigned int size;
+
+	if (get_attribute_definition(output->GetGUIType(), type, container, hint, size)) {
+		const OfOutput* plug = cls.output_exists(output->GetInternalName());
+		if (plug == nullptr) {
+			cls.add_output(output->GetInternalName(), type, size, hint);
+		} else {
+			LOG_WARNING("Failed to add " << cls.get_name() << "::" << output->GetInternalName() << " since it already exists!\n");
+		}
+	} // else unsupported
+}
+
+void
+register_outputs(OfClass& cls, const RSShaderGUIInfo& shader)
+{
+	for (unsigned int i = 0; i < shader.GetNumOutputParameters(); i++) {
+		if (const RSShaderOutputParamInfo *output = shader.GetOutputParameterInfo(i)) {
+			register_output(cls, output);
+		}
+	}
+}
+
 bool
 register_shader(OfApp& application, OfClass& redshift_class, const CoreString& new_class, const RSShaderGUIInfo& shader)
 {
     OfClass *cls = application.get_factory().get_classes().add(new_class, redshift_class.get_name());
     cls->set_callbacks(redshift_class.get_callbacks());
     register_attributes(*cls, shader);
+	register_outputs(*cls, shader);
     return true;
 }
 
@@ -1352,56 +1381,74 @@ RedshiftUtils::on_attribute_change(RSShaderNode& shader, const OfAttr& attr, int
     unsigned int idx = shader.GetParameterIndex(name);
     shader.BeginUpdate();
 
-    switch (attr.get_visual_hint()) {
-        case OfAttr::VISUAL_HINT_RGB:
-            if (attr.is_textured()) {
-                shader.SetParameterNode(idx, get_texture(attr));
-            } else {
-                shader.SetParameterData(idx, get_color3(attr));
-            }
-            break;
-        case OfAttr::VISUAL_HINT_RGBA:
-            if (attr.is_textured()) {
-                shader.SetParameterNode(idx, get_texture(attr));
-            } else {
-                shader.SetParameterData(idx, get_color4(attr));
-            }
-            break;
-        case OfAttr::VISUAL_HINT_DEFAULT:
-            switch (attr.get_type()) {
-                case OfAttr::TYPE_BOOL:
-                    shader.SetParameterData(idx, get_bool(attr));
-                    break;
-                case OfAttr::TYPE_LONG:
-                    if (attr.get_value_count() == 4) {
-                        shader.SetParameterData(idx, get_uint4(attr));
-                    } else {
-                        shader.SetParameterData(idx, get_int(attr));
-                    }
-                    break;
-                case OfAttr::TYPE_DOUBLE:
-                    switch (attr.get_value_count()) {
-                        case 2:
-                            shader.SetParameterData(idx, get_vec2(attr));
-                            break;
-                        case 3:
-                            shader.SetParameterData(idx, get_vec3(attr));
-                            break;
-                        case 4:
-                            shader.SetParameterData(idx, get_vec4(attr));
-                            break;
-                        default:
-                            shader.SetParameterData(idx, get_float(attr));
-                            break;
-                    }
-                    break;
-                case OfAttr::TYPE_STRING:
-                    shader.SetParameterData(idx, get_string(attr));
-                    break;
-                default: break;
-            }
-            break;
-        default: break;
-    }
+	unsigned int plug_idx;
+	if (OfObject* object_bound = attr.get_output_binding(plug_idx, false)) {
+		// If an OfOutput is connected to this attribute, we only have to use Redshift to get its value,
+		// and to set it to the current input parameter (corresponding to the current attribute)
+		if (object_bound->get_module()->is_kindof(ModuleTextureRedshift::class_info())) {
+			ModuleTextureRedshift *texture = static_cast<ModuleTextureRedshift *>(object_bound->get_module());
+			RSShaderNode *shader_bound = texture->get_shader();
+			const OfOutput *output = object_bound->get_output(plug_idx);
+			shader.SetParameterNode(idx, shader_bound, output->get_name().get_data());
+		} else {
+			LOG_WARNING("RedshiftUtils.on_attribute_change: OfOutput can only be connected into texturable attribute for now.");
+			return;
+		}
+	} else {
+		// If no OfOutput is connected to the current attribute, we have to translate Clarisse data into Redshift data
+		// and update the current input parameter (corresponding to the current attribute)
+		switch (attr.get_visual_hint()) {
+			case OfAttr::VISUAL_HINT_RGB:
+				if (attr.is_textured()) {
+					shader.SetParameterNode(idx, get_texture(attr));
+				} else {
+					shader.SetParameterData(idx, get_color3(attr));
+				}
+				break;
+			case OfAttr::VISUAL_HINT_RGBA:
+				if (attr.is_textured()) {
+					shader.SetParameterNode(idx, get_texture(attr));
+				} else {
+					shader.SetParameterData(idx, get_color4(attr));
+				}
+				break;
+			case OfAttr::VISUAL_HINT_DEFAULT:
+				switch (attr.get_type()) {
+					case OfAttr::TYPE_BOOL:
+						shader.SetParameterData(idx, get_bool(attr));
+						break;
+					case OfAttr::TYPE_LONG:
+						if (attr.get_value_count() == 4) {
+							shader.SetParameterData(idx, get_uint4(attr));
+						} else {
+							shader.SetParameterData(idx, get_int(attr));
+						}
+						break;
+					case OfAttr::TYPE_DOUBLE:
+						switch (attr.get_value_count()) {
+							case 2:
+								shader.SetParameterData(idx, get_vec2(attr));
+								break;
+							case 3:
+								shader.SetParameterData(idx, get_vec3(attr));
+								break;
+							case 4:
+								shader.SetParameterData(idx, get_vec4(attr));
+								break;
+							default:
+								shader.SetParameterData(idx, get_float(attr));
+								break;
+						}
+						break;
+					case OfAttr::TYPE_STRING:
+						shader.SetParameterData(idx, get_string(attr));
+						break;
+					default: break;
+				}
+				break;
+			default: break;
+		}
+	}
+
     shader.EndUpdate();
 }
