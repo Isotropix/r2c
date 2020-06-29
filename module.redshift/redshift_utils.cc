@@ -1170,7 +1170,8 @@ void register_shaders(OfApp& application)
 //                        register_shader(application, *redshift_light, cls_name, *shader, deprecated_lights);
 //                    }
 //                    break;
-                case RS_GUISHADERTYPE_TEXTURE:
+				case RS_GUISHADERTYPE_TEXTURE:
+				case RS_GUISHADERTYPE_UTILITY:
                     if (redshift_texture != nullptr) {
                         cls_name = ModuleTextureRedshift::mangle_class(shader->GetName());
                         register_shader(application, *redshift_texture, cls_name, *shader);
