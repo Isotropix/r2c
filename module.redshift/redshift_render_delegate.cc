@@ -297,8 +297,8 @@ RedshiftRenderDelegate::clear()
             RS_MeshInstance_Delete(geo.ptr);
         }
         m->geometries.index.remove_all();
-        m->geometries.removed.clear();
-        m->geometries.inserted.clear();
+        m->geometries.removed.remove_all();
+        m->geometries.inserted.remove_all();
         m->geometries.dirty = R2cSceneDelegate::DIRTINESS_ALL;
         m->scene->ClearInstanceMaterialOverrides();
         m->scene->ClearMeshInstances();
@@ -316,15 +316,15 @@ RedshiftRenderDelegate::clear()
         }
         m->scene->ClearMeshPointClouds(); // not really necessary since we called ClearMeshes()
         m->instancers.index.remove_all();
-        m->instancers.removed.clear();
-        m->instancers.inserted.clear();
+        m->instancers.removed.remove_all();
+        m->instancers.inserted.remove_all();
         m->instancers.dirty = R2cSceneDelegate::DIRTINESS_ALL;
 
         // clearing lights
         for (auto light : m->lights.index) RS_Light_Delete(light.get_value().ptr);
         m->lights.index.remove_all();
-        m->lights.removed.clear();
-        m->lights.inserted.clear();
+        m->lights.removed.remove_all();
+        m->lights.inserted.remove_all();
         m->lights.dirty = R2cSceneDelegate::DIRTINESS_ALL;
         m->scene->ClearLights();
 
