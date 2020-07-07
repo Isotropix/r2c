@@ -1203,7 +1203,7 @@ register_output(OfClass& cls, const RSShaderOutputParamInfo *output)
 void
 register_outputs(OfClass& cls, const RSShaderGUIInfo& shader)
 {
-	for (unsigned int i = 0; i < shader.GetNumOutputParameters(); i++) {
+	for (int i = 0; i < shader.GetNumOutputParameters(); i++) {
 		if (const RSShaderOutputParamInfo *output = shader.GetOutputParameterInfo(i)) {
 			register_output(cls, output);
 		}
