@@ -204,7 +204,7 @@ inline void SetVertexData(void *vtx_data_struct, unsigned int attribute_byte_off
 RSMesh *
 RedshiftUtils::CreatePolymesh(const PolyMesh& polymesh, RSMaterial *material)
 {
-    const unsigned int attribute_count = 2;
+    const unsigned int attribute_count = 3;
     const unsigned int material_count = polymesh.get_shading_group_names().get_count();
 
     RSMesh *mesh = RS_Mesh_New(get_new_unique_name("GeometrySmoothed").get_data());
@@ -222,12 +222,17 @@ RedshiftUtils::CreatePolymesh(const PolyMesh& polymesh, RSMaterial *material)
 
     const unsigned int positionStreamOriginalIndex = 0;
     const unsigned int normalStreamOriginalIndex = 1;
-    //const unsigned int uv0StreamOriginalIndex = 2;
+    const unsigned int uv0StreamOriginalIndex = 2;
 
     pMyVertexFormatData->SetAttributeDefinition(positionStreamOriginalIndex, "RS_ATTRIBUTETYPE_FLOAT3", "RS_ATTRIBUTEUSAGETYPE_POSITION", "<<position>>");
     pMyVertexFormatData->SetAttributeDefinition(normalStreamOriginalIndex, "RS_ATTRIBUTETYPE_NORMAL", "RS_ATTRIBUTEUSAGETYPE_NORMAL", "<<normal>>");
+	// Note : For now, we only support one UV map per mesh, it can be easily extended to support multiple UV maps
+	pMyVertexFormatData->SetAttributeDefinition(uv0StreamOriginalIndex, "RS_ATTRIBUTETYPE_FLOAT2", "RS_ATTRIBUTEUSAGETYPE_TEXCOORD", "uv0");			// requires 'AddVertexAttributeMeshAssociation' on shader node that is accessing this attribute stream, otherwise it can be optimized out (see notes above)
+	//pMyVertexFormatData->SetAttributeDefinition(uv0StreamOriginalIndex, "RS_ATTRIBUTETYPE_FLOAT2", "RS_ATTRIBUTEUSAGETYPE_TEXCOORD", "uv0", false);	// does not require 'AddVertexAttributeMeshAssociation' on shader node that is accessing this attribute stream
 
-    pMyVertexFormatData->FinalizeAttributeFormatAndAllocate(true, 1, false, mesh->GetName(), materials);
+	// Note : The first parameter is set to False, otherwise, the attribute for UVs seems to be always considered as unused and textures are not working ...
+	// If someone understand why it is not working and how to optimize it, feel free to set it to True and to update the code accordingly
+    pMyVertexFormatData->FinalizeAttributeFormatAndAllocate(false, 1, false, mesh->GetName(), materials);
 
     // Cache the re-mapped offsets into the finalized vertex data structure
     unsigned int vtx_attr_offsets[attribute_count];
@@ -241,6 +246,7 @@ RedshiftUtils::CreatePolymesh(const PolyMesh& polymesh, RSMaterial *material)
 
     unsigned int p_offset = vtx_attr_offsets[positionStreamOriginalIndex];
     unsigned int n_offset= vtx_attr_offsets[normalStreamOriginalIndex];
+	unsigned int uv_offset= vtx_attr_offsets[uv0StreamOriginalIndex];
 
     CoreArray<GMathVec3f> vertices;
     CoreArray<unsigned int> polygon_vertex_ids;
@@ -254,14 +260,25 @@ RedshiftUtils::CreatePolymesh(const PolyMesh& polymesh, RSMaterial *material)
     polymesh.get_polygon_vertex_indices(polygon_vertex_ids);
     polymesh.get_polygon_shading_groups(polygon_shading_groups);
 
+	// Note : For now, we only support one UV map per mesh, it can be easily extended to support multiple UV maps
+	CoreArray<GMathVec3f> uvs;
+	CoreArray<unsigned int> uv_indices;
+	bool is_uv_defined = polymesh.get_uv_map_data(0, uvs, uv_indices);
+
     unsigned int offset = 0;
     unsigned int *ids;
 
     mesh->SetAttributesFormat(pMyVertexFormatData);
     mesh->BeginPrimitives(1);
 
-    char vtx_data[4][1024]; // temporary vertex buffer data
+	char vtx_data[4][1024]; // temporary vertex buffer data
+	unsigned int vidx = 0;
+
     for (unsigned int i = 0; i < polymesh.get_polygon_count(); i++) {
+		const unsigned int id0 = vidx;
+		const unsigned int id1 = vidx + 1;
+		const unsigned int id2 = vidx + 2;
+		const unsigned int id3 = vidx + 3;
         ids = &polygon_vertex_ids[offset];
 
         if (polygon_vertex_count[i] == 3) {
@@ -272,6 +289,12 @@ RedshiftUtils::CreatePolymesh(const PolyMesh& polymesh, RSMaterial *material)
             SetVertexData(vtx_data[0], n_offset, RSNormal(ptc->get_normal(ids[0])[0], ptc->get_normal(ids[0])[1], -ptc->get_normal(ids[0])[2]));
             SetVertexData(vtx_data[1], n_offset, RSNormal(ptc->get_normal(ids[1])[0], ptc->get_normal(ids[1])[1], -ptc->get_normal(ids[1])[2]));
             SetVertexData(vtx_data[2], n_offset, RSNormal(ptc->get_normal(ids[2])[0], ptc->get_normal(ids[2])[1], -ptc->get_normal(ids[2])[2]));
+
+			if (uv_offset != 0xFFFF && is_uv_defined) {
+				SetVertexData(vtx_data[0], uv_offset, RSVector2(uvs[uv_indices[id0]][0], uvs[uv_indices[id0]][1]));
+				SetVertexData(vtx_data[1], uv_offset, RSVector2(uvs[uv_indices[id1]][0], uvs[uv_indices[id1]][1]));
+				SetVertexData(vtx_data[2], uv_offset, RSVector2(uvs[uv_indices[id2]][0], uvs[uv_indices[id2]][1]));
+			}
 
             mesh->AddTri(vtx_data[0], vtx_data[1], vtx_data[2],
                           0.0f, 0.0f, 0.0f, 0.0f,0.0f,0.0f,
@@ -288,10 +311,18 @@ RedshiftUtils::CreatePolymesh(const PolyMesh& polymesh, RSMaterial *material)
             SetVertexData(vtx_data[2], n_offset, RSNormal(ptc->get_normal(ids[2])[0], ptc->get_normal(ids[2])[1], -ptc->get_normal(ids[2])[2]));
             SetVertexData(vtx_data[3], n_offset, RSNormal(ptc->get_normal(ids[3])[0], ptc->get_normal(ids[3])[1], -ptc->get_normal(ids[3])[2]));
 
+			if (uv_offset != 0xFFFF && is_uv_defined) {
+				SetVertexData(vtx_data[0], uv_offset, RSVector2(uvs[uv_indices[id0]][0], uvs[uv_indices[id0]][1]));
+				SetVertexData(vtx_data[1], uv_offset, RSVector2(uvs[uv_indices[id1]][0], uvs[uv_indices[id1]][1]));
+				SetVertexData(vtx_data[2], uv_offset, RSVector2(uvs[uv_indices[id2]][0], uvs[uv_indices[id2]][1]));
+				SetVertexData(vtx_data[3], uv_offset, RSVector2(uvs[uv_indices[id3]][0], uvs[uv_indices[id3]][1]));
+			}
+
             mesh->AddQuad(vtx_data[0], vtx_data[1], vtx_data[2], vtx_data[3],
                           0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,0.0f,0.0f,
                           ids[0], ids[1], ids[2], ids[3], static_cast<unsigned short>(polygon_shading_groups[i]));
         }
+		vidx += polygon_vertex_count[i];
         offset += polygon_vertex_count[i];
     }
     mesh->CompactDataAndPrepareForRendering();
@@ -302,7 +333,7 @@ RedshiftUtils::CreatePolymesh(const PolyMesh& polymesh, RSMaterial *material)
 RSMesh *
 RedshiftUtils::CreateGeometryPolymesh(const GeometryObject& geometry, RSMaterial *material)
 {
-    const unsigned int attribute_count = 2;
+    const unsigned int attribute_count = 3;
     const unsigned int material_count = geometry.get_shading_group_names().get_count();
 
 
@@ -321,12 +352,17 @@ RedshiftUtils::CreateGeometryPolymesh(const GeometryObject& geometry, RSMaterial
 
     const unsigned int positionStreamOriginalIndex = 0;
     const unsigned int normalStreamOriginalIndex = 1;
-    //const unsigned int uv0StreamOriginalIndex = 2;
+    const unsigned int uv0StreamOriginalIndex = 2;
 
     pMyVertexFormatData->SetAttributeDefinition(positionStreamOriginalIndex, "RS_ATTRIBUTETYPE_FLOAT3", "RS_ATTRIBUTEUSAGETYPE_POSITION", "<<position>>");
     pMyVertexFormatData->SetAttributeDefinition(normalStreamOriginalIndex, "RS_ATTRIBUTETYPE_NORMAL", "RS_ATTRIBUTEUSAGETYPE_NORMAL", "<<normal>>");
+	// Note : For now, we only support one UV map per mesh, it can be easily extended to support multiple UV maps
+    pMyVertexFormatData->SetAttributeDefinition(uv0StreamOriginalIndex, "RS_ATTRIBUTETYPE_FLOAT2", "RS_ATTRIBUTEUSAGETYPE_TEXCOORD", "uv0");			// requires 'AddVertexAttributeMeshAssociation' on shader node that is accessing this attribute stream, otherwise it can be optimized out (see notes above)
+	//pMyVertexFormatData->SetAttributeDefinition(uv0StreamOriginalIndex, "RS_ATTRIBUTETYPE_FLOAT2", "RS_ATTRIBUTEUSAGETYPE_TEXCOORD", "uv0", false);	// does not require 'AddVertexAttributeMeshAssociation' on shader node that is accessing this attribute stream
 
-    pMyVertexFormatData->FinalizeAttributeFormatAndAllocate(true, 1, false, mesh->GetName(), materials);
+	// Note : The first parameter is set to False, otherwise, the attribute for UVs seems to be always considered as unused and textures are not working ...
+	// If someone understand why it is not working and how to optimize it, feel free to set it to True and to update the code accordingly
+    pMyVertexFormatData->FinalizeAttributeFormatAndAllocate(false, 1, false, mesh->GetName(), materials);
 
     // Cache the re-mapped offsets into the finalized vertex data structure
     unsigned int vtx_attr_offsets[attribute_count];
@@ -340,6 +376,7 @@ RedshiftUtils::CreateGeometryPolymesh(const GeometryObject& geometry, RSMaterial
 
     unsigned int p_offset = vtx_attr_offsets[positionStreamOriginalIndex];
     unsigned int n_offset= vtx_attr_offsets[normalStreamOriginalIndex];
+	unsigned int uv_offset= vtx_attr_offsets[uv0StreamOriginalIndex];
 
     mesh->SetAttributesFormat(pMyVertexFormatData);
     mesh->BeginPrimitives(1);
@@ -351,6 +388,11 @@ RedshiftUtils::CreateGeometryPolymesh(const GeometryObject& geometry, RSMaterial
 
     CoreArray<GMathVec3f> normals;
     CoreArray<unsigned int> normal_index;
+
+	// Note : For now, we only support one UV map per mesh, it can be easily extended to support multiple UV maps
+	CoreArray<GMathVec3f> uvs;
+	CoreArray<unsigned int> uv_indices;
+    bool is_uv_defined = geometry.get_uv_map_data(0, uvs, uv_indices);
 
     unsigned int offset = 0;
     unsigned int *ids;
@@ -388,6 +430,13 @@ RedshiftUtils::CreateGeometryPolymesh(const GeometryObject& geometry, RSMaterial
                 SetVertexData(vtx_data[1], n_offset, RSNormal(ptc->get_normal(ids[1])[0], ptc->get_normal(ids[1])[1], -ptc->get_normal(ids[1])[2]));
                 SetVertexData(vtx_data[2], n_offset, RSNormal(ptc->get_normal(ids[2])[0], ptc->get_normal(ids[2])[1], -ptc->get_normal(ids[2])[2]));
             }
+
+			if (uv_offset != 0xFFFF && is_uv_defined) {
+				SetVertexData(vtx_data[0], uv_offset, RSVector2(uvs[uv_indices[id0]][0], uvs[uv_indices[id0]][1]));
+				SetVertexData(vtx_data[1], uv_offset, RSVector2(uvs[uv_indices[id1]][0], uvs[uv_indices[id1]][1]));
+				SetVertexData(vtx_data[2], uv_offset, RSVector2(uvs[uv_indices[id2]][0], uvs[uv_indices[id2]][1]));
+			}
+
             mesh->AddTri(vtx_data[0], vtx_data[1], vtx_data[2],
                           0.0f, 0.0f, 0.0f, 0.0f,0.0f,0.0f,
                           ids[0], ids[1], ids[2], shading_group_id);
@@ -409,6 +458,14 @@ RedshiftUtils::CreateGeometryPolymesh(const GeometryObject& geometry, RSMaterial
                 SetVertexData(vtx_data[2], n_offset, RSNormal(ptc->get_normal(ids[2])[0], ptc->get_normal(ids[2])[1], -ptc->get_normal(ids[2])[2]));
                 SetVertexData(vtx_data[3], n_offset, RSNormal(ptc->get_normal(ids[3])[0], ptc->get_normal(ids[3])[1], -ptc->get_normal(ids[3])[2]));
             }
+
+			if (uv_offset != 0xFFFF && is_uv_defined) {
+				SetVertexData(vtx_data[0], uv_offset, RSVector2(uvs[uv_indices[id0]][0], uvs[uv_indices[id0]][1]));
+				SetVertexData(vtx_data[1], uv_offset, RSVector2(uvs[uv_indices[id1]][0], uvs[uv_indices[id1]][1]));
+				SetVertexData(vtx_data[2], uv_offset, RSVector2(uvs[uv_indices[id2]][0], uvs[uv_indices[id2]][1]));
+				SetVertexData(vtx_data[3], uv_offset, RSVector2(uvs[uv_indices[id3]][0], uvs[uv_indices[id3]][1]));
+			}
+
             mesh->AddQuad(vtx_data[0], vtx_data[1], vtx_data[2], vtx_data[3],
                           0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,0.0f,0.0f,
                           ids[0], ids[1], ids[2], ids[3], shading_group_id);
@@ -998,6 +1055,7 @@ get_attribute_definition(const EGUIShaderParamType& rs_type,
         case RS_GUISHADERPARAMTYPE_STRING:          // RSString
         case RS_GUISHADERPARAMTYPE_AOVNAME:         // RSString
         case RS_GUISHADERPARAMTYPE_LAYERNAME:       // RSString
+		case RS_GUISHADERPARAMTYPE_TEXTURE:
             type = OfAttr::TYPE_STRING;
             container = OfAttr::CONTAINER_SINGLE;
             hint = OfAttr::VISUAL_HINT_DEFAULT;
@@ -1015,7 +1073,6 @@ get_attribute_definition(const EGUIShaderParamType& rs_type,
         case RS_GUISHADERPARAMTYPE_COLORRAMP:       // RSCurve* (where curve type is RS_CURVETYPE_COLOR)
         case RS_GUISHADERPARAMTYPE_CAMERAPICKER:    // requires custom call-back code (a string or node picker in the GUI)
         case RS_GUISHADERPARAMTYPE_CURVE:           // RSCurve*
-        case RS_GUISHADERPARAMTYPE_TEXTURE:         // RSTexture*, RSUDIMTexture*, RSUVTILETexture* (a filename string in the GUI)
         case RS_GUISHADERPARAMTYPE_LIGHT:           // RSLight*
         case RS_GUISHADERPARAMTYPE_MATRIX4X4:       // RSMatrix4x4
         default:
@@ -1441,7 +1498,17 @@ RedshiftUtils::on_attribute_change(RSShaderNode& shader, const OfAttr& attr, int
 						}
 						break;
 					case OfAttr::TYPE_STRING:
-						shader.SetParameterData(idx, get_string(attr));
+						if (shader.IsParameterATexture(idx)) { // the attribute is a file path of a texture
+							RSTexture *texture = RS_Texture_Get(get_string(attr));
+							// Note : For now, we only support one UV map per mesh, it can be easily extended to support multiple UV maps
+							shader.AddVertexAttributeMeshAssociation( "tspace_id", "uv0" );
+							shader.SetParameterData(idx, texture);
+							// Textures are reference counted, so releasing it here after applying it to 'shader' will ensure it does not leak.
+							// It will then be automatically deleted when 'shader' is deleted.
+							RS_Texture_Release(texture);
+						} else { // the attribute is a simple string
+							shader.SetParameterData(idx, get_string(attr));
+						}
 						break;
 					default: break;
 				}
