@@ -1449,7 +1449,6 @@ RedshiftUtils::on_attribute_change(RSShaderNode& shader, const OfAttr& attr, int
 			shader.SetParameterNode(idx, shader_bound, output->get_name().get_data());
 		} else {
 			LOG_WARNING("RedshiftUtils.on_attribute_change: OfOutput can only be connected into texturable attribute for now.");
-			return;
 		}
 	} else {
 		// If no OfOutput is connected to the current attribute, we have to translate Clarisse data into Redshift data
