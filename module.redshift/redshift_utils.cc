@@ -1440,15 +1440,22 @@ RedshiftUtils::on_attribute_change(RSShaderNode& shader, const OfAttr& attr, int
 
 	unsigned int plug_idx;
 	if (OfObject* object_bound = attr.get_output_binding(plug_idx, false)) {
-		// If an OfOutput is connected to this attribute, we only have to use Redshift to get its value,
+		// If an OfOutput is connected to this attribute, we only have to use Redshift to get its value (if it is supported)
 		// and to set it to the current input parameter (corresponding to the current attribute)
+		const OfOutput *output = object_bound->get_output(plug_idx);
+		RSShaderNode *shader_bound = nullptr;
 		if (object_bound->get_module()->is_kindof(ModuleTextureRedshift::class_info())) {
 			ModuleTextureRedshift *texture = static_cast<ModuleTextureRedshift *>(object_bound->get_module());
-			RSShaderNode *shader_bound = texture->get_shader();
-			const OfOutput *output = object_bound->get_output(plug_idx);
+			shader_bound = texture->get_shader();
+		} else if (object_bound->get_module()->is_kindof(ModuleMaterialRedshift::class_info())) {
+			ModuleMaterialRedshift *material = static_cast<ModuleMaterialRedshift *>(object_bound->get_module());
+			shader_bound = material->get_material()->GetSurfaceShaderNodeGraph();
+		} 
+		if (shader_bound != nullptr) {
 			shader.SetParameterNode(idx, shader_bound, output->get_name().get_data());
 		} else {
-			LOG_WARNING("RedshiftUtils.on_attribute_change: OfOutput can only be connected into texturable attribute for now.");
+			LOG_WARNING("RedshiftUtils.on_attribute_change: The connection between the output " << output->get_full_name() << " and the attribute " << attr.get_full_name() <<
+						" can not be handled because only outputs of TextureRedshift amd MaterialRedshift are supported for now.");
 		}
 	} else {
 		// If no OfOutput is connected to the current attribute, we have to translate Clarisse data into Redshift data
