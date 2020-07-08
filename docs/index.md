@@ -134,6 +134,7 @@ The Redshift integration example is a prototype to serve as an example for rende
 - no displacement support
 - no *GeometryBundle* support (could be implemented like instancers)
 - no volume support
+- No support of multiple UV maps (pretty straight forward to implement)
 
 # Future work
 
@@ -152,6 +153,5 @@ color "diffuse" {
 - Change how Clarisse reports render progress so that it is completely driven by the renderer since it knows what's it current progress.
 - Create a new *Layer3d* abstract class that allows orbiting, picking items, drag and drop materials in the *Image View* so that renderer plugins could offer these features too.
 - Move `module.renderer.base` into the built-in Clarisse module an derive Clarisse *Renderer* *OfClass* from it.
-- Support of multiple UV maps (pretty straight forward)
 
 Copyright (c) 2020 Isotropix SAS. All rights reserved.
