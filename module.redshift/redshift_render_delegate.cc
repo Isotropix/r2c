@@ -364,13 +364,13 @@ RedshiftRenderDelegate::sync_camera(const unsigned int& w, const unsigned int& h
         // FIXME: need to support all types of compatible cameras
         m->camera->SetType("RS_CAMERA_TYPE_PERSPECTIVE");
 
-        double ratio = h / static_cast<double>(w), hfov, vfov;
-        // FIXME: FOV is only working in vertical. Need to investigate on Clarisse side.
-        cam->get_fovs(ratio, hfov, vfov);
+        float redshift_ratio = static_cast<float>(h) / static_cast<float>(w);
+		double clarisse_ratio = static_cast<double>(w) / static_cast<double>(h), hfov, vfov;
+        cam->get_fovs(clarisse_ratio, hfov, vfov);
 
         // We need to ensure all steps are cleared because the scene might be using transformation blur!
         for(unsigned int i=0; i< m->camera->GetNumTransformationSteps(); i++) {
-            m->camera->SetAspect(static_cast<float>(ratio), i); // height divided by width
+            m->camera->SetAspect(redshift_ratio, i); // height divided by width
             m->camera->SetNear(0.01f, i);
             m->camera->SetFar(100000.0f, i);
             m->camera->SetFOVOrOrthogonalHeight(gmath_radians(static_cast<float>(vfov)), true, i); // FOV to 90 degrees in radians. We want 90 degrees horizontal FOV, hence the false parameter.
