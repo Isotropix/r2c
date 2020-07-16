@@ -174,7 +174,7 @@ private:
     void insert_light(OfObject *light);
 
     void set_input(OfObject **m_input, OfObject *new_input, const CoreString& class_name);
-    void sync_index(OfObject *item, OfObjectIndex& index, const CoreVector<const OfClass *>& supported_classes, CoreVector<OfObject *>& added_items, CoreVector<OfObject *>& removed_items);
+    void sync_index(OfObject *item, OfObjectIndex& index, const CoreVector<const OfClass *>& supported_classes, const CoreVector<const OfClass *>& unsupported_classes, CoreVector<OfObject *>& added_items, CoreVector<OfObject *>& removed_items);
 
     /*!\brief Events method to react to scene changes */
     void on_input_destroyed(EventObject& sender, const EventInfo& evtid, void *data);
@@ -230,6 +230,14 @@ private:
         CoreVector<const OfClass *> geometries;
         CoreVector<const OfClass *> materials;
     } m_supported_classes;
+
+	// Clarisse classes not supported by the render delegate
+	struct {
+		CoreVector<const OfClass *> cameras;
+		CoreVector<const OfClass *> lights;
+		CoreVector<const OfClass *> geometries;
+		CoreVector<const OfClass *> materials;
+	} m_unsupported_classes;
 
     DECLARE_CLASS
 };

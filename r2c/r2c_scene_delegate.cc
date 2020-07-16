@@ -41,12 +41,14 @@ populate_supported_classes(CoreVector<const OfClass *>& supported_classes, const
 
 // used to return if speficied item class is supported by the render delegate
 bool
-is_class_supported(OfObject *item, const CoreVector<const OfClass *>& supported_classes)
+is_class_supported(OfObject *item, const CoreVector<const OfClass *>& supported_classes, const CoreVector<const OfClass *>& unsupported_classes)
 {
+	bool result = false;
     if (item != nullptr) {
-        for (auto cls : supported_classes) if (item->is_kindof(cls->get_name())) return true;
+        for (auto cls : supported_classes) result |= (item->is_kindof(cls->get_name()));
+		for (auto cls : unsupported_classes) result &= (!item->is_kindof(cls->get_name()));
     }
-    return false;
+    return result;
 }
 
 // used to resolve the dependencies of instancers and add them to the dependency index
@@ -373,7 +375,7 @@ R2cSceneDelegate::get_shading_group_info(R2cItemId id, const unsigned int& shadi
             ModuleTexture *clip_map_module = sg_links.get_clip_map();
 
             // making sure a supported material is assigned
-            if (material_module != nullptr && is_class_supported(material_module->get_object(), m_supported_classes.materials)) {
+            if (material_module != nullptr && is_class_supported(material_module->get_object(), m_supported_classes.materials, m_unsupported_classes.materials)) {
                 OfObject *material = material_module->get_object();
                 shading_group_info.m_material.set_id(material);
                 shading_group_info.m_material.set_full_name(material->get_full_name());
@@ -381,7 +383,7 @@ R2cSceneDelegate::get_shading_group_info(R2cItemId id, const unsigned int& shadi
             }
 
             // making sure a supported displacement is assigned
-            if (displacement_module != nullptr && is_class_supported(displacement_module->get_object(), m_supported_classes.materials)) {
+            if (displacement_module != nullptr && is_class_supported(displacement_module->get_object(), m_supported_classes.materials, m_unsupported_classes.materials)) {
                 OfObject *displacement = displacement_module->get_object();
                 shading_group_info.m_displacement.set_id(displacement);
                 shading_group_info.m_displacement.set_full_name(displacement->get_full_name());
@@ -389,7 +391,7 @@ R2cSceneDelegate::get_shading_group_info(R2cItemId id, const unsigned int& shadi
             }
 
             // making sure a supported clip map texture is assigned
-            if (clip_map_module != nullptr && is_class_supported(clip_map_module->get_object(), m_supported_classes.materials)) {
+            if (clip_map_module != nullptr && is_class_supported(clip_map_module->get_object(), m_supported_classes.materials, m_unsupported_classes.materials)) {
                 OfObject *clip_map = clip_map_module->get_object();
                 shading_group_info.m_clip_map.set_id(clip_map);
                 shading_group_info.m_clip_map.set_full_name(clip_map->get_full_name());
@@ -478,6 +480,7 @@ void
 R2cSceneDelegate::sync_index(OfObject *item,
                                     OfObjectIndex& index,
                                     const CoreVector<const OfClass *>& supported_classes,
+							        const CoreVector<const OfClass *>& unsupported_classes,
                                     CoreVector<OfObject *>& added_items,
                                     CoreVector<OfObject *>& removed_items)
 {
@@ -490,7 +493,7 @@ R2cSceneDelegate::sync_index(OfObject *item,
     group->get_updated_objects(new_items);
 
     for (auto item : new_items) {
-        if (is_class_supported(item, supported_classes)) {
+        if (is_class_supported(item, supported_classes, unsupported_classes)) {
             // value is true is the item is still alive!
             bool *value = index.is_key_exists(item);
             if (value == nullptr) { // this is a new item that wasn't in our index
@@ -533,7 +536,7 @@ R2cSceneDelegate::sync()
     CoreVector<OfObject *> removed;
     // check if our geometries list is dirty, otherwise there's nothing to do
     if (m_geometry_index_dirty) {
-        sync_index(m_geometries, m_geometry_index, m_supported_classes.geometries, inserted, removed);
+        sync_index(m_geometries, m_geometry_index, m_supported_classes.geometries, m_unsupported_classes.geometries, inserted, removed);
         // setting geometries map dirtiness to false since we just synched
         m_geometry_index_dirty = false;
 
@@ -552,7 +555,7 @@ R2cSceneDelegate::sync()
 
     // check if our light index is dirty, otherwise there's nothing to do
     if (m_light_index_dirty) {
-        sync_index(m_lights, m_light_index, m_supported_classes.lights, inserted, removed);
+        sync_index(m_lights, m_light_index, m_supported_classes.lights, m_unsupported_classes.lights, inserted, removed);
         // setting lights map dirtiness to false since we just synched
         m_light_index_dirty = false;
 
@@ -758,10 +761,19 @@ R2cSceneDelegate::set_render_delegate(R2cRenderDelegate *render_delegate)
             // clear ourselves so we can repopulate ourselfves to the new delegate during sync
             clear();
             // populate supported class with the new render delegate
-            populate_supported_classes(m_supported_classes.lights, *render_delegate, render_delegate->get_supported_lights(), get_application());
-            populate_supported_classes(m_supported_classes.materials, *render_delegate, render_delegate->get_supported_materials(), get_application());
-            populate_supported_classes(m_supported_classes.geometries, *render_delegate, render_delegate->get_supported_geometries(), get_application());
-            populate_supported_classes(m_supported_classes.cameras, *render_delegate, render_delegate->get_supported_cameras(), get_application());
+			CoreVector<CoreString> supported_classes, unsupported_classes;
+			render_delegate->get_supported_lights(supported_classes, unsupported_classes);
+            populate_supported_classes(m_supported_classes.lights, *render_delegate, supported_classes, get_application());
+			populate_supported_classes(m_unsupported_classes.lights, *render_delegate, unsupported_classes, get_application());
+			render_delegate->get_supported_materials(supported_classes, unsupported_classes);
+            populate_supported_classes(m_supported_classes.materials, *render_delegate, supported_classes, get_application());
+			populate_supported_classes(m_unsupported_classes.materials, *render_delegate, unsupported_classes, get_application());
+			render_delegate->get_supported_geometries(supported_classes, unsupported_classes);
+            populate_supported_classes(m_supported_classes.geometries, *render_delegate, supported_classes, get_application());
+			populate_supported_classes(m_unsupported_classes.geometries, *render_delegate, unsupported_classes, get_application());
+			render_delegate->get_supported_cameras(supported_classes, unsupported_classes);
+            populate_supported_classes(m_supported_classes.cameras, *render_delegate, supported_classes, get_application());
+			populate_supported_classes(m_unsupported_classes.cameras, *render_delegate, unsupported_classes, get_application());
         }
         m_render_delegate = render_delegate;
     } // else nothing to do since it's the same

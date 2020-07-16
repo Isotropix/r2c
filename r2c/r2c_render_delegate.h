@@ -84,21 +84,29 @@ public:
     virtual float get_render_progress() const = 0;
 
     /*! \brief Return the names of the clarisse camera classes supported by the render delegate
+	 *  \param supported_cameras The list of camera classes supported by the renderer
+	 *  \param unsupported_cameras The list of camera classes not supported by the renderer
      *  \note  Items for unsupported classes are simply skipped and not passed to the render delegate.
-     *  Instead of specifying many classes, you can specify a base class to support children if applies. */
-    virtual CoreVector<CoreString> get_supported_cameras() const = 0;
+     *  Instead of specifying many classes, you can specify a base class as supported and optionally some of its children as unsupported. */
+	virtual void get_supported_cameras(CoreVector<CoreString>& supported_cameras, CoreVector<CoreString>& unsupported_cameras) const = 0;
     /*! \brief Return the names of the clarisse light classes supported by the render delegate
+	 *  \param supported_lights The list of light classes supported by the renderer
+	 *  \param unsupported_lights The list of light classes not supported by the renderer
      *  \note  The scene descriptor is synched prior the render call.
-     *  Instead of specifying many classes, you can specify a base class to support children if applies. */
-    virtual CoreVector<CoreString> get_supported_lights() const = 0;
+     *  Instead of specifying many classes, you can specify a base class as supported and optionally some of its children as unsupported. */
+	virtual void get_supported_lights(CoreVector<CoreString>& supported_lights, CoreVector<CoreString>& unsupported_lights) const = 0;
     /*! \brief Return the names of the clarisse material classes supported by the render delegate
+	 *  \param supported_materials The list of material classes supported by this renderer
+	 *  \param unsupported_materials The list of material classes not supported by this renderer
      *  \note  The scene descriptor is synched prior the render call.
-     *  Instead of specifying many classes, you can specify a base class to support children if applies. */
-    virtual CoreVector<CoreString> get_supported_materials() const = 0;
+     *  Instead of specifying many classes, you can specify a base class as supported and optionally some of its children as unsupported. */
+	virtual void get_supported_materials(CoreVector<CoreString>& supported_materials, CoreVector<CoreString>& unsupported_materials) const = 0;
     /*! \brief Return the names of the clarisse geometry classes supported by the render delegate
+	 *  \param supported_geometries The list of geometry classes supported by this renderer
+	 *  \param unsupported_geometries The list of geometry classes not supported by this renderer
      *  \note  The scene descriptor is synched prior the render call.
-     *  Instead of specifying many classes, you can specify a base class to support children if applies. */
-    virtual CoreVector<CoreString> get_supported_geometries() const = 0;
+     *  Instead of specifying many classes, you can specify a base class as supported and optionally some of its children as unsupported. */
+	virtual void get_supported_geometries(CoreVector<CoreString>& supported_geometries, CoreVector<CoreString>& unsupported_geometries) const = 0;
 
     /*! \brief Return the scene delegate associated to the render delegate */
     const R2cSceneDelegate *get_scene_delegate() const { return m_scene_delegate; }

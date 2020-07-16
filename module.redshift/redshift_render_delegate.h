@@ -51,12 +51,21 @@ public:
     void render(R2cRenderBuffer *render_buffer, const float& sampling_quality) override;
     float get_render_progress() const override;
 
-    CoreVector<CoreString> get_supported_cameras() const override;
-    CoreVector<CoreString> get_supported_lights() const override;
-    CoreVector<CoreString> get_supported_materials() const override;
-    CoreVector<CoreString> get_supported_geometries() const override;
+    void get_supported_cameras(CoreVector<CoreString>& supported_cameras, CoreVector<CoreString>& unsupported_cameras) const override;
+    void get_supported_lights(CoreVector<CoreString>& supported_lights, CoreVector<CoreString>& unsupported_lights) const override;
+    void get_supported_materials(CoreVector<CoreString>& supported_materials, CoreVector<CoreString>& unsupported_materials) const override;
+    void get_supported_geometries(CoreVector<CoreString>& supported_geometries, CoreVector<CoreString>& unsupported_geometries) const override;
 
     void clear() override;
+
+	static const CoreVector<CoreString> s_supported_cameras;
+	static const CoreVector<CoreString> s_unsupported_cameras;
+	static const CoreVector<CoreString> s_supported_lights;
+	static const CoreVector<CoreString> s_unsupported_lights;
+	static const CoreVector<CoreString> s_supported_materials;
+	static const CoreVector<CoreString> s_unsupported_materials;
+	static const CoreVector<CoreString> s_supported_geometries;
+	static const CoreVector<CoreString> s_unsupported_geometries;
 
 private:
 

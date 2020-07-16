@@ -81,6 +81,15 @@ public:
 
 IMPLEMENT_CLASS(RedshiftRenderDelegate, R2cRenderDelegate);
 
+const CoreVector<CoreString> RedshiftRenderDelegate::s_supported_cameras      = { "CameraAlembic", "CameraUsd", "CameraPerspective", "CameraPerspectiveAdvanced"};
+const CoreVector<CoreString> RedshiftRenderDelegate::s_unsupported_cameras    = {};
+const CoreVector<CoreString> RedshiftRenderDelegate::s_supported_lights       = { "LightPhysicalDistant", "LightPhysicalSphere" }; // lights are not really supported right now
+const CoreVector<CoreString> RedshiftRenderDelegate::s_unsupported_lights     = {};
+const CoreVector<CoreString> RedshiftRenderDelegate::s_supported_materials    = { "MaterialRedshift" }; // we only support redshift materials
+const CoreVector<CoreString> RedshiftRenderDelegate::s_unsupported_materials  = {};
+const CoreVector<CoreString> RedshiftRenderDelegate::s_supported_geometries   = { "SceneObject" };
+const CoreVector<CoreString> RedshiftRenderDelegate::s_unsupported_geometries = { "GeometryVolume", "GeometryFur", "GeometryBundle", "GeometrySphere", "GeometryCylinder" };
+
 RedshiftRenderDelegate::RedshiftRenderDelegate() : R2cRenderDelegate()
 {
     m = new RSDelegateImpl;
@@ -778,44 +787,31 @@ RedshiftRenderDelegate::sync_lights(CleanupFlags& cleanup)
     m->lights.dirty = false;
 }
 
-CoreVector<CoreString>
-RedshiftRenderDelegate::get_supported_cameras() const
+void
+RedshiftRenderDelegate::get_supported_cameras(CoreVector<CoreString>& supported_cameras, CoreVector<CoreString>& unsupported_cameras) const
 {
-    CoreVector<CoreString> result;
-    result.add("CameraAlembic");
-    result.add("CameraUsd");
-    result.add("CameraPerspective");
-    result.add("CameraPerspectiveAdvanced");
-    return result;
+	supported_cameras = s_supported_cameras;
+	unsupported_cameras = s_unsupported_cameras;
 }
 
 
-CoreVector<CoreString>
-RedshiftRenderDelegate::get_supported_materials() const
+void
+RedshiftRenderDelegate::get_supported_materials(CoreVector<CoreString>& supported_materials, CoreVector<CoreString>& unsupported_materials) const
 {
-    CoreVector<CoreString> result;
-    result.add("MaterialRedshift"); // we only support redshift materials
-    return result;
+	supported_materials = s_supported_materials;
+	unsupported_materials = s_unsupported_materials;
 }
 
-CoreVector<CoreString>
-RedshiftRenderDelegate::get_supported_lights() const
+void
+RedshiftRenderDelegate::get_supported_lights(CoreVector<CoreString>& supported_lights, CoreVector<CoreString>& unsupported_lights) const
 {
-    CoreVector<CoreString> result;
-    result.add("Light"); // lights are not really supported right now
-    return result;
+	supported_lights = s_supported_lights;
+	unsupported_lights = s_unsupported_lights;
 }
 
-CoreVector<CoreString>
-RedshiftRenderDelegate::get_supported_geometries() const
+void
+RedshiftRenderDelegate::get_supported_geometries(CoreVector<CoreString>& supported_geometries, CoreVector<CoreString>& unsupported_geometries) const
 {
-    CoreVector<CoreString> result;
-    result.add("GeometryPolymesh");
-    //result.add("GeometrySphere"); // skip for now since the current implementation creates a point cloud for spheres...
-    result.add("GeometryBox");
-    result.add("GeometryUsdCube");
-    //result.add("GeometryUsdSphere"); // same as the implicit sphere
-    //result.add("GeometryBundle"); // bundle (not supported but should be treated pretty much like instancers)
-    result.add("SceneObjectTree"); // instancer
-    return result;
+	supported_geometries = s_supported_geometries;
+	unsupported_geometries = s_unsupported_geometries;
 }
