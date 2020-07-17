@@ -7,6 +7,7 @@
 #include <of_app.h>
 #include <of_object.h>
 #include <of_object_factory.h>
+#include <module_material_default.h>
 #include <module_scene_object.h>
 #include <module_scene_object_tree.h>
 #include <module_geometry.h>
@@ -371,6 +372,7 @@ R2cSceneDelegate::get_shading_group_info(R2cItemId id, const unsigned int& shadi
             CtxHelpers::get_shading(m_shading_table, GeometrySource(*scene_object_index, scene_object), shading_group_id, sg_links);
 
             ModuleMaterial *material_module = m_override_material ? static_cast<ModuleMaterial *>(m_override_material->get_module()) : sg_links.get_material();
+			material_module = (material_module != nullptr && ModuleMaterialDefault::is_default(*material_module))? m_render_delegate->get_default_material() : material_module;
             ModuleDisplacement *displacement_module = sg_links.get_displacement();
             ModuleTexture *clip_map_module = sg_links.get_clip_map();
 

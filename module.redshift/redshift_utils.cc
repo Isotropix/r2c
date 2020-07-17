@@ -15,7 +15,7 @@
 #include <module_material_redshift.h>
 #include <module_scene_object_tree.h>
 #include <module_texture_redshift.h>
-#include <of_app.h>
+#include <of_context.h>
 #include <poly_mesh_smoothed.h>
 #include <poly_mesh.h>
 #include <r2c_instancer.h>
@@ -151,6 +151,8 @@ ClarisseLogSink::Log(RSLogLevel level, const char *msg, size_t nCharsMSG)
             break;
     }
 }
+
+static ModuleMaterialRedshift *redshift_default_material = nullptr;
 
 RSMeshBase *
 RedshiftUtils::CreateGeometry(const R2cSceneDelegate& delegate, R2cItemId geometry, RSMaterial *material, RSResourceInfo::Type& type)
@@ -985,6 +987,24 @@ RedshiftUtils::is_initialized()
     return RS_is_initialized();
 }
 
+void
+create_default_material_module(OfApp& app)
+{
+	if (OfObject *default_material_object = app.get_factory().get_default().add_object("resdhift_default", "MaterialRedshiftMaterial")) {
+		default_material_object->set_read_only(true);
+		default_material_object->set_static(true);
+		default_material_object->set_private(true);
+
+		redshift_default_material = static_cast<ModuleMaterialRedshift *>(default_material_object->get_module());
+		redshift_default_material->set_material(RedshiftUtils::get_default_material());
+	}
+}
+
+ModuleMaterial *
+RedshiftUtils::get_default_material_module()
+{
+	return redshift_default_material;
+}
 
 // converts a Redshift parameter to a Clarisse attribute
 bool
@@ -1329,6 +1349,9 @@ RedshiftUtils::initialize(OfApp& application)
         // register Redshift shaders to Clarisse
         register_shaders(application);
 
+		// create the material that will be evaluated when the default material is assigned
+		create_default_material_module(application);
+
         RS_is_initialized() = true;
         return true;
     }
@@ -1342,7 +1365,7 @@ RSMaterial *create_default_material()
     RSShaderNode *shader = RS_ShaderNode_Get("__clarisse_default_material__shader_node__", "Material" );
     if (shader != nullptr) {
         shader->BeginUpdate();
-        shader->SetParameterData("diffuse", RSColor(0.5f, 0.5f, 0.5f));
+        shader->SetParameterData("diffuse_color", RSColor(0.5f, 0.5f, 0.5f));
         shader->SetParameterData("refl_roughness", 0.3f);
         shader->SetParameterData("refl_brdf", 1);
         shader->EndUpdate();

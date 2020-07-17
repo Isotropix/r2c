@@ -12,6 +12,7 @@
 class ImageCanvas;
 class OfObject;
 class ModuleLayer;
+class ModuleMaterial;
 
 class R2cGeometryResource;
 class R2cItemDescriptor;
@@ -107,6 +108,9 @@ public:
      *  \note  The scene descriptor is synched prior the render call.
      *  Instead of specifying many classes, you can specify a base class as supported and optionally some of its children as unsupported. */
 	virtual void get_supported_geometries(CoreVector<CoreString>& supported_geometries, CoreVector<CoreString>& unsupported_geometries) const = 0;
+
+	/*! \brief Return the material that will be evaluated when the default material is connected to the current shading group evaluated */
+	virtual ModuleMaterial *get_default_material() const { return nullptr; }
 
     /*! \brief Return the scene delegate associated to the render delegate */
     const R2cSceneDelegate *get_scene_delegate() const { return m_scene_delegate; }

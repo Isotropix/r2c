@@ -14,6 +14,7 @@
 #include <RS.h>
 
 class OfAttr;
+class ModuleMaterial;
 
 
 /*! \class RSLightInfo
@@ -176,6 +177,7 @@ namespace RedshiftUtils {
     //
     /*! \brief Return the default material which is set to look like the default Clarisse one. */
     RSMaterial *get_default_material();
+	ModuleMaterial *get_default_material_module();
 
     /*! \brief Create a Redshift geometry from an input Clarisse geometry. */
     RSMeshBase *CreateGeometry(const R2cSceneDelegate& delegate, R2cItemId geometry, RSMaterial * material, RSResourceInfo::Type& type);

@@ -56,6 +56,8 @@ public:
     void get_supported_materials(CoreVector<CoreString>& supported_materials, CoreVector<CoreString>& unsupported_materials) const override;
     void get_supported_geometries(CoreVector<CoreString>& supported_geometries, CoreVector<CoreString>& unsupported_geometries) const override;
 
+	ModuleMaterial * get_default_material() const override;
+
     void clear() override;
 
 	static const CoreVector<CoreString> s_supported_cameras;

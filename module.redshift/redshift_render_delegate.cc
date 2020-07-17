@@ -815,3 +815,9 @@ RedshiftRenderDelegate::get_supported_geometries(CoreVector<CoreString>& support
 	supported_geometries = s_supported_geometries;
 	unsupported_geometries = s_unsupported_geometries;
 }
+
+ModuleMaterial * 
+RedshiftRenderDelegate::get_default_material() const
+{
+	return RedshiftUtils::get_default_material_module();
+}

@@ -23,6 +23,11 @@ public:
      * \note The material is automatically synched. */
     inline RSMaterial *get_material() { return m_material; }
 
+    /* \brief set the Redshift material attached to the Clarisse material item.
+     * \note It is not intended to be used except for particular case, 
+     * if you want to use this method, the result won't match the attributes values of the Clarisse material item. */
+	inline void set_material(RSMaterial *material) { m_material = material; }
+
     /*! \brief return a Clarisse UI style name from the specified Redshift shader class name.
      * \param class_name Redshift shader class name. */
     static CoreString mangle_class(const CoreString& class_name);
