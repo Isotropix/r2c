@@ -821,3 +821,9 @@ RedshiftRenderDelegate::get_default_material() const
 {
 	return RedshiftUtils::get_default_material_module();
 }
+
+ModuleMaterial * 
+RedshiftRenderDelegate::get_error_material() const
+{
+	return RedshiftUtils::get_error_material_module();
+}

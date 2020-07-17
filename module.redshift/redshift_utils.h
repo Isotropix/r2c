@@ -179,6 +179,10 @@ namespace RedshiftUtils {
     RSMaterial *get_default_material();
 	ModuleMaterial *get_default_material_module();
 
+	/*! \brief Return the error material which is evaluated when a non-supported material is assigned. */
+	RSMaterial *get_error_material();
+	ModuleMaterial *get_error_material_module();
+
     /*! \brief Create a Redshift geometry from an input Clarisse geometry. */
     RSMeshBase *CreateGeometry(const R2cSceneDelegate& delegate, R2cItemId geometry, RSMaterial * material, RSResourceInfo::Type& type);
     /*! \brief Create a Redshift instancer from an input Clarisse instancer */

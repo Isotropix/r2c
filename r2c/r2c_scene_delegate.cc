@@ -377,11 +377,13 @@ R2cSceneDelegate::get_shading_group_info(R2cItemId id, const unsigned int& shadi
             ModuleTexture *clip_map_module = sg_links.get_clip_map();
 
             // making sure a supported material is assigned
-            if (material_module != nullptr && is_class_supported(material_module->get_object(), m_supported_classes.materials, m_unsupported_classes.materials)) {
-                OfObject *material = material_module->get_object();
-                shading_group_info.m_material.set_id(material);
-                shading_group_info.m_material.set_full_name(material->get_full_name());
-                shading_group_info.m_material.set_refcount(1);
+            if (material_module != nullptr) {
+                OfObject *material = is_class_supported(material_module->get_object(), m_supported_classes.materials, m_unsupported_classes.materials)? material_module->get_object() : m_render_delegate->get_error_material()->get_object();
+                if (material != nullptr) {
+					shading_group_info.m_material.set_id(material);
+					shading_group_info.m_material.set_full_name(material->get_full_name());
+					shading_group_info.m_material.set_refcount(1);
+				}
             }
 
             // making sure a supported displacement is assigned

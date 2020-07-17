@@ -112,6 +112,9 @@ public:
 	/*! \brief Return the material that will be evaluated when the default material is connected to the current shading group evaluated */
 	virtual ModuleMaterial *get_default_material() const { return nullptr; }
 
+	/*! \brief Return the material that will be evaluated when a non supported material is connected to the current shading group evaluated */
+	virtual ModuleMaterial *get_error_material() const { return nullptr; }
+
     /*! \brief Return the scene delegate associated to the render delegate */
     const R2cSceneDelegate *get_scene_delegate() const { return m_scene_delegate; }
 

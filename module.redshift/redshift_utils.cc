@@ -153,6 +153,7 @@ ClarisseLogSink::Log(RSLogLevel level, const char *msg, size_t nCharsMSG)
 }
 
 static ModuleMaterialRedshift *redshift_default_material = nullptr;
+static ModuleMaterialRedshift *redshift_error_material = nullptr;
 
 RSMeshBase *
 RedshiftUtils::CreateGeometry(const R2cSceneDelegate& delegate, R2cItemId geometry, RSMaterial *material, RSResourceInfo::Type& type)
@@ -1006,6 +1007,25 @@ RedshiftUtils::get_default_material_module()
 	return redshift_default_material;
 }
 
+void
+create_error_material_module(OfApp& app)
+{
+	if (OfObject *error_material_object = app.get_factory().get_default().add_object("resdhift_error", "MaterialRedshiftMaterial")) {
+		error_material_object->set_read_only(true);
+		error_material_object->set_static(true);
+		error_material_object->set_private(true);
+
+		redshift_error_material = static_cast<ModuleMaterialRedshift *>(error_material_object->get_module());
+		redshift_error_material->set_material(RedshiftUtils::get_error_material());
+	}
+}
+
+ModuleMaterial *
+RedshiftUtils::get_error_material_module()
+{
+	return redshift_error_material;
+}
+
 // converts a Redshift parameter to a Clarisse attribute
 bool
 get_attribute_definition(const EGUIShaderParamType& rs_type,
@@ -1351,6 +1371,8 @@ RedshiftUtils::initialize(OfApp& application)
 
 		// create the material that will be evaluated when the default material is assigned
 		create_default_material_module(application);
+		// create the material that will be evaluated when a non-supported material is assigned
+		create_error_material_module(application);
 
         RS_is_initialized() = true;
         return true;
@@ -1383,6 +1405,30 @@ RedshiftUtils::get_default_material()
     static RSMaterial *default_material = create_default_material();
     return default_material;
 }
+
+static
+RSMaterial *create_error_material()
+{
+	RSShaderNode *shader = RS_ShaderNode_Get("__clarisse_error_material__shader_node__", "Material" );
+	if (shader != nullptr) {
+		shader->BeginUpdate();
+		shader->SetParameterData("diffuse_color", RSColor(1.0f, 0.0f, 0.0f));
+		shader->EndUpdate();
+	}
+	RSMaterial *error_material = RS_Material_Get("__clarisse_error_material__");
+	error_material->SetSurfaceShaderNodeGraph(shader);
+
+	RS_ShaderNode_Release(shader);
+	return error_material;
+}
+
+RSMaterial *
+RedshiftUtils::get_error_material()
+{
+	static RSMaterial *error_material = create_error_material();
+	return error_material;
+}
+
 
 // Attribute dirtiness
 

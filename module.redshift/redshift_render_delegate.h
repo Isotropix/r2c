@@ -57,6 +57,7 @@ public:
     void get_supported_geometries(CoreVector<CoreString>& supported_geometries, CoreVector<CoreString>& unsupported_geometries) const override;
 
 	ModuleMaterial * get_default_material() const override;
+	ModuleMaterial * get_error_material() const override;
 
     void clear() override;
 
