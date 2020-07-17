@@ -121,6 +121,9 @@ The implementation of the *RedshiftRenderDelegate* can be found in `redshift_ren
 
 One interesting topic addressed by the example is the dynamic creation and registration of Clarisse classes describing Redshift materials. The method *register_shader* can be found in `redshift_utils.cc`. This file also shows how to convert Clarisse native geometries and instancers. Have a look at both *RedshiftUtils::CreatePolymesh* and *RedshiftUtils::CreateInstancer*.
 
+# Redshift in Clarisse video
+You can find a video snapshot of the integration running in Clarisse [**here**](https://youtu.be/9Yg7vC3Xwq4)
+
 # Limitations
 
 Currently, the R2C library is not feature complete. However, it already provides an easier API to renderer plugin writers that should cover a lot of their needs. Also the library can be easily extended by either parties. Our idea was to offer a first working version of the API and then improve it according to your feedback.
