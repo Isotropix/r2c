@@ -94,6 +94,16 @@ The *R2cRenderBuffer* is an abstract class that manages Clarisse render buffers.
 
 The R2C library currently provide only one implementation *ClarisseLayerRenderBuffer* which is specialized to fill the render buffer of a ImageLayer.
 
+## Exposing Material and Texture Network
+
+Shader integration in Clarisse can be done in two ways, either by inheriting from the class ModuleMaterial for materials, or by inheriting from the class ModuleTextureOperator for textures. By doing so, obviously it will be possible to assign your materials with the material linker or by dragging the material on a scene object in the image view, but also with the shading layer. All the shading assignment is managed automatically by the Scene Delegate. A shader network can be displayed automatically in the Material Editor.
+
+There are a few things to know when implementing the integration of shaders. For all the texturable attributes of the shaders (i.e : attributes allowing to plug a texture as input), you must have to specify the classes of textures supported by the renderer, so it is not possible to connect anything else inside. You can do it by using the method OfAttr::set_texture_filters().
+
+A lot of DCC allow to create shading networks with multiple outputs per node. In order to display and manage such graph, we have introduced a new outputs system in the Clarisse object framework. You can register such outputs at the level of the class or the object. It will be displayed in the material editor, and it will be possible to plug it in a texturable attribute. There is also an API to get the output bound to an attribute, this make it possible to reproduce the connection that have be created in Clarisse in the DCC.
+
+Everything mentioned in this section have been implemented in the Redshift example. You can take a look at the file redshift_utils.cc in the redshift example library.
+
 ## The Redshift example
 
 The R2C library provides a working example of a Redshift integration, found in the `module.redshift` directory.
@@ -103,7 +113,7 @@ The Redshift integration consists of a *LayerRedshift* which serves as a render 
 - A *Renderer* where users set render settings by creating an item of class *RendererRedshift*
 - A group of *Geometries* where users can specify a group of geometries (*SceneObjects*) defining what to render
 - A group of *Lights* where users can specify a group of lights (*Light*) defining which lights are in the render scene
-- A *Shading Layer* which can define dynamically material association. Please note that this feature is not implemented for the moment.
+- A *Shading Layer* which can define dynamically material association.
 
 The implementation of the Redshift layer can be found in `layer_redshift.cc`. The layer actually owns the instances of the *R2cSceneDelegate* (which is set to the inputs of the layer) and the *RedshiftRenderDelegate* which implement the render delegate.
 
@@ -138,20 +148,8 @@ The Redshift integration example is a prototype to serve as an example for rende
 
 # Future work
 
-- The *OfClass* hierarchy of textures should be changed to inherit from an new abstract texture class that is not implementing any Clarisse specifics. That way 3rd party developers could inherit from this class instead of the current one. The *Material Editor* will need to be updated to reflect this change.
-- Texture binding API in *libof* and in CID files should support a class filter syntax to restrict the binding of texture to specific texture classes. That way we could write for example:
-```c
-color "diffuse" {
-    value 1.0 1.0 1.0
-    animatable yes
-    texturable yes "TextureRedshift"
-}
-```
 - Implement the non-flattened version of Instancers (pretty straight forward)
 - Multithreaded version of the *RedshiftRenderDelegate::sync* to create geometries and synchronize index in parallel to speed up sync.
 - Add progress bar in *RedshiftRenderDelegate::sync* to notify the application of what's currently happening
-- Change how Clarisse reports render progress so that it is completely driven by the renderer since it knows what's it current progress.
-- Create a new *Layer3d* abstract class that allows orbiting, picking items, drag and drop materials in the *Image View* so that renderer plugins could offer these features too.
-- Move `module.renderer.base` into the built-in Clarisse module an derive Clarisse *Renderer* *OfClass* from it.
 
 Copyright (c) 2020 Isotropix SAS. All rights reserved.
