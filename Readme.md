@@ -71,6 +71,15 @@ install prefix on Windows. You can disable this using the following variable dur
 
 - `-DINSTALL_REDSHIFT_LIBRARIES=OFF`
 
+## Additional Build Options
+
+If you're building custom version of other libraries and/or modules as well as `R2C`, you might
+want to tell CMake to ignore the official libraries/modules from your Clarisse install to avoid
+conflicts. To do that, use the following variables:
+
+- `CLARISSE_IGNORED_LIBRARIES` : semi-colon separated list of uppercase libraries names to ignore.
+- `CLARISSE_IGNORED_MODULES` : semi-colon separated list of uppercase modules names to ignore.
+
 # Running
 
 The easiest way is to run the CMake install target directly with the install prefix
