@@ -28,6 +28,8 @@ add_clarisse_library (ix_r2c
     ""
 )
 
+ix_setup_properties (ix_r2c)
+
 target_include_directories (ix_r2c
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}

@@ -4,7 +4,8 @@
 
 # check required variables
 if (NOT DEFINED REDSHIFT_SDK_DIR)
-    message (FATAL_ERROR "REDSHIFT_SDK_DIR not set. This should point to the Redshift SDK directory.")
+    message (STATUS "[ module.redshift ] REDSHIFT_SDK_DIR not set, the module will not be built.")
+    return ()
 endif ()
 
 set (SOURCES
@@ -49,6 +50,8 @@ add_clarisse_module (redshift
     "${CID_FILES}"
     "${CID_DEPENDS}"
 )
+
+ix_setup_properties (redshift)
 
 target_include_directories (redshift
     PRIVATE

@@ -23,8 +23,8 @@ add_subdirectory (module.layer.r2c.scene)
 # Documentation
 #-------------------------------------------------------------------------------
 
-option (BUILD_DOC "Build documentation with doxygen (if available). ON by default." ON)
-if (BUILD_DOC)
+option (R2C_BUILD_DOC "Build documentation with doxygen (if available). ON by default." ON)
+if (R2C_BUILD_DOC)
     add_subdirectory (docs)
 endif ()
 
@@ -32,7 +32,7 @@ endif ()
 # Optional Redshift example
 #-------------------------------------------------------------------------------
 
-option (BUILD_REDSHIFT "Build the Redshift example integration (needs the Redshift SDK). ON by default." ON)
-if (BUILD_REDSHIFT)
+option (R2C_BUILD_REDSHIFT "Build the Redshift example integration (needs the Redshift SDK). ON by default." ON)
+if (R2C_BUILD_REDSHIFT)
     add_subdirectory (module.redshift)
 endif ()

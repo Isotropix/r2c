@@ -7,21 +7,22 @@ set (SOURCES
     layer_r2c_scene.cc
 )
 
-set(HEADERS
-)
-
 set (CID_FILES
     layer_r2c_scene.cid
 )
 
-set(CID_DEPENDS layer_scene)
+set (CID_DEPENDS
+    layer_scene
+)
 
 add_clarisse_module (layer_r2c_scene
     "${SOURCES}"
-    "${HEADERS}"
+    ""
     "${CID_FILES}"
     "${CID_DEPENDS}"
 )
+
+ix_setup_properties (layer_r2c_scene)
 
 target_include_directories (layer_r2c_scene
     PRIVATE
