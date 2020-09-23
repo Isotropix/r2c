@@ -19,6 +19,8 @@
 #include "module_renderer_bbox.h"
 #include "bbox_utils.h"
 
+#include <ray_generator_camera.h>
+#include <sampling_image.h>
 #include "bbox_render_delegate.h"
 
 // private implementation
@@ -194,45 +196,53 @@ BboxRenderDelegate::dirty_geometry(R2cItemDescriptor item, const int& dirtiness)
 void
 BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling_quality)
 {
-//    if (render_buffer != nullptr && sync_render_settings(sampling_quality)) { // make sure we have what we need to render
-//        const unsigned int w = static_cast<unsigned int>(render_buffer->get_width());
-//        const unsigned int h = static_cast<unsigned int>(render_buffer->get_height());
+    const unsigned int width = static_cast<unsigned int>(render_buffer->get_width());
+    const unsigned int height = static_cast<unsigned int>(render_buffer->get_height());
 
-//        sync_camera(w, h, 0, 0, w, h); // this takes care of creating the camera
-//        if (m->camera == nullptr) return; // no valid camera is set
+    // Browse all the light in the scene and compute the light contribution
+    const GMathVec3f light_contribution = GMathVec3f(1.0f, 0.5f, 0.5f);
 
-//        // Create the render scene if it wasn't already created
-//        if (m->scene == nullptr) {
-//            m->scene = RS_Scene_New();
-//        }
+    // Create a Ray Generator
+    ModuleCamera *current_camera = static_cast<ModuleCamera *>(get_scene_delegate()->get_camera().get_item()->get_module());
+    RayGeneratorCamera *ray_generator = current_camera->create_ray_generator();
 
-//        // Create the sink if it wasn't already
-//        if (m->sink == nullptr) {
-//            m->sink = new RenderingBlockSink;
-//            RS_RenderChannel_GetMain()->AddBlockSink(0, m->sink); // just for the beauty for now
-//        }
+    float *result_buffer = new float[width * height * 4];
 
-//        m->sink->SetRenderBuffer(render_buffer); // set the sink to the input render buffer
+    // Browse our image and for each pixel we compute a ray and raytrace the scene
+    for (unsigned int pixel_y = 0; pixel_y < height; ++pixel_y) {
+        for (unsigned int pixel_x = 0; pixel_x < width; ++pixel_x) {
+            // Pixel index
+            const unsigned int pixel_index = (pixel_y * width + pixel_x) * 4;
 
-//        // Create the abort checker if it wasn't already
-//        if (m->abort_checker == nullptr) {
-//            m->abort_checker = new RenderingAbortChecker(get_scene_delegate()->get_application());
-//        }
+            // Compute ray for the pixel [X, Y]
+            GMathRay ray;
+            ImageSampler image_sampler;
+            GMathVec2d image_sample, min, max;
+            ImagePixelSample pixel_sample;
+            unsigned int index = 0;
+            image_sampler.init(width, height);
+            image_sampler.get_pixel_samples(pixel_x, pixel_y, &image_sample, &pixel_sample, min, max);
+            ray_generator->get_rays(&image_sample, &pixel_sample, 1, &ray, &index);
 
-//        // Create the progress class if it wasn't already
-//        if (m->progress == nullptr) {
-//            m->progress = new RenderingProgress();
-//        }
+            // Use this ray to raytrace the scene
 
-//        // make sure to synchronize the render scene with the scene delegate
-//        sync();
+            // If we hit something we take the color form the intersected BBox and multiply it per all the light contrinutions
+            const GMathVec3f material_color(fabs(ray.get_direction()[0]),fabs(ray.get_direction()[1]), fabs(ray.get_direction()[2]));
+            const GMathVec3f final_color = material_color * light_contribution;
 
-//        // main rendering call.
-//        RS_Renderer_Render(m->camera, m->scene, true, m->abort_checker, m->progress);
+            result_buffer[pixel_index]     = final_color[0];
+            result_buffer[pixel_index + 1] = final_color[1];
+            result_buffer[pixel_index + 2] = final_color[2];
+            result_buffer[pixel_index + 3] = 1.0f;
+        }
+    }
 
-//        // finalize the render buffer
-//        render_buffer->finalize();
-//    }
+    // Write the new buffer to the image
+    R2cRenderBuffer::Region reg(0,0, width, height);
+    render_buffer->fill_rgba_region(result_buffer, width, reg, false);
+    render_buffer->finalize();
+
+    delete [] result_buffer;
 }
 
 float
