@@ -1,0 +1,8 @@
+//
+// Copyright 2020 - present Isotropix SAS. See License.txt for license information
+//
+
+class "LayerCsdkBbox" "LayerR2cScene" {
+    #version 1.0
+    doc "The Bbox allows to render a scene using a Bbox renderer."
+}
