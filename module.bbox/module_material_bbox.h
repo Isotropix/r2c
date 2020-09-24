@@ -5,7 +5,7 @@
 
 #include <module_material.h>
 
-class RSMaterial;
+class BBMaterial;
 
 class OfObject;
 
@@ -19,12 +19,12 @@ public:
 
     /*! \brief return the Bbox material attached to the Clarisse material item.
      * \note The material is automatically synched. */
-    inline RSMaterial *get_material() { return m_material; }
+    inline BBMaterial *get_material() { return m_material; }
 
     /* \brief set the Bbox material attached to the Clarisse material item.
      * \note It is not intended to be used except for particular case, 
      * if you want to use this method, the result won't match the attributes values of the Clarisse material item. */
-	inline void set_material(RSMaterial *material) { m_material = material; }
+	inline void set_material(BBMaterial *material) { m_material = material; }
 
     /*! \brief return a Clarisse UI style name from the specified Bbox shader class name.
      * \param class_name Bbox shader class name. */
@@ -47,6 +47,6 @@ private:
     ModuleMaterialBbox& operator=(const ModuleMaterialBbox&) = delete;
 
     CoreString m_shader_class_name;
-    RSMaterial *m_material;
+    BBMaterial *m_material;
     DECLARE_CLASS
 };

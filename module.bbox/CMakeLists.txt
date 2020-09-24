@@ -43,9 +43,6 @@ add_clarisse_module (bbox
 target_include_directories (bbox
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
-
-        # bbox SDK
-        ${bbox_SDK_DIR}/include
 )
 
 target_link_libraries (bbox
@@ -60,4 +57,6 @@ target_link_libraries (bbox
         ${CLARISSE_IX_OF_LIBRARY}
         ${CLARISSE_IX_POLY_LIBRARY}
         ${CLARISSE_IX_SYS_LIBRARY}
+        ${CLARISSE_IX_RAYTRACE_LIBRARY}
+        ${CLARISSE_IX_SAMPLING_LIBRARY}
 )

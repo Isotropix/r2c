@@ -27,18 +27,17 @@
 class BboxDelegateImpl {
 public:
 
-//    RSScene *scene; // actual Bbox render scene
-//    RSCamera *camera; // Bbox render camera
+//    BBCamera *camera; // Bbox render camera
 //    RenderingBlockSink *sink; // Bbox BlockSink that fills the Clarisse's render buffer
 //    RenderingAbortChecker *abort_checker; // Bbox AbortChecker that notifies the renderer to stop
 //    RenderingProgress *progress; // Bbox rendering progress
 
     struct {
-        RSResourceIndex index; // the index of all current resources where we store deduplicated data
+        BBResourceIndex index; // the index of all current resources where we store deduplicated data
     } resources;
 
     struct {
-        RSGeometryIndex index; // index of all render geometries which are mesh instances pointing to a geometry resource
+        BBGeometryIndex index; // index of all render geometries which are mesh instances pointing to a geometry resource
         CoreVector<R2cItemId> inserted; // is filled by BboxRenderDelegate::insert_geometry when a geometry is inserted to the scene
         CoreVector<R2cItemId> removed; // is filled by BboxRenderDelegate::remove_geometry when a geometry is removed from the scene
 
@@ -48,7 +47,7 @@ public:
     } geometries;
 
     struct {
-        RSLightIndex index; // index of all render lights
+        BBLightIndex index; // index of all render lights
         CoreVector<R2cItemId> inserted; // is filled by BboxRenderDelegate::insert_light when a light is inserted to the scene
         CoreVector<R2cItemId> removed; // is filled by BboxRenderDelegate::remove_light when a light is removed from the scene
         bool dirty; // flag set when we receive dirtiness so that we don't need to iterate the whole index to know that it is dirty
@@ -58,7 +57,7 @@ public:
     } lights;
 
     struct {
-        RSInstancerIndex index; // index of all render instancers
+        BBInstancerIndex index; // index of all render instancers
         CoreVector<R2cItemId> inserted; // is filled by BboxRenderDelegate::insert_instancer when an instancer is inserted to the scene
         CoreVector<R2cItemId> removed; // is filled by BboxRenderDelegate::remove_instancer when an instancer is removed from the scene
         bool dirty; // flag set when we receive dirtiness so that we don't need to iterate the whole index to know that it is dirty
@@ -199,6 +198,8 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
     const unsigned int width = static_cast<unsigned int>(render_buffer->get_width());
     const unsigned int height = static_cast<unsigned int>(render_buffer->get_height());
 
+    sync();
+
     // Browse all the light in the scene and compute the light contribution
     const GMathVec3f light_contribution = GMathVec3f(1.0f, 0.5f, 0.5f);
 
@@ -224,11 +225,27 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
             image_sampler.get_pixel_samples(pixel_x, pixel_y, &image_sample, &pixel_sample, min, max);
             ray_generator->get_rays(&image_sample, &pixel_sample, 1, &ray, &index);
 
-            // Use this ray to raytrace the scene
-
             // If we hit something we take the color form the intersected BBox and multiply it per all the light contrinutions
-            const GMathVec3f material_color(fabs(ray.get_direction()[0]),fabs(ray.get_direction()[1]), fabs(ray.get_direction()[2]));
-            const GMathVec3f final_color = material_color * light_contribution;
+            const GMathVec3f material_color(fabs(ray.get_direction()[0]), fabs(ray.get_direction()[1]), fabs(ray.get_direction()[2]));
+            GMathVec3f final_color = material_color * light_contribution;
+
+            // Use this ray to raytrace the scene
+            for (const auto geom: m->geometries.index) {
+                const R2cItemId& item_id = geom.get_key();
+                const BboxGeometryInfo& geom_info = geom.get_value();
+
+                const BboxResourceInfo* resource_info = m->resources.index.is_key_exists(geom_info.resource);
+                CORE_ASSERT(resource_info != nullptr);
+
+                GMathBbox3d transformed_bbox;
+                resource_info->bbox.transform_bbox_and_get_bbox(geom_info.transform, transformed_bbox);
+
+                double tmin, tmax;
+                if (transformed_bbox.intersect(ray, tmin, tmax)) {
+                    final_color = GMathVec3f(1.0, 1.0, 1.0);
+                    break;
+                }
+            }
 
             result_buffer[pixel_index]     = final_color[0];
             result_buffer[pixel_index + 1] = final_color[1];
@@ -306,8 +323,8 @@ BboxRenderDelegate::clear()
 //        // clearing instances
 //        for (auto geometry : m->geometries.index) {
 //            const BboxGeometryInfo& geo = geometry.get_value();
-//            RS_InstanceMaterialOverrides_Delete(geo.materials);
-//            RS_MeshInstance_Delete(geo.ptr);
+//            BB_InstanceMaterialOverrides_Delete(geo.materials);
+//            BB_MeshInstance_Delete(geo.ptr);
 //        }
 //        m->geometries.index.remove_all();
 //        m->geometries.removed.remove_all();
@@ -317,14 +334,14 @@ BboxRenderDelegate::clear()
 //        m->scene->ClearMeshInstances();
 
 //        // clearing meshes
-//        for (auto resource: m->resources.index) RS_MeshBase_Delete(resource.get_value().ptr);
+//        for (auto resource: m->resources.index) BB_MeshBase_Delete(resource.get_value().ptr);
 //        m->scene->ClearMeshes();
 //        m->resources.index.remove_all();
 
 //        // clearing point clouds
 //        for (auto instancer: m->instancers.index) {
 //            for (auto point_cloud : instancer.get_value().ptrs) {
-//                RS_PointCloud_Delete(point_cloud);
+//                BB_PointCloud_Delete(point_cloud);
 //            }
 //        }
 //        m->scene->ClearMeshPointClouds(); // not really necessary since we called ClearMeshes()
@@ -334,18 +351,18 @@ BboxRenderDelegate::clear()
 //        m->instancers.dirty = R2cSceneDelegate::DIRTINESS_ALL;
 
 //        // clearing lights
-//        for (auto light : m->lights.index) RS_Light_Delete(light.get_value().ptr);
+//        for (auto light : m->lights.index) BB_Light_Delete(light.get_value().ptr);
 //        m->lights.index.remove_all();
 //        m->lights.removed.remove_all();
 //        m->lights.inserted.remove_all();
 //        m->lights.dirty = R2cSceneDelegate::DIRTINESS_ALL;
 //        m->scene->ClearLights();
 
-//        RS_Scene_Delete(m->scene);
+//        BB_Scene_Delete(m->scene);
 //        m->scene = nullptr;
 //    }
 //    if (m->camera != nullptr) {
-//        RS_Camera_Delete(m->camera);
+//        BB_Camera_Delete(m->camera);
 //        m->camera = nullptr;
 //    }
 
@@ -366,16 +383,16 @@ BboxRenderDelegate::sync_camera(const unsigned int& w, const unsigned int& h,
 {
 //    if (!get_scene_delegate()->get_camera().is_destroyed()) {
 //        if (m->camera == nullptr) {
-//            m->camera = RS_Camera_New();
+//            m->camera = BB_Camera_New();
 //        }
 //        ModuleCamera *cam = static_cast<ModuleCamera *>(get_scene_delegate()->get_camera().get_item()->get_module());
-//        m->camera->SetMatrix(BboxUtils::ToRSMatrix4x4(cam->get_global_matrix()));
+//        m->camera->SetMatrix(BboxUtils::ToBBMatrix4x4(cam->get_global_matrix()));
 
 //        m->camera->SetNumStepsFromRendererOptions(); // we need to call this before setting any parameters or matrices. As the name suggests, this reads the transformation blur "num steps" and allocates as many aspect, near/far plane, matrices, etc as needed
 //        m->camera->SetFramebufferParams(w, h, cox, coy, cw, ch);
 
 //        // FIXME: need to support all types of compatible cameras
-//        m->camera->SetType("RS_CAMERA_TYPE_PERSPECTIVE");
+//        m->camera->SetType("BB_CAMERA_TYPE_PERSPECTIVE");
 
 //        float bbox_ratio = static_cast<float>(h) / static_cast<float>(w);
 //		double clarisse_ratio = static_cast<double>(w) / static_cast<double>(h), hfov, vfov;
@@ -389,7 +406,7 @@ BboxRenderDelegate::sync_camera(const unsigned int& w, const unsigned int& h,
 //            m->camera->SetFOVOrOrthogonalHeight(gmath_radians(static_cast<float>(vfov)), true, i); // FOV to 90 degrees in radians. We want 90 degrees horizontal FOV, hence the false parameter.
 //        }
 //    } else if (m->camera != nullptr) { // shouldn't really happen since we can't be called with an empty camera
-//        RS_Camera_Delete(m->camera);
+//        BB_Camera_Delete(m->camera);
 //        m->camera = nullptr;
 //    }
 }
@@ -406,151 +423,151 @@ sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cgeometryid, Bbo
 void
 BboxRenderDelegate::_sync_geometry(R2cItemId cgeometryid, BboxGeometryInfo& rgeometry, const bool& is_new)
 {
-//    if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_GEOMETRY) {
-//        if (!is_new) {
-//            // mark as removed since we will need to recreate it
-//            m->geometries.removed.add(cgeometryid);
-//            rgeometry.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
-//            // reinsert the removed geometry so it is added after the cleanup
-//            m->geometries.inserted.add(cgeometryid);
-//        } else {
-//            // it's a new geometry so let's first see if the geometry already defined a resource
-//            R2cGeometryResource cresource = get_scene_delegate()->get_geometry_resource(cgeometryid);
-//            BboxResourceInfo *stored_resource = m->resources.index.is_key_exists(cresource.get_id());
-//            RSMeshBase *mesh = nullptr;
+   if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_GEOMETRY) {
+       if (!is_new) {
+           // mark as removed since we will need to recreate it
+           m->geometries.removed.add(cgeometryid);
+           rgeometry.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
+           // reinsert the removed geometry so it is added after the cleanup
+           m->geometries.inserted.add(cgeometryid);
+       } else {
+           // it's a new geometry so let's first see if the geometry already defined a resource
+            R2cGeometryResource cresource = get_scene_delegate()->get_geometry_resource(cgeometryid);
+            BboxResourceInfo *stored_resource = m->resources.index.is_key_exists(cresource.get_id());
+            
+            if (stored_resource == nullptr) { // the resource doesn't exists so let's create it
+                // create corresponding geometry resource according to the Clarisse geometry
+                BboxResourceInfo new_resource;
 
-//            if (stored_resource == nullptr) { // the resource doesn't exists so let's create it
-//                // create corresponding geometry resource according to the Clarisse geometry
-//                BboxResourceInfo new_resource;
-//                mesh = new_resource.ptr = BboxUtils::CreateGeometry(*get_scene_delegate(), cgeometryid, BboxUtils::get_default_material(), new_resource.type);
-//                new_resource.refcount = 1;
-//                // adding the new resource
-//                m->resources.index.add(cresource.get_id(), new_resource);
-//                // we need to add the new mesh to instanciate it
-//                m->scene->AddMesh(new_resource.ptr);
-//            } else {
-//                mesh = stored_resource->ptr;
-//                stored_resource->refcount++;
-//            }
+                // Extract the bbox
+                R2cItemDescriptor idesc = get_scene_delegate()->get_render_item(cgeometryid);
+                ModuleSceneObject *module = static_cast<ModuleSceneObject *>(idesc.get_item()->get_module());
+                new_resource.bbox = module->get_bbox();
 
-//            // generating the instance to the resource
-//            rgeometry.ptr = RS_MeshInstance_New();
-//            rgeometry.ptr->SetIsTransformationBlurred(false);
-//            // we need to create the material overrides for the instance since we can freely assign
-//            // materials to instances in Clarisse
-//            rgeometry.materials = RS_InstanceMaterialOverrides_New();
-//            rgeometry.materials->SetTemplate(mesh);
-//            rgeometry.materials->SetNumMaterials(mesh->GetNumMaterials());
-//            // back pointer to the clarisse resource since when we are dirty it's too late to get it back
-//            rgeometry.resource = cresource.get_id();
+                new_resource.refcount = 1;
+                // adding the new resource
+                m->resources.index.add(cresource.get_id(), new_resource);
+                // we need to add the new mesh to instanciate it
+            //    m->scene->AddMesh(new_resource.ptr);
+            } else {
+                stored_resource->refcount++;
+            }
 
-//            rgeometry.ptr->SetTemplate(mesh, m->scene->AddInstanceMaterialOverride(rgeometry.materials));
-//            // since that was a new geometry we will need to set the matrix, materials and visibility flags
-//            rgeometry.dirtiness = R2cSceneDelegate::DIRTINESS_KINEMATIC |
-//                                  R2cSceneDelegate::DIRTINESS_SHADING_GROUP |
-//                                  R2cSceneDelegate::DIRTINESS_VISIBILITY;
-//        }
-//    }
+           // generating the instance to the resource
+           // we need to create the material overrides for the instance since we can freely assign
+           // materials to instances in Clarisse
+        //    rgeometry.materials = BB_InstanceMaterialOverrides_New();
+        //    rgeometry.materials->SetTemplate(mesh);
+        //    rgeometry.materials->SetNumMaterials(mesh->GetNumMaterials());
+           // back pointer to the clarisse resource since when we are dirty it's too late to get it back
+           rgeometry.resource = cresource.get_id();
 
-//    if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_KINEMATIC) {
-//        rgeometry.ptr->SetMatrix(BboxUtils::ToRSMatrix4x4(get_scene_delegate()->get_transform(cgeometryid)));
-//    }
+        //    rgeometry.ptr->SetTemplate(mesh, m->scene->AddInstanceMaterialOverride(rgeometry.materials));
+           // since that was a new geometry we will need to set the matrix, materials and visibility flags
+           rgeometry.dirtiness = R2cSceneDelegate::DIRTINESS_KINEMATIC |
+                                 R2cSceneDelegate::DIRTINESS_SHADING_GROUP |
+                                 R2cSceneDelegate::DIRTINESS_VISIBILITY;
+       }
+   }
+
+   if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_KINEMATIC) {
+       rgeometry.transform = get_scene_delegate()->get_transform(cgeometryid);
+   }
 
 //    if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_SHADING_GROUP) {
 //        sync_shading_groups(*get_scene_delegate(), cgeometryid, rgeometry);
 //    }
 
-//    if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_VISIBILITY) {
-//        const bool visibility = get_scene_delegate()->get_visible(cgeometryid);
-//        rgeometry.ptr->SetCachedMeshFlags(visibility ? RS_CachedMeshFlag_GetDefault() : RS_CachedMeshFlag_Hidden());
-//    }
+   if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_VISIBILITY) {
+       rgeometry.visibility = get_scene_delegate()->get_visible(cgeometryid);
+   }
 
-//    // setting the dirtiness back to none since the geometry is fully synched
-//    rgeometry.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
+   // setting the dirtiness back to none since the geometry is fully synched
+   rgeometry.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
 }
 
 
 void
 BboxRenderDelegate::sync_geometries(CleanupFlags& cleanup)
 {
-//    if (m->geometries.is_dirty()) {
-//        // iterating through geometries to see if we need to sync any of them
-//        // it's VERY IMPORTANT to do this before everything else since if any
-//        // items received DIRTINESS_GEOMETRY, we need to remove it from the
-//        // scene to rebuild it!!!
-//        for (auto geometry : m->geometries.index) {
-//            if (geometry.get_value().dirtiness != R2cSceneDelegate::DIRTINESS_NONE) {
-//                sync_geometry(geometry.get_key(), geometry.get_value());
-//            }
-//        }
-//        // check if geometries have been removed and in that case we will have to
-//        // rebuild the render scene since we can't remove items from the scene using
-//        // the Bbox API
-//        cleanup.mesh_instances = m->geometries.removed.get_count() > 0;
-//        // let's see if we have to remove geometries from the scene
-//        for (auto removed_item : m->geometries.removed) {
-//            BboxGeometryInfo *geometry = m->geometries.index.is_key_exists(removed_item);
-//            // check the current geometry exists in the scene
-//            if (geometry != nullptr) {
-//                // doing proper cleanup. Let's cleanup the resource
-//                // get the resource if it exists
-//                BboxResourceInfo *stored_resource = m->resources.index.is_key_exists(geometry->resource);
-//                if (stored_resource != nullptr) { // there's a resource bound to the current geometry
-//                    stored_resource->refcount--;
-//                    if (stored_resource->refcount == 0) { // no one is using that resource anymore so let's delete it
-//                        RS_MeshBase_Delete(stored_resource->ptr);
-//                        m->resources.index.remove(geometry->resource);
-//                        switch(stored_resource->type) {
-//                            case BboxResourceInfo::TYPE_POINT_CLOUD:
-//                                cleanup.point_clouds |= true;
-//                                break;
-//                            case BboxResourceInfo::TYPE_HAIR:
-//                                cleanup.hairs |= true;
-//                                break;
-//                            default:
-//                                cleanup.meshes |= true;
-//                                break;
-//                        }
-//                    }
-//                }
-//                RS_MeshInstance_Delete(geometry->ptr);
-//                RS_InstanceMaterialOverrides_Delete(geometry->materials);
+   if (m->geometries.is_dirty()) {
+       // iterating through geometries to see if we need to sync any of them
+       // it's VERY IMPORTANT to do this before everything else since if any
+       // items received DIRTINESS_GEOMETRY, we need to remove it from the
+       // scene to rebuild it!!!
+       for (auto geometry : m->geometries.index) {
+           if (geometry.get_value().dirtiness != R2cSceneDelegate::DIRTINESS_NONE) {
+               sync_geometry(geometry.get_key(), geometry.get_value());
+           }
+       }
+       // check if geometries have been removed and in that case we will have to
+       // rebuild the render scene since we can't remove items from the scene using
+       // the Bbox API
+       cleanup.mesh_instances = m->geometries.removed.get_count() > 0;
+       // let's see if we have to remove geometries from the scene
+       for (auto removed_item : m->geometries.removed) {
+           BboxGeometryInfo *geometry = m->geometries.index.is_key_exists(removed_item);
+           // check the current geometry exists in the scene
+           if (geometry != nullptr) {
+               // doing proper cleanup. Let's cleanup the resource
+               // get the resource if it exists
+               BboxResourceInfo *stored_resource = m->resources.index.is_key_exists(geometry->resource);
+               if (stored_resource != nullptr) { // there's a resource bound to the current geometry
+                   stored_resource->refcount--;
+                   if (stored_resource->refcount == 0) { // no one is using that resource anymore so let's delete it
+                       // TODO: replace this: BB_MeshBase_Delete(stored_resource->ptr);
+                       m->resources.index.remove(geometry->resource);
+                    //    switch(stored_resource->type) {
+                    //        case BboxResourceInfo::TYPE_POINT_CLOUD:
+                    //            cleanup.point_clouds |= true;
+                    //            break;
+                    //        case BboxResourceInfo::TYPE_HAIR:
+                    //            cleanup.hairs |= true;
+                    //            break;
+                    //        default:
+                    //            cleanup.meshes |= true;
+                    //            break;
+                    //    }
+                   }
+               }
+               // TODO replace this: BB_MeshInstance_Delete(geometry->ptr);
+               // TODO replace this: BB_InstanceMaterialOverrides_Delete(geometry->materials);
 
-//                m->geometries.index.remove(removed_item);
-//                if (m->geometries.index.get_count() == 0) break; // finished
-//            }
-//        }
-//        // since we processed all pending removed geometries we have to clear our array
-//        m->geometries.removed.remove_all();
+               m->geometries.index.remove(removed_item);
+               if (m->geometries.index.get_count() == 0) break; // finished
+           }
+       }
+       // since we processed all pending removed geometries we have to clear our array
+       m->geometries.removed.remove_all();
 
-//        // let's see if new geometries have been added. Interestingly it's possible
-//        // that sync_geometry remove and add items if the topology changes. This
-//        // is why it is very important to first sync the index, remove and finally add.
-//        // let's see if we have to create new geometries
-//        BboxGeometryInfo geometry;
-//        CoreVector<BboxGeometryInfo> new_geometries(0, m->geometries.inserted.get_count());
-//        for (auto inserted_item : m->geometries.inserted) {
-//            // initializing the new geometry
-//            geometry.ptr = nullptr;
-//            geometry.dirtiness = R2cSceneDelegate::DIRTINESS_ALL;
-//            // synching the new geometry
-//            sync_new_geometry(inserted_item, geometry);
-//            // adding it to our geometry index
-//            m->geometries.index.add(inserted_item, geometry);
-//            new_geometries.add(geometry);
-//        }
-//        // since we processed all pending inserted geometries we have to clear the array
-//        m->geometries.inserted.remove_all();
+       // let's see if new geometries have been added. Interestingly it's possible
+       // that sync_geometry remove and add items if the topology changes. This
+       // is why it is very important to first sync the index, remove and finally add.
+       // let's see if we have to create new geometries
+       BboxGeometryInfo geometry;
+       CoreVector<BboxGeometryInfo> new_geometries(0, m->geometries.inserted.get_count());
+       for (auto inserted_item : m->geometries.inserted) {
+           // initializing the new geometry
+           geometry.dirtiness = R2cSceneDelegate::DIRTINESS_ALL;
+           // synching the new geometry
+           sync_new_geometry(inserted_item, geometry);
+           // adding it to our geometry index
+           m->geometries.index.add(inserted_item, geometry);
+           new_geometries.add(geometry);
+       }
+       // since we processed all pending inserted geometries we have to clear the array
+       m->geometries.inserted.remove_all();
 
-//        if (!cleanup.mesh_instances) {
-//            // we can just add new geometries to the scene since they are already synched!
-//            for (auto new_geometry : new_geometries) {
-//               m->scene->AddMeshInstance(new_geometry.ptr);
-//            }
-//        }
-//    }
-//    // our geometries are now perfectly synched
-//    m->geometries.dirty = false;
+    //    if (!cleanup.mesh_instances) {
+    //        // we can just add new geometries to the scene since they are already synched!
+    //        for (auto new_geometry : new_geometries) {
+    //            // TODO: instert in bboxes vector
+    //           m->scene->AddMeshInstance(new_geometry.ptr);
+    //        }
+    //    }
+   }
+   // our geometries are now perfectly synched
+   m->geometries.dirty = false;
 }
 
 /*! \brief shading group synchronization helper */
@@ -588,7 +605,7 @@ BboxRenderDelegate::_sync_instancer(R2cItemId cinstancerid, BboxInstancerInfo& r
 
 //    if (rinstancer.dirtiness & R2cSceneDelegate::DIRTINESS_KINEMATIC) {
 //        const GMathMatrix4x4d& transform = get_scene_delegate()->get_transform(cinstancerid);
-//        for (auto ptc : rinstancer.ptrs) ptc->SetMatrix(BboxUtils::ToRSMatrix4x4(transform));
+//        for (auto ptc : rinstancer.ptrs) ptc->SetMatrix(BboxUtils::ToBBMatrix4x4(transform));
 //    }
 
 //    if (rinstancer.dirtiness & R2cSceneDelegate::DIRTINESS_SHADING_GROUP) {
@@ -597,7 +614,7 @@ BboxRenderDelegate::_sync_instancer(R2cItemId cinstancerid, BboxInstancerInfo& r
 
 //    if (rinstancer.dirtiness & R2cSceneDelegate::DIRTINESS_VISIBILITY) {
 //        const bool visibility = get_scene_delegate()->get_visible(cinstancerid);
-//        for (auto ptc : rinstancer.ptrs) ptc->SetCachedMeshFlags(visibility ? RS_CachedMeshFlag_GetDefault() : RS_CachedMeshFlag_Hidden());
+//        for (auto ptc : rinstancer.ptrs) ptc->SetCachedMeshFlags(visibility ? BB_CachedMeshFlag_GetDefault() : BB_CachedMeshFlag_Hidden());
 //    }
 //    // setting the dirtiness back to none since the instancer is synched
 //    rinstancer.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
@@ -628,7 +645,7 @@ BboxRenderDelegate::sync_instancers(CleanupFlags& cleanup)
 //            // check the current instancer exists in the scene
 //            if (instancer != nullptr) {
 //                // removing all point clouds representing the current instancer
-//                for (unsigned int i = 0; i < instancer->ptrs.get_count(); i++) RS_PointCloud_Delete(instancer->ptrs[i]);
+//                for (unsigned int i = 0; i < instancer->ptrs.get_count(); i++) BB_PointCloud_Delete(instancer->ptrs[i]);
 //                // now doing proper cleanup. Let's cleanup resources
 //                // get the resources if they exist
 
@@ -638,7 +655,7 @@ BboxRenderDelegate::sync_instancers(CleanupFlags& cleanup)
 //                    if (stored_resource != nullptr) { // there's a resource bound to the current instancer
 //                        stored_resource->refcount--;
 //                        if (stored_resource->refcount == 0) { // no one is using that resource anymore so let's delete it
-//                            RS_MeshBase_Delete(stored_resource->ptr);
+//                            BB_MeshBase_Delete(stored_resource->ptr);
 //                            m->resources.index.remove(resource_id);
 //                            switch(stored_resource->type) {
 //                                case BboxResourceInfo::TYPE_POINT_CLOUD: // spheres are point clouds....
@@ -700,7 +717,7 @@ void
 sync_light(const R2cSceneDelegate& delegate, R2cItemId clightid, BboxLightInfo& rlight)
 {
 //    if (rlight.dirtiness & R2cSceneDelegate::DIRTINESS_KINEMATIC) {
-//        rlight.ptr->SetMatrix(BboxUtils::ToRSMatrix4x4(delegate.get_transform(clightid)));
+//        rlight.ptr->SetMatrix(BboxUtils::ToBBMatrix4x4(delegate.get_transform(clightid)));
 //    }
 
 //    if (rlight.dirtiness & R2cSceneDelegate::DIRTINESS_LIGHT) {
@@ -708,12 +725,12 @@ sync_light(const R2cSceneDelegate& delegate, R2cItemId clightid, BboxLightInfo& 
 //        // synching light's attributes only
 //        OfAttr *color = clight->attribute_exists("color");
 //        rlight.shader->BeginUpdate();
-//        rlight.shader->SetParameterData("color", color != nullptr ? BboxUtils::ToRSColor(color->get_vec3d()) : RSColor(1.0,1.0,1.0));
+//        rlight.shader->SetParameterData("color", color != nullptr ? BboxUtils::ToBBColor(color->get_vec3d()) : BBColor(1.0,1.0,1.0));
 
 //        OfAttr *radius = clight->attribute_exists("radius");
 //        if (radius != nullptr) {
 //            float value =  static_cast<float>(radius->get_double());
-//            rlight.ptr->SetAreaScaling(RSVector3(value, value, value));
+//            rlight.ptr->SetAreaScaling(BBVector3(value, value, value));
 //        }
 //        rlight.shader->EndUpdate();
 //    }
@@ -731,8 +748,8 @@ BboxRenderDelegate::sync_lights(CleanupFlags& cleanup)
 //            BboxLightInfo *light = m->lights.index.is_key_exists(removed_item);
 //            // check the current light exists in the scene
 //            if (light != nullptr) {
-//                RS_Light_Delete(light->ptr);
-//                RS_ShaderNode_Release(light->shader);
+//                BB_Light_Delete(light->ptr);
+//                BB_ShaderNode_Release(light->shader);
 //                m->lights.index.remove(removed_item);
 //                if (m->lights.index.get_count() == 0) break; // finished
 //            }
