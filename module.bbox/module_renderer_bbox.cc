@@ -11,7 +11,7 @@
 
 IMPLEMENT_CLASS(ModuleRendererBbox, ModuleRenderer)
 
-ModuleRendererBbox::ModuleRendererBbox() : ModuleRenderer() {}
+ModuleRendererBbox::ModuleRendererBbox() : ModuleRenderer(), m_background_color(0.0f) {}
 
 ModuleRendererBbox::~ModuleRendererBbox() {}
 
@@ -33,4 +33,7 @@ void
 ModuleRendererBbox::on_attribute_change(const OfAttr& attr, int& dirtiness, const int& dirtiness_flags)
 {
     ModuleProjectItem::on_attribute_change(attr, dirtiness, dirtiness_flags);
+    if (attr.get_name() == "background_color") {
+        m_background_color = static_cast<GMathVec3f>(attr.get_vec3d());
+    }
 }

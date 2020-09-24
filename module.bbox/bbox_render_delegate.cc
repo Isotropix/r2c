@@ -20,8 +20,6 @@
 #include "module_renderer_bbox.h"
 #include "bbox_utils.h"
 
-#include <ray_generator_camera.h>
-#include <sampling_image.h>
 #include "bbox_render_delegate.h"
 
 // private implementation
@@ -209,13 +207,10 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
         light_contribution += light_data.light_module->evaluate();
     }
 
-    // Create a Ray Generator
-    ModuleCamera *current_camera = static_cast<ModuleCamera *>(get_scene_delegate()->get_camera().get_item()->get_module());
-    RayGeneratorCamera *ray_generator = current_camera->create_ray_generator();
-    ray_generator->init(width, height, 1, 1);
-
     // Get the background color from the renderer
-    const GMathVec3f background_color(0.1,0.0,0.0);
+    R2cItemDescriptor renderer = get_scene_delegate()->get_render_settings();
+    ModuleRendererBbox *settings = static_cast<ModuleRendererBbox *>(renderer.get_item()->get_module());
+    const GMathVec3f background_color = settings->get_background_color();
 
     float *result_buffer = new float[width * height * 4];
 
@@ -226,20 +221,13 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
             const unsigned int pixel_index = (pixel_y * width + pixel_x) * 4;
 
             // Compute ray for the pixel [X, Y]
-            GMathRay ray;
-            ImageSampler image_sampler;
-            GMathVec2d image_sample, min, max;
-            ImagePixelSample pixel_sample;
-            unsigned int index = 0;
-            image_sampler.init(width, height);
-            image_sampler.get_pixel_samples(pixel_x, pixel_y, &image_sample, &pixel_sample, min, max);
-
-            m->camera->ray_generator->get_rays(&image_sample, &pixel_sample, 1, &ray, &index);
+            GMathRay ray = m->camera->generate_ray(width, height, pixel_x, pixel_y);
 
             GMathVec3f final_color = light_contribution;
 
             // Use this ray to raytrace the scene
             // If we hit something we take the color from the intersected material BBox and multiply it per all the light contrinutions
+            // If nothing is hit we return the background renderer color
 
             bool hit_something = false;
 
@@ -426,9 +414,7 @@ BboxRenderDelegate::sync_camera(const unsigned int& width, const unsigned int& h
         m->camera = nullptr;
     }
 
-    ModuleCamera *current_camera = static_cast<ModuleCamera *>(get_scene_delegate()->get_camera().get_item()->get_module());
-    m->camera->ray_generator = current_camera->create_ray_generator();
-    m->camera->ray_generator->init(width, height, 1, 1);
+    m->camera->init_ray_generator(width, height);
 }
 
 void

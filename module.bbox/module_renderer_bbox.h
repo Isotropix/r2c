@@ -25,6 +25,8 @@ public:
      *  \note  The multiplier should affect all sampling values so that a sampling_quality of 0.0 should result to 1 spp. */
     void sync(const float& sampling_quality);
 
+    const GMathVec3f get_background_color() { return m_background_color; }
+
 protected:
 
     /*! \brief Event method called when a user modifies an attribute of the item
@@ -34,6 +36,8 @@ protected:
     void on_attribute_change(const OfAttr& attr, int& dirtiness, const int& dirtiness_flags) override;
 
 private:
+
+    GMathVec3f m_background_color;
 
     DECLARE_CLASS
 };

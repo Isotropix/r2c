@@ -21,6 +21,8 @@
 #include <r2c_render_buffer.h>
 #include <sys_globals.h>
 #include <sys_thread_lock.h>
+#include <ray_generator_camera.h>
+#include <sampling_image.h>
 
 
 void BboxUtils::create_light(const R2cSceneDelegate &render_delegate, R2cItemId item_id, BboxLightInfo &light_info)
@@ -36,5 +38,28 @@ void BboxUtils::create_light(const R2cSceneDelegate &render_delegate, R2cItemId 
 BboxCamera::BboxCamera(const R2cSceneDelegate *render_delegate)
 {
     ModuleCamera *current_camera = static_cast<ModuleCamera *>(render_delegate->get_camera().get_item()->get_module());
-    ray_generator = current_camera->create_ray_generator();
+    m_ray_generator = current_camera->create_ray_generator();
+}
+
+void BboxCamera::init_ray_generator(const unsigned int width, const unsigned int height)
+{
+    m_ray_generator->init(width, height, 1, 1);
+}
+
+GMathRay BboxCamera::generate_ray(const unsigned int width, const unsigned int height, const unsigned int x, const unsigned int y)
+{
+    GMathRay ray;
+
+    // Create image sampler
+    GMathVec2d image_sample, min, max;
+    ImagePixelSample pixel_sample;
+    ImageSampler image_sampler;
+    image_sampler.init(width, height);
+    image_sampler.get_pixel_samples(x, y, &image_sample, &pixel_sample, min, max);
+
+    // Compute the ray
+    unsigned int index = 0;
+    m_ray_generator->get_rays(&image_sample, &pixel_sample, 1, &ray, &index);
+
+    return ray;
 }
