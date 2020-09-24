@@ -115,7 +115,7 @@ private:
     void sync_lights(CleanupFlags& cleanup);
     /*! \brief Synchronize the render camera with the scene delegate
      *  \param width width of the rendered image
-     *  \param height hight of the rendered image
+     *  \param height hight of the rendered image */
     void sync_camera(const unsigned int& width, const unsigned int& height);
     /*! \brief Cleanup the render scene according to the specified flags
      *  \note This post cleanup is there to rebuild the render scene since bbox can only
