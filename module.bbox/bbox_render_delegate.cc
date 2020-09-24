@@ -47,7 +47,7 @@ public:
     } geometries;
 
     struct {
-        BBLightIndex index; // index of all render lights
+        BboxLightIndex index; // index of all render lights
         CoreVector<R2cItemId> inserted; // is filled by BboxRenderDelegate::insert_light when a light is inserted to the scene
         CoreVector<R2cItemId> removed; // is filled by BboxRenderDelegate::remove_light when a light is removed from the scene
         bool dirty; // flag set when we receive dirtiness so that we don't need to iterate the whole index to know that it is dirty
@@ -78,9 +78,9 @@ IMPLEMENT_CLASS(BboxRenderDelegate, R2cRenderDelegate);
 
 const CoreVector<CoreString> BboxRenderDelegate::s_supported_cameras      = { "CameraAlembic", "CameraUsd", "CameraPerspective", "CameraPerspectiveAdvanced"};
 const CoreVector<CoreString> BboxRenderDelegate::s_unsupported_cameras    = {};
-const CoreVector<CoreString> BboxRenderDelegate::s_supported_lights       = { "LightPhysicalDistant", "LightPhysicalSphere" }; // lights are not really supported right now
+const CoreVector<CoreString> BboxRenderDelegate::s_supported_lights       = { "LightBbox" };
 const CoreVector<CoreString> BboxRenderDelegate::s_unsupported_lights     = {};
-const CoreVector<CoreString> BboxRenderDelegate::s_supported_materials    = { "MaterialBbox" }; // we only support bbox materials
+const CoreVector<CoreString> BboxRenderDelegate::s_supported_materials    = { "MaterialBbox" };
 const CoreVector<CoreString> BboxRenderDelegate::s_unsupported_materials  = {};
 const CoreVector<CoreString> BboxRenderDelegate::s_supported_geometries   = { "SceneObject" };
 const CoreVector<CoreString> BboxRenderDelegate::s_unsupported_geometries = { "GeometryVolume", "GeometryFur", "GeometryBundle", "GeometrySphere", "GeometryCylinder" };
@@ -120,6 +120,7 @@ BboxRenderDelegate::sync_render_settings(const float& sampling_quality)
 void
 BboxRenderDelegate::insert_light(R2cItemDescriptor item)
 {
+    LOG_INFO("asdasdasdasd\n");
     m->lights.inserted.add(item.get_id());
 }
 
@@ -195,13 +196,19 @@ BboxRenderDelegate::dirty_geometry(R2cItemDescriptor item, const int& dirtiness)
 void
 BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling_quality)
 {
+    sync();
+
     const unsigned int width = static_cast<unsigned int>(render_buffer->get_width());
     const unsigned int height = static_cast<unsigned int>(render_buffer->get_height());
 
     sync();
 
     // Browse all the light in the scene and compute the light contribution
-    const GMathVec3f light_contribution = GMathVec3f(1.0f, 0.5f, 0.5f);
+    GMathVec3f light_contribution = GMathVec3f(0.0f, 0.0f, 0.0f);
+    for (auto light : m->lights.index) {
+        const LightData& light_data = light.get_value().light_data;
+        light_contribution += light_data.light_module->evaluate();
+    }
 
     // Create a Ray Generator
     ModuleCamera *current_camera = static_cast<ModuleCamera *>(get_scene_delegate()->get_camera().get_item()->get_module());
@@ -226,12 +233,11 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
             ray_generator->get_rays(&image_sample, &pixel_sample, 1, &ray, &index);
 
             // If we hit something we take the color form the intersected BBox and multiply it per all the light contrinutions
-            const GMathVec3f material_color(fabs(ray.get_direction()[0]), fabs(ray.get_direction()[1]), fabs(ray.get_direction()[2]));
-            GMathVec3f final_color = material_color * light_contribution;
+            const GMathVec3f background_color(fabs(ray.get_direction()[0]), fabs(ray.get_direction()[1]), fabs(ray.get_direction()[2]));
+            GMathVec3f final_color = background_color * light_contribution;
 
             // Use this ray to raytrace the scene
             for (const auto geom: m->geometries.index) {
-                const R2cItemId& item_id = geom.get_key();
                 const BboxGeometryInfo& geom_info = geom.get_value();
 
                 const BboxResourceInfo* resource_info = m->resources.index.is_key_exists(geom_info.resource);
@@ -242,7 +248,7 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
 
                 double tmin, tmax;
                 if (transformed_bbox.intersect(ray, tmin, tmax)) {
-                    final_color = GMathVec3f(1.0, 1.0, 1.0);
+                    final_color = GMathVec3f(1.0, 1.0, 1.0) * light_contribution;
                     break;
                 }
             }
@@ -716,77 +722,64 @@ BboxRenderDelegate::sync_instancers(CleanupFlags& cleanup)
 void
 sync_light(const R2cSceneDelegate& delegate, R2cItemId clightid, BboxLightInfo& rlight)
 {
-//    if (rlight.dirtiness & R2cSceneDelegate::DIRTINESS_KINEMATIC) {
-//        rlight.ptr->SetMatrix(BboxUtils::ToBBMatrix4x4(delegate.get_transform(clightid)));
-//    }
+    if (rlight.dirtiness & R2cSceneDelegate::DIRTINESS_KINEMATIC) {
+    }
 
-//    if (rlight.dirtiness & R2cSceneDelegate::DIRTINESS_LIGHT) {
-//        OfObject *clight = delegate.get_render_item(clightid).get_item();
-//        // synching light's attributes only
-//        OfAttr *color = clight->attribute_exists("color");
-//        rlight.shader->BeginUpdate();
-//        rlight.shader->SetParameterData("color", color != nullptr ? BboxUtils::ToBBColor(color->get_vec3d()) : BBColor(1.0,1.0,1.0));
+    if (rlight.dirtiness & R2cSceneDelegate::DIRTINESS_LIGHT) {
 
-//        OfAttr *radius = clight->attribute_exists("radius");
-//        if (radius != nullptr) {
-//            float value =  static_cast<float>(radius->get_double());
-//            rlight.ptr->SetAreaScaling(BBVector3(value, value, value));
-//        }
-//        rlight.shader->EndUpdate();
-//    }
-//    // setting the dirtiness back to none since the light is synched
-//    rlight.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
+    }
+    // setting the dirtiness back to none since the light is synched
+    rlight.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
 }
 
 void
 BboxRenderDelegate::sync_lights(CleanupFlags& cleanup)
 {
-//    if (m->lights.is_dirty()) {
-//        cleanup.lights = m->lights.removed.get_count() > 0;
-//        // remove lights first
-//        for (auto removed_item : m->lights.removed) {
-//            BboxLightInfo *light = m->lights.index.is_key_exists(removed_item);
-//            // check the current light exists in the scene
-//            if (light != nullptr) {
-//                BB_Light_Delete(light->ptr);
-//                BB_ShaderNode_Release(light->shader);
-//                m->lights.index.remove(removed_item);
-//                if (m->lights.index.get_count() == 0) break; // finished
-//            }
-//        }
-//        m->lights.removed.remove_all();
+    if (m->lights.is_dirty()) {
+        cleanup.lights = m->lights.removed.get_count() > 0;
+        // remove lights first
+        for (auto removed_item : m->lights.removed) {
+            BboxLightInfo *light = m->lights.index.is_key_exists(removed_item);
+            // check the current light exists in the scene
+            if (light != nullptr) {
+                m->lights.index.remove(removed_item);
+                if (m->lights.index.get_count() == 0) break; // finished
+            }
+        }
+        m->lights.removed.remove_all();
 
-//        // creating new lights
-//        BboxLightInfo light;
-//        CoreVector<BboxLightInfo> new_lights(0, m->lights.inserted.get_count());
-//        for (auto inserted_item : m->lights.inserted) {
-//            // create corresponding light according to the Clarisse light
-//            BboxUtils::CreateLight(*get_scene_delegate(), inserted_item, light);
-//            light.dirtiness = R2cSceneDelegate::DIRTINESS_ALL;
-//            // and sync it to its attributes
-//            // synching the new light
-//            sync_light(*get_scene_delegate(), inserted_item, light);
-//            // adding it to our light index
-//            m->lights.index.add(inserted_item, light);
-//            new_lights.add(light);
-//        }
-//        m->lights.inserted.remove_all();
+        LOG_INFO_VAR(m->lights.inserted.get_count());
+        // creating new lights
+        BboxLightInfo light;
+        CoreVector<BboxLightInfo> new_lights(0, m->lights.inserted.get_count());
+        for (auto inserted_item : m->lights.inserted) {
+            // create corresponding light according to the Clarisse light
+            BboxUtils::create_light(*get_scene_delegate(), inserted_item, light);
+            light.dirtiness = R2cSceneDelegate::DIRTINESS_ALL;
+            // and sync it to its attributes
+            // synching the new light
+            sync_light(*get_scene_delegate(), inserted_item, light);
+            // adding it to our light index
+            m->lights.index.add(inserted_item, light);
+            new_lights.add(light);
+        }
+        m->lights.inserted.remove_all();
 
-//        if (!cleanup.lights) {
-//            // we can just add new lights since they are already synched!
-//            for (auto new_light : new_lights) {
+        if (!cleanup.lights) {
+            // we can just add new lights since they are already synched!
+            for (auto new_light : new_lights) {
 //               m->scene->AddLight(new_light.ptr);
-//            }
-//        }
-//        // iterating through lights to see if we need to sync any of them
-//        for (auto light : m->lights.index) {
-//            if (light.get_value().dirtiness != R2cSceneDelegate::DIRTINESS_NONE) {
-//                sync_light(*get_scene_delegate(), light.get_key(), light.get_value());
-//            }
-//        }
-//    }
-//    // our lights are now perfectly synched
-//    m->lights.dirty = false;
+            }
+        }
+        // iterating through lights to see if we need to sync any of them
+        for (auto light : m->lights.index) {
+            if (light.get_value().dirtiness != R2cSceneDelegate::DIRTINESS_NONE) {
+                sync_light(*get_scene_delegate(), light.get_key(), light.get_value());
+            }
+        }
+    }
+    // our lights are now perfectly synched
+    m->lights.dirty = false;
 }
 
 void

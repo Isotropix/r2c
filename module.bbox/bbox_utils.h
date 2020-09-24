@@ -10,10 +10,14 @@
 #include <gmath_matrix4x4.h>
 #include <gmath_vec3.h>
 #include <r2c_scene_delegate.h>
+#include <module_light_bbox.h>
 
 class OfAttr;
 class ModuleMaterial;
 
+struct LightData {
+    ModuleLightBbox *light_module;
+};
 
 /*! \class BboxLightInfo
     \brief internal class holding Bbox light data */
@@ -21,9 +25,11 @@ class BboxLightInfo {
 public:
     int dirtiness; // dirtiness state of the item
     BboxLightInfo() : dirtiness(R2cSceneDelegate::DIRTINESS_ALL) {}
+    LightData light_data;
+
 };
 
-typedef CoreHashTable<R2cItemId, BboxLightInfo> BBLightIndex;
+typedef CoreHashTable<R2cItemId, BboxLightInfo> BboxLightIndex;
 
 /*! \class bboxResourceInfo
     \brief internal class holding the actual geometric resource data */
@@ -60,5 +66,11 @@ public:
 };
 
 typedef CoreHashTable<R2cItemId, BboxInstancerInfo> BBInstancerIndex;
+
+
+class BboxUtils {
+public :
+    static void create_light(const R2cSceneDelegate& render_delegate, R2cItemId item_id, BboxLightInfo& light_info);
+};
 
 #endif

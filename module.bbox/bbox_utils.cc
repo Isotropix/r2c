@@ -22,3 +22,13 @@
 #include <sys_globals.h>
 #include <sys_thread_lock.h>
 
+
+void BboxUtils::create_light(const R2cSceneDelegate &render_delegate, R2cItemId item_id, BboxLightInfo &light_info)
+{
+    // Get the OfObject of the light
+    R2cItemDescriptor idesc = render_delegate.get_render_item(item_id);
+    OfObject *item = idesc.get_item();
+
+    // Fill the light data
+    light_info.light_data.light_module = static_cast<ModuleLightBbox *>(item->get_module());
+}

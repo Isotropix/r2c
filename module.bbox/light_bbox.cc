@@ -17,17 +17,10 @@
 #define MODULE_CLASS ModuleObject
 #endif
 
-IX_BEGIN_DECLARE_MODULE_CALLBACKS(ModuleLightBbox, ModuleLightCallbacks)
-    static MODULE_CLASS *declare_module(OfObject& object, OfObjectFactory& objects);
+IX_BEGIN_DECLARE_MODULE_CALLBACKS(ModuleLightBbox, ModuleLightBboxCallback)
+    static GMathVec3d evaluate(OfObject&object);
 IX_END_DECLARE_MODULE_CALLBACKS(ModuleLightBbox)
 
-MODULE_CLASS *
-IX_MODULE_CLBK::declare_module(OfObject& object, OfObjectFactory& objects)
-{
-    ModuleLightBbox *light = new ModuleLightBbox;
-    light->set_object(object);
-    return light;
-}
 
 namespace LightBbox
 {
@@ -38,6 +31,12 @@ namespace LightBbox
 
         IX_MODULE_CLBK *module_callbacks;
         IX_CREATE_MODULE_CLBK(new_class, module_callbacks)
-        module_callbacks->cb_create_module = IX_MODULE_CLBK::declare_module;
+
+        module_callbacks->cb_evaluate = IX_MODULE_CLBK::evaluate;
     }
+}
+
+GMathVec3d IX_MODULE_CLBK::evaluate(OfObject& object)
+{
+    return object.get_attribute("color")->get_vec3d();
 }
