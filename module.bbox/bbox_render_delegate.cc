@@ -14,6 +14,7 @@
 
 #include <r2c_scene_delegate.h>
 #include <r2c_render_buffer.h>
+#include <r2c_instancer.h>
 
 #include <module_material_bbox.h>
 #include "module_renderer_bbox.h"
@@ -83,7 +84,7 @@ const CoreVector<CoreString> BboxRenderDelegate::s_unsupported_lights     = {};
 const CoreVector<CoreString> BboxRenderDelegate::s_supported_materials    = { "MaterialBbox" };
 const CoreVector<CoreString> BboxRenderDelegate::s_unsupported_materials  = {};
 const CoreVector<CoreString> BboxRenderDelegate::s_supported_geometries   = { "SceneObject" };
-const CoreVector<CoreString> BboxRenderDelegate::s_unsupported_geometries = { "GeometryVolume", "GeometryFur", "GeometryBundle", "GeometrySphere", "GeometryCylinder" };
+const CoreVector<CoreString> BboxRenderDelegate::s_unsupported_geometries = { "GeometryVolume", "GeometryFur", "GeometryBundle", "GeometrySphere", "GeometryCylinder", "GeometryPointArray" };
 
 BboxRenderDelegate::BboxRenderDelegate() : R2cRenderDelegate()
 {
@@ -239,12 +240,27 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
             // Use this ray to raytrace the scene
             for (const auto geom: m->geometries.index) {
                 const BboxGeometryInfo& geom_info = geom.get_value();
-
                 const BboxResourceInfo* resource_info = m->resources.index.is_key_exists(geom_info.resource);
                 CORE_ASSERT(resource_info != nullptr);
 
                 GMathBbox3d transformed_bbox;
                 resource_info->bbox.transform_bbox_and_get_bbox(geom_info.transform, transformed_bbox);
+
+                double tmin, tmax;
+                if (transformed_bbox.intersect(ray, tmin, tmax)) {
+                    final_color = GMathVec3f(1.0, 1.0, 1.0) * light_contribution;
+                    break;
+                }
+            }
+            
+            // Use this ray to raytrace the scene
+            for (const auto instancer: m->instancers.index) {
+                const BboxInstancerInfo& instancer_info = instancer.get_value();
+                const BboxResourceInfo* resource_info = m->resources.index.is_key_exists(instancer_info.resource);
+                CORE_ASSERT(resource_info != nullptr);
+
+                GMathBbox3d transformed_bbox;
+                resource_info->bbox.transform_bbox_and_get_bbox(instancer_info.transform, transformed_bbox);
 
                 double tmin, tmax;
                 if (transformed_bbox.intersect(ray, tmin, tmax)) {
@@ -429,15 +445,15 @@ sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cgeometryid, Bbo
 void
 BboxRenderDelegate::_sync_geometry(R2cItemId cgeometryid, BboxGeometryInfo& rgeometry, const bool& is_new)
 {
-   if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_GEOMETRY) {
-       if (!is_new) {
-           // mark as removed since we will need to recreate it
-           m->geometries.removed.add(cgeometryid);
-           rgeometry.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
-           // reinsert the removed geometry so it is added after the cleanup
-           m->geometries.inserted.add(cgeometryid);
-       } else {
-           // it's a new geometry so let's first see if the geometry already defined a resource
+    if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_GEOMETRY) {
+        if (!is_new) {
+            // mark as removed since we will need to recreate it
+            m->geometries.removed.add(cgeometryid);
+            rgeometry.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
+            // reinsert the removed geometry so it is added after the cleanup
+            m->geometries.inserted.add(cgeometryid);
+        } else {
+            // it's a new geometry so let's first see if the geometry already defined a resource
             R2cGeometryResource cresource = get_scene_delegate()->get_geometry_resource(cgeometryid);
             BboxResourceInfo *stored_resource = m->resources.index.is_key_exists(cresource.get_id());
             
@@ -459,70 +475,70 @@ BboxRenderDelegate::_sync_geometry(R2cItemId cgeometryid, BboxGeometryInfo& rgeo
                 stored_resource->refcount++;
             }
 
-           // generating the instance to the resource
-           // we need to create the material overrides for the instance since we can freely assign
-           // materials to instances in Clarisse
+            // generating the instance to the resource
+            // we need to create the material overrides for the instance since we can freely assign
+            // materials to instances in Clarisse
         //    rgeometry.materials = BB_InstanceMaterialOverrides_New();
         //    rgeometry.materials->SetTemplate(mesh);
         //    rgeometry.materials->SetNumMaterials(mesh->GetNumMaterials());
-           // back pointer to the clarisse resource since when we are dirty it's too late to get it back
-           rgeometry.resource = cresource.get_id();
+            // back pointer to the clarisse resource since when we are dirty it's too late to get it back
+            rgeometry.resource = cresource.get_id();
 
         //    rgeometry.ptr->SetTemplate(mesh, m->scene->AddInstanceMaterialOverride(rgeometry.materials));
-           // since that was a new geometry we will need to set the matrix, materials and visibility flags
-           rgeometry.dirtiness = R2cSceneDelegate::DIRTINESS_KINEMATIC |
-                                 R2cSceneDelegate::DIRTINESS_SHADING_GROUP |
-                                 R2cSceneDelegate::DIRTINESS_VISIBILITY;
-       }
-   }
+            // since that was a new geometry we will need to set the matrix, materials and visibility flags
+            rgeometry.dirtiness = R2cSceneDelegate::DIRTINESS_KINEMATIC |
+                                    R2cSceneDelegate::DIRTINESS_SHADING_GROUP |
+                                    R2cSceneDelegate::DIRTINESS_VISIBILITY;
+        }
+    }
 
-   if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_KINEMATIC) {
-       rgeometry.transform = get_scene_delegate()->get_transform(cgeometryid);
-   }
+    if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_KINEMATIC) {
+        rgeometry.transform = get_scene_delegate()->get_transform(cgeometryid);
+    }
 
-//    if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_SHADING_GROUP) {
-//        sync_shading_groups(*get_scene_delegate(), cgeometryid, rgeometry);
-//    }
+    //    if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_SHADING_GROUP) {
+    //        sync_shading_groups(*get_scene_delegate(), cgeometryid, rgeometry);
+    //    }
 
-   if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_VISIBILITY) {
-       rgeometry.visibility = get_scene_delegate()->get_visible(cgeometryid);
-   }
+    if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_VISIBILITY) {
+        rgeometry.visibility = get_scene_delegate()->get_visible(cgeometryid);
+    }
 
-   // setting the dirtiness back to none since the geometry is fully synched
-   rgeometry.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
+    // setting the dirtiness back to none since the geometry is fully synched
+    rgeometry.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
 }
 
 
 void
 BboxRenderDelegate::sync_geometries(CleanupFlags& cleanup)
 {
-   if (m->geometries.is_dirty()) {
-       // iterating through geometries to see if we need to sync any of them
-       // it's VERY IMPORTANT to do this before everything else since if any
-       // items received DIRTINESS_GEOMETRY, we need to remove it from the
-       // scene to rebuild it!!!
-       for (auto geometry : m->geometries.index) {
-           if (geometry.get_value().dirtiness != R2cSceneDelegate::DIRTINESS_NONE) {
-               sync_geometry(geometry.get_key(), geometry.get_value());
-           }
-       }
-       // check if geometries have been removed and in that case we will have to
-       // rebuild the render scene since we can't remove items from the scene using
-       // the Bbox API
-       cleanup.mesh_instances = m->geometries.removed.get_count() > 0;
-       // let's see if we have to remove geometries from the scene
-       for (auto removed_item : m->geometries.removed) {
-           BboxGeometryInfo *geometry = m->geometries.index.is_key_exists(removed_item);
-           // check the current geometry exists in the scene
-           if (geometry != nullptr) {
-               // doing proper cleanup. Let's cleanup the resource
-               // get the resource if it exists
-               BboxResourceInfo *stored_resource = m->resources.index.is_key_exists(geometry->resource);
-               if (stored_resource != nullptr) { // there's a resource bound to the current geometry
-                   stored_resource->refcount--;
-                   if (stored_resource->refcount == 0) { // no one is using that resource anymore so let's delete it
-                       // TODO: replace this: BB_MeshBase_Delete(stored_resource->ptr);
-                       m->resources.index.remove(geometry->resource);
+    if (m->geometries.is_dirty()) {
+        // iterating through geometries to see if we need to sync any of them
+        // it's VERY IMPORTANT to do this before everything else since if any
+        // items received DIRTINESS_GEOMETRY, we need to remove it from the
+        // scene to rebuild it!!!
+        for (auto geometry : m->geometries.index) {
+            if (geometry.get_value().dirtiness != R2cSceneDelegate::DIRTINESS_NONE) {
+                sync_geometry(geometry.get_key(), geometry.get_value());
+            }
+        }
+        // check if geometries have been removed and in that case we will have to
+        // rebuild the render scene since we can't remove items from the scene using
+        // the Bbox API
+        cleanup.mesh_instances = m->geometries.removed.get_count() > 0;
+        // let's see if we have to remove geometries from the scene
+        for (auto removed_item : m->geometries.removed) {
+            BboxGeometryInfo *geometry = m->geometries.index.is_key_exists(removed_item);
+            // check the current geometry exists in the scene
+            if (geometry != nullptr) {
+                // doing proper cleanup. Let's cleanup the resource
+                // get the resource if it exists
+                BboxResourceInfo *stored_resource = m->resources.index.is_key_exists(geometry->resource);
+                if (stored_resource != nullptr) { // there's a resource bound to the current geometry
+                    stored_resource->refcount--;
+                    if (stored_resource->refcount == 0) { // no one is using that resource anymore so let's delete it
+                        // TODO: replace this: BB_MeshBase_Delete(stored_resource->ptr);
+                        m->resources.index.remove(geometry->resource);
                     //    switch(stored_resource->type) {
                     //        case BboxResourceInfo::TYPE_POINT_CLOUD:
                     //            cleanup.point_clouds |= true;
@@ -534,35 +550,35 @@ BboxRenderDelegate::sync_geometries(CleanupFlags& cleanup)
                     //            cleanup.meshes |= true;
                     //            break;
                     //    }
-                   }
-               }
-               // TODO replace this: BB_MeshInstance_Delete(geometry->ptr);
-               // TODO replace this: BB_InstanceMaterialOverrides_Delete(geometry->materials);
+                    }
+                }
+                // TODO replace this: BB_MeshInstance_Delete(geometry->ptr);
+                // TODO replace this: BB_InstanceMaterialOverrides_Delete(geometry->materials);
 
-               m->geometries.index.remove(removed_item);
-               if (m->geometries.index.get_count() == 0) break; // finished
-           }
-       }
-       // since we processed all pending removed geometries we have to clear our array
-       m->geometries.removed.remove_all();
+                m->geometries.index.remove(removed_item);
+                if (m->geometries.index.get_count() == 0) break; // finished
+            }
+        }
+        // since we processed all pending removed geometries we have to clear our array
+        m->geometries.removed.remove_all();
 
-       // let's see if new geometries have been added. Interestingly it's possible
-       // that sync_geometry remove and add items if the topology changes. This
-       // is why it is very important to first sync the index, remove and finally add.
-       // let's see if we have to create new geometries
-       BboxGeometryInfo geometry;
-       CoreVector<BboxGeometryInfo> new_geometries(0, m->geometries.inserted.get_count());
-       for (auto inserted_item : m->geometries.inserted) {
-           // initializing the new geometry
-           geometry.dirtiness = R2cSceneDelegate::DIRTINESS_ALL;
-           // synching the new geometry
-           sync_new_geometry(inserted_item, geometry);
-           // adding it to our geometry index
-           m->geometries.index.add(inserted_item, geometry);
-           new_geometries.add(geometry);
-       }
-       // since we processed all pending inserted geometries we have to clear the array
-       m->geometries.inserted.remove_all();
+        // let's see if new geometries have been added. Interestingly it's possible
+        // that sync_geometry remove and add items if the topology changes. This
+        // is why it is very important to first sync the index, remove and finally add.
+        // let's see if we have to create new geometries
+        BboxGeometryInfo geometry;
+        CoreVector<BboxGeometryInfo> new_geometries(0, m->geometries.inserted.get_count());
+        for (auto inserted_item : m->geometries.inserted) {
+            // initializing the new geometry
+            geometry.dirtiness = R2cSceneDelegate::DIRTINESS_ALL;
+            // synching the new geometry
+            sync_new_geometry(inserted_item, geometry);
+            // adding it to our geometry index
+            m->geometries.index.add(inserted_item, geometry);
+            new_geometries.add(geometry);
+        }
+        // since we processed all pending inserted geometries we have to clear the array
+        m->geometries.inserted.remove_all();
 
     //    if (!cleanup.mesh_instances) {
     //        // we can just add new geometries to the scene since they are already synched!
@@ -571,9 +587,9 @@ BboxRenderDelegate::sync_geometries(CleanupFlags& cleanup)
     //           m->scene->AddMeshInstance(new_geometry.ptr);
     //        }
     //    }
-   }
-   // our geometries are now perfectly synched
-   m->geometries.dirty = false;
+    }
+    // our geometries are now perfectly synched
+    m->geometries.dirty = false;
 }
 
 /*! \brief shading group synchronization helper */
@@ -596,126 +612,156 @@ sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cinstancerid, Bb
 void
 BboxRenderDelegate::_sync_instancer(R2cItemId cinstancerid, BboxInstancerInfo& rinstancer, const bool& is_new)
 {
-//    if (rinstancer.dirtiness & R2cSceneDelegate::DIRTINESS_GEOMETRY) {
-//        if (!is_new) { // existing instancer
-//            // mark as removed since we will need to recreate it
-//            m->instancers.removed.add(cinstancerid);
-//            // reinsert the removed instancer so it is added after the cleanup
-//            m->instancers.inserted.add(cinstancerid);
-//            // mark it as clean since we will rebuild it anyway
-//            rinstancer.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
-//        } else { // it's a new instancer and let's create its resources
-//            BboxUtils::CreateInstancer(rinstancer, m->resources.index, *get_scene_delegate(), m->scene, cinstancerid);
-//        }
-//    }
+    if (rinstancer.dirtiness & R2cSceneDelegate::DIRTINESS_GEOMETRY) {
+        if (!is_new) { // existing instancer
+            // mark as removed since we will need to recreate it
+            m->instancers.removed.add(cinstancerid);
+            // reinsert the removed instancer so it is added after the cleanup
+            m->instancers.inserted.add(cinstancerid);
+            // mark it as clean since we will rebuild it anyway
+            rinstancer.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
+        } else { // it's a new instancer and let's create its resources
+            // BboxUtils::CreateInstancer(rinstancer, m->resources.index, *get_scene_delegate(), m->scene, cinstancerid);
+            
+            // it's a new geometry so let's first see if the geometry already defined a resource
+            R2cGeometryResource cresource = get_scene_delegate()->get_geometry_resource(cinstancerid);
+            BboxResourceInfo *stored_resource = m->resources.index.is_key_exists(cresource.get_id());
+            
+            if (stored_resource == nullptr) { // the resource doesn't exists so let's create it
+                // create corresponding geometry resource according to the Clarisse geometry
+                BboxResourceInfo new_resource;
 
-//    if (rinstancer.dirtiness & R2cSceneDelegate::DIRTINESS_KINEMATIC) {
-//        const GMathMatrix4x4d& transform = get_scene_delegate()->get_transform(cinstancerid);
-//        for (auto ptc : rinstancer.ptrs) ptc->SetMatrix(BboxUtils::ToBBMatrix4x4(transform));
-//    }
+                // Extract the bbox
+                R2cItemDescriptor idesc = get_scene_delegate()->get_render_item(cinstancerid);
+                ModuleSceneObject *module = static_cast<ModuleSceneObject *>(idesc.get_item()->get_module());
+                new_resource.bbox = module->get_bbox();
+
+                new_resource.refcount = 1;
+                // adding the new resource
+                m->resources.index.add(cresource.get_id(), new_resource);
+                // we need to add the new mesh to instanciate it
+            //    m->scene->AddMesh(new_resource.ptr);
+            } else {
+                stored_resource->refcount++;
+            }
+
+            // generating the instance to the resource
+            // we need to create the material overrides for the instance since we can freely assign
+            // materials to instances in Clarisse
+        //    rgeometry.materials = BB_InstanceMaterialOverrides_New();
+        //    rgeometry.materials->SetTemplate(mesh);
+        //    rgeometry.materials->SetNumMaterials(mesh->GetNumMaterials());
+            // back pointer to the clarisse resource since when we are dirty it's too late to get it back
+            rinstancer.resource = cresource.get_id();
+
+        //    rgeometry.ptr->SetTemplate(mesh, m->scene->AddInstanceMaterialOverride(rgeometry.materials));
+            // since that was a new geometry we will need to set the matrix, materials and visibility flags
+            rinstancer.dirtiness = R2cSceneDelegate::DIRTINESS_KINEMATIC |
+                                    R2cSceneDelegate::DIRTINESS_SHADING_GROUP |
+                                    R2cSceneDelegate::DIRTINESS_VISIBILITY;
+
+        }
+    }
+
+    if (rinstancer.dirtiness & R2cSceneDelegate::DIRTINESS_KINEMATIC) {
+        rinstancer.transform = get_scene_delegate()->get_transform(cinstancerid);
+    }
 
 //    if (rinstancer.dirtiness & R2cSceneDelegate::DIRTINESS_SHADING_GROUP) {
 //        sync_shading_groups(*get_scene_delegate(), cinstancerid, rinstancer);
 //    }
 
-//    if (rinstancer.dirtiness & R2cSceneDelegate::DIRTINESS_VISIBILITY) {
-//        const bool visibility = get_scene_delegate()->get_visible(cinstancerid);
-//        for (auto ptc : rinstancer.ptrs) ptc->SetCachedMeshFlags(visibility ? BB_CachedMeshFlag_GetDefault() : BB_CachedMeshFlag_Hidden());
-//    }
-//    // setting the dirtiness back to none since the instancer is synched
-//    rinstancer.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
+    if (rinstancer.dirtiness & R2cSceneDelegate::DIRTINESS_VISIBILITY) {
+        rinstancer.visibility = get_scene_delegate()->get_visible(cinstancerid);
+    }
+    // setting the dirtiness back to none since the instancer is synched
+    rinstancer.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
 }
 
 void
 BboxRenderDelegate::sync_instancers(CleanupFlags& cleanup)
 {
-//    if (m->instancers.is_dirty()) {
-//        // iterating through instancers to see if we need to sync any of them
-//        // it's VERY IMPORTANT to do this before everything else since if any
-//        // items received DIRTINESS_GEOMETRY, we need to remove it from the
-//        // scene to rebuild it!!!
-//        for (auto instancer : m->instancers.index) {
-//            if (instancer.get_value().dirtiness != R2cSceneDelegate::DIRTINESS_NONE) {
-//                sync_instancer(instancer.get_key(), instancer.get_value());
-//            }
-//        }
-//        // check if instancers have been removed and in that case we will have to
-//        // rebuild the render scene since we can't remove items from the scene using
-//        // the Bbox API
+    if (m->instancers.is_dirty()) {
+        // iterating through instancers to see if we need to sync any of them
+        // it's VERY IMPORTANT to do this before everything else since if any
+        // items received DIRTINESS_GEOMETRY, we need to remove it from the
+        // scene to rebuild it!!!
+        for (auto instancer : m->instancers.index) {
+            if (instancer.get_value().dirtiness != R2cSceneDelegate::DIRTINESS_NONE) {
+                sync_instancer(instancer.get_key(), instancer.get_value());
+            }
+        }
+        // check if instancers have been removed and in that case we will have to
+        // rebuild the render scene since we can't remove items from the scene using
+        // the Bbox API
 
-//        cleanup.point_clouds |= m->instancers.removed.get_count() > 0;
+    //    cleanup.point_clouds |= m->instancers.removed.get_count() > 0;
 
-//        // let's see if we have to remove instancers from the scene
-//        for (auto removed_item : m->instancers.removed) {
-//            BboxInstancerInfo *instancer = m->instancers.index.is_key_exists(removed_item);
-//            // check the current instancer exists in the scene
-//            if (instancer != nullptr) {
-//                // removing all point clouds representing the current instancer
-//                for (unsigned int i = 0; i < instancer->ptrs.get_count(); i++) BB_PointCloud_Delete(instancer->ptrs[i]);
-//                // now doing proper cleanup. Let's cleanup resources
-//                // get the resources if they exist
+        // let's see if we have to remove instancers from the scene
+        for (auto removed_item : m->instancers.removed) {
+            BboxInstancerInfo *instancer = m->instancers.index.is_key_exists(removed_item);
+            // check the current instancer exists in the scene
+            if (instancer != nullptr) {
+                // now doing proper cleanup. Let's cleanup resources
+                // get the resources if they exist
+                BboxResourceInfo *stored_resource = m->resources.index.is_key_exists(instancer->resource);
+                if (stored_resource != nullptr) { // there's a resource bound to the current geometry
+                    stored_resource->refcount--;
+                    if (stored_resource->refcount == 0) { // no one is using that resource anymore so let's delete it
+                        // TODO: replace this: BB_MeshBase_Delete(stored_resource->ptr);
+                        m->resources.index.remove(instancer->resource);
+                    //    switch(stored_resource->type) {
+                    //        case BboxResourceInfo::TYPE_POINT_CLOUD:
+                    //            cleanup.point_clouds |= true;
+                    //            break;
+                    //        case BboxResourceInfo::TYPE_HAIR:
+                    //            cleanup.hairs |= true;
+                    //            break;
+                    //        default:
+                    //            cleanup.meshes |= true;
+                    //            break;
+                    //    }
+                    }
+                }
+                m->instancers.index.remove(removed_item);
+                if (m->instancers.index.get_count() == 0) break; // finished
+            }
+        }
+        // since we processed all pending removed instancers we have to clear our array
+        m->instancers.removed.remove_all();
 
-//                for (unsigned int i = 0; i < instancer->resources.get_count(); i++) {
-//                    R2cResourceId resource_id = instancer->resources[i];
-//                    BboxResourceInfo *stored_resource = m->resources.index.is_key_exists(resource_id);
-//                    if (stored_resource != nullptr) { // there's a resource bound to the current instancer
-//                        stored_resource->refcount--;
-//                        if (stored_resource->refcount == 0) { // no one is using that resource anymore so let's delete it
-//                            BB_MeshBase_Delete(stored_resource->ptr);
-//                            m->resources.index.remove(resource_id);
-//                            switch(stored_resource->type) {
-//                                case BboxResourceInfo::TYPE_POINT_CLOUD: // spheres are point clouds....
-//                                    cleanup.point_clouds |= true;
-//                                    break;
-//                                case BboxResourceInfo::TYPE_HAIR:
-//                                    cleanup.hairs |= true;
-//                                    break;
-//                                default:
-//                                    cleanup.meshes |= true;
-//                                    break;
-//                            }
-//                        }
-//                    }
-//                }
-//                m->instancers.index.remove(removed_item);
-//                if (m->instancers.index.get_count() == 0) break; // finished
-//            }
-//        }
-//        // since we processed all pending removed instancers we have to clear our array
-//        m->instancers.removed.remove_all();
+        // let's see if new instancers have been added. Interestingly it's possible
+        // that sync_instancers remove and add items if the topology changes. This
+        // is why it is very important to first sync the index, remove and finally add.
+        // let's see if we have to create new geometries
+        BboxInstancerInfo instancer;
+        CoreVector<BboxInstancerInfo> new_instancers(0, m->instancers.inserted.get_count());
+        for (auto inserted_item : m->instancers.inserted) {
+            // initializing the new instancer
+            // instancer.transforms.remove_all();
+            // instancer.resources.remove_all();
+            // since we create them we need to make them as fully dirty
+            instancer.dirtiness = R2cSceneDelegate::DIRTINESS_ALL;
+            // synching the new instancer
+            sync_new_instancer(inserted_item, instancer);
+            // adding it to our instancer index
+            m->instancers.index.add(inserted_item, instancer);
+            new_instancers.add(instancer);
+        }
+        // since we processed all pending inserted instancers we have to clear the array
+        m->instancers.inserted.remove_all();
 
-//        // let's see if new instancers have been added. Interestingly it's possible
-//        // that sync_instancers remove and add items if the topology changes. This
-//        // is why it is very important to first sync the index, remove and finally add.
-//        // let's see if we have to create new geometries
-//        BboxInstancerInfo instancer;
-//        CoreVector<BboxInstancerInfo> new_instancers(0, m->instancers.inserted.get_count());
-//        for (auto inserted_item : m->instancers.inserted) {
-//            // initializing the new instancer
-//            instancer.ptrs.remove_all();
-//            instancer.resources.remove_all();
-//            // since we create them we need to make them as fully dirty
-//            instancer.dirtiness = R2cSceneDelegate::DIRTINESS_ALL;
-//            // synching the new instancer
-//            sync_new_instancer(inserted_item, instancer);
-//            // adding it to our instancer index
-//            m->instancers.index.add(inserted_item, instancer);
-//            new_instancers.add(instancer);
-//        }
-//        // since we processed all pending inserted instancers we have to clear the array
-//        m->instancers.inserted.remove_all();
-
-//        if (!cleanup.point_clouds) {
-//            // we can just add new geometries to the scene since they are already synched!
-//            for (auto new_instancer : new_instancers) {
-//                for (auto point_cloud : new_instancer.ptrs) {
-//                    m->scene->AddMeshPointCloud(point_cloud);
-//                }
-//            }
-//        }
-//    }
-//    // our instancers are now perfectly synched
-//    m->instancers.dirty = false;
+    //    if (!cleanup.point_clouds) {
+    //        // we can just add new geometries to the scene since they are already synched!
+    //        for (auto new_instancer : new_instancers) {
+    //            for (auto point_cloud : new_instancer.ptrs) {
+    //                m->scene->AddMeshPointCloud(point_cloud);
+    //            }
+    //        }
+    //    }
+    }
+    // our instancers are now perfectly synched
+    m->instancers.dirty = false;
 }
 
 /*! \brief light synchronization helper */

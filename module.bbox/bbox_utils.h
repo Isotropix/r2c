@@ -59,8 +59,9 @@ typedef CoreHashTable<R2cItemId, BboxGeometryInfo> BBGeometryIndex;
     \brief internal class holding instancer data which is basically a list of Bbox point clouds instancing a geometry */
 class BboxInstancerInfo {
 public:
-    CoreArray<GMathMatrix4x4d> transforms;
-    CoreArray<R2cResourceId> resources; //!< list of unique resources for used by all prototypes the number of resources can be smaller that the number of prototypes if there's deduplication
+    bool visibility;
+    GMathMatrix4x4d transform;
+    R2cResourceId resource; //!< id to the actual Clarisse geometry resource
     int dirtiness; //!< dirtiness state of the item
     BboxInstancerInfo() : dirtiness(R2cSceneDelegate::DIRTINESS_ALL) {}
 };
