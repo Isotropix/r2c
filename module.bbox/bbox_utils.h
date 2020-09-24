@@ -23,8 +23,7 @@ struct LightData {
 class BboxCamera {
 
 public:
-    BboxCamera(const R2cSceneDelegate *render_delegate);
-    void init_ray_generator(const unsigned int width, const unsigned int height);
+    void init_ray_generator(const R2cSceneDelegate &delegate, const unsigned int width, const unsigned int height);
     GMathRay generate_ray(const unsigned int width, const unsigned int height, const unsigned int x, const unsigned int y);
 
 private :

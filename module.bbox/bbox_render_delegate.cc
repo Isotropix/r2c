@@ -26,7 +26,7 @@
 class BboxDelegateImpl {
 public:
 
-      BboxCamera *camera; // Bbox render camera
+      BboxCamera camera; // Bbox render camera
 //    RenderingBlockSink *sink; // Bbox BlockSink that fills the Clarisse's render buffer
 //    RenderingAbortChecker *abort_checker; // Bbox AbortChecker that notifies the renderer to stop
 //    RenderingProgress *progress; // Bbox rendering progress
@@ -221,7 +221,7 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
             const unsigned int pixel_index = (pixel_y * width + pixel_x) * 4;
 
             // Compute ray for the pixel [X, Y]
-            GMathRay ray = m->camera->generate_ray(width, height, pixel_x, pixel_y);
+            GMathRay ray = m->camera.generate_ray(width, height, pixel_x, pixel_y);
 
             GMathVec3f final_color = light_contribution;
 
@@ -403,18 +403,7 @@ BboxRenderDelegate::clear()
 void
 BboxRenderDelegate::sync_camera(const unsigned int& width, const unsigned int& height)
 {
-    if (!get_scene_delegate()->get_camera().is_destroyed()) {
-
-        if (m->camera == nullptr) {
-             m->camera = new BboxCamera(get_scene_delegate());
-        }
-
-    } else if (m->camera != nullptr) {
-        delete m->camera;
-        m->camera = nullptr;
-    }
-
-    m->camera->init_ray_generator(width, height);
+    m->camera.init_ray_generator(*get_scene_delegate(), width, height);
 }
 
 void
