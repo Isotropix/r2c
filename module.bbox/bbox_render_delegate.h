@@ -114,15 +114,9 @@ private:
      *  \param cleanup output cleanup flags to do post cleanup with the render scene */
     void sync_lights(CleanupFlags& cleanup);
     /*! \brief Synchronize the render camera with the scene delegate
-     *  \param w width of the rendered image
-     *  \param h hight of the rendered image
-     *  \param cox x offset of the render region
-     *  \param coy y offset of the render region
-     *  \param cw width of the render region
-     *  \param ch height of the render region */
-    void sync_camera(const unsigned int& w, const unsigned int& h,
-                     const unsigned int& cox, const unsigned int& coy,
-                     const unsigned int& cw, const unsigned int& ch);
+     *  \param width width of the rendered image
+     *  \param height hight of the rendered image
+    void sync_camera(const unsigned int& width, const unsigned int& height);
     /*! \brief Cleanup the render scene according to the specified flags
      *  \note This post cleanup is there to rebuild the render scene since bbox can only
      *        add new items not remove them. We are then obliged to remove the corresponding

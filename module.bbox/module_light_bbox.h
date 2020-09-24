@@ -22,7 +22,7 @@ public :
         cb.cb_evaluate = cb_evaluate;
     }
 
-    typedef GMathVec3d (*EvaluateLightCallback) (OfObject& object);
+    typedef GMathVec3f (*EvaluateLightCallback) (OfObject& object);
     EvaluateLightCallback cb_evaluate;
 };
 
@@ -34,7 +34,7 @@ public:
     ModuleLightBbox();
     virtual ~ModuleLightBbox() override;
 
-    GMathVec3d evaluate() {
+    GMathVec3f evaluate() {
         return get_callbacks<ModuleLightBboxCallback>()->cb_evaluate(*get_object());
     }
 

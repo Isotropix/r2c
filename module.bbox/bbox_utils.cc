@@ -32,3 +32,9 @@ void BboxUtils::create_light(const R2cSceneDelegate &render_delegate, R2cItemId 
     // Fill the light data
     light_info.light_data.light_module = static_cast<ModuleLightBbox *>(item->get_module());
 }
+
+BboxCamera::BboxCamera(const R2cSceneDelegate *render_delegate)
+{
+    ModuleCamera *current_camera = static_cast<ModuleCamera *>(render_delegate->get_camera().get_item()->get_module());
+    ray_generator = current_camera->create_ray_generator();
+}

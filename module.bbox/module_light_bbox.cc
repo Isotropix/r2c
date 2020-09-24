@@ -26,9 +26,9 @@ ModuleLightBbox::mangle_class(const CoreString& class_name)
     return name;
 }
 
-static GMathVec3d default_evaluate(OfObject&)
+static GMathVec3f default_evaluate(OfObject&)
 {
-    return GMathVec3d(1.0,0.0,0.0);
+    return GMathVec3f(0.0,0.0,0.0);
 }
 
 ModuleLightBboxCallback::ModuleLightBboxCallback()

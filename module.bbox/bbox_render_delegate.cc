@@ -28,7 +28,7 @@
 class BboxDelegateImpl {
 public:
 
-//    BBCamera *camera; // Bbox render camera
+      BboxCamera *camera; // Bbox render camera
 //    RenderingBlockSink *sink; // Bbox BlockSink that fills the Clarisse's render buffer
 //    RenderingAbortChecker *abort_checker; // Bbox AbortChecker that notifies the renderer to stop
 //    RenderingProgress *progress; // Bbox rendering progress
@@ -121,7 +121,6 @@ BboxRenderDelegate::sync_render_settings(const float& sampling_quality)
 void
 BboxRenderDelegate::insert_light(R2cItemDescriptor item)
 {
-    LOG_INFO("asdasdasdasd\n");
     m->lights.inserted.add(item.get_id());
 }
 
@@ -197,11 +196,10 @@ BboxRenderDelegate::dirty_geometry(R2cItemDescriptor item, const int& dirtiness)
 void
 BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling_quality)
 {
-    sync();
-
     const unsigned int width = static_cast<unsigned int>(render_buffer->get_width());
     const unsigned int height = static_cast<unsigned int>(render_buffer->get_height());
 
+    sync_camera(width, height);
     sync();
 
     // Browse all the light in the scene and compute the light contribution
@@ -214,6 +212,10 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
     // Create a Ray Generator
     ModuleCamera *current_camera = static_cast<ModuleCamera *>(get_scene_delegate()->get_camera().get_item()->get_module());
     RayGeneratorCamera *ray_generator = current_camera->create_ray_generator();
+    ray_generator->init(width, height, 1, 1);
+
+    // Get the background color from the renderer
+    const GMathVec3f background_color(0.1,0.0,0.0);
 
     float *result_buffer = new float[width * height * 4];
 
@@ -231,13 +233,17 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
             unsigned int index = 0;
             image_sampler.init(width, height);
             image_sampler.get_pixel_samples(pixel_x, pixel_y, &image_sample, &pixel_sample, min, max);
-            ray_generator->get_rays(&image_sample, &pixel_sample, 1, &ray, &index);
 
-            // If we hit something we take the color form the intersected BBox and multiply it per all the light contrinutions
-            const GMathVec3f background_color(fabs(ray.get_direction()[0]), fabs(ray.get_direction()[1]), fabs(ray.get_direction()[2]));
-            GMathVec3f final_color = background_color * light_contribution;
+            m->camera->ray_generator->get_rays(&image_sample, &pixel_sample, 1, &ray, &index);
+
+            GMathVec3f final_color = light_contribution;
 
             // Use this ray to raytrace the scene
+            // If we hit something we take the color from the intersected material BBox and multiply it per all the light contrinutions
+
+            bool hit_something = false;
+
+            // Raytrace the geometries
             for (const auto geom: m->geometries.index) {
                 const BboxGeometryInfo& geom_info = geom.get_value();
                 const BboxResourceInfo* resource_info = m->resources.index.is_key_exists(geom_info.resource);
@@ -248,12 +254,13 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
 
                 double tmin, tmax;
                 if (transformed_bbox.intersect(ray, tmin, tmax)) {
-                    final_color = GMathVec3f(1.0, 1.0, 1.0) * light_contribution;
+                    final_color *= GMathVec3f(1.0, 1.0, 1.0);
+                    hit_something = true;
                     break;
                 }
             }
             
-            // Use this ray to raytrace the scene
+            // Raytrace the instancers
             for (const auto instancer: m->instancers.index) {
                 const BboxInstancerInfo& instancer_info = instancer.get_value();
                 const BboxResourceInfo* resource_info = m->resources.index.is_key_exists(instancer_info.resource);
@@ -264,11 +271,18 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
 
                 double tmin, tmax;
                 if (transformed_bbox.intersect(ray, tmin, tmax)) {
-                    final_color = GMathVec3f(1.0, 1.0, 1.0) * light_contribution;
+                    final_color *= GMathVec3f(1.0, 1.0, 1.0);
+                    hit_something = true;
                     break;
                 }
             }
 
+            // Hit nothing
+            if (!hit_something) {
+                final_color = background_color;
+            }
+
+            // Set the color for the pixel [X,Y]
             result_buffer[pixel_index]     = final_color[0];
             result_buffer[pixel_index + 1] = final_color[1];
             result_buffer[pixel_index + 2] = final_color[2];
@@ -399,38 +413,22 @@ BboxRenderDelegate::clear()
 }
 
 void
-BboxRenderDelegate::sync_camera(const unsigned int& w, const unsigned int& h,
-                                    const unsigned int& cox, const unsigned int& coy,
-                                    const unsigned int& cw, const unsigned int& ch)
+BboxRenderDelegate::sync_camera(const unsigned int& width, const unsigned int& height)
 {
-//    if (!get_scene_delegate()->get_camera().is_destroyed()) {
-//        if (m->camera == nullptr) {
-//            m->camera = BB_Camera_New();
-//        }
-//        ModuleCamera *cam = static_cast<ModuleCamera *>(get_scene_delegate()->get_camera().get_item()->get_module());
-//        m->camera->SetMatrix(BboxUtils::ToBBMatrix4x4(cam->get_global_matrix()));
+    if (!get_scene_delegate()->get_camera().is_destroyed()) {
 
-//        m->camera->SetNumStepsFromRendererOptions(); // we need to call this before setting any parameters or matrices. As the name suggests, this reads the transformation blur "num steps" and allocates as many aspect, near/far plane, matrices, etc as needed
-//        m->camera->SetFramebufferParams(w, h, cox, coy, cw, ch);
+        if (m->camera == nullptr) {
+             m->camera = new BboxCamera(get_scene_delegate());
+        }
 
-//        // FIXME: need to support all types of compatible cameras
-//        m->camera->SetType("BB_CAMERA_TYPE_PERSPECTIVE");
+    } else if (m->camera != nullptr) {
+        delete m->camera;
+        m->camera = nullptr;
+    }
 
-//        float bbox_ratio = static_cast<float>(h) / static_cast<float>(w);
-//		double clarisse_ratio = static_cast<double>(w) / static_cast<double>(h), hfov, vfov;
-//        cam->get_fovs(clarisse_ratio, hfov, vfov);
-
-//        // We need to ensure all steps are cleared because the scene might be using transformation blur!
-//        for(unsigned int i=0; i< m->camera->GetNumTransformationSteps(); i++) {
-//            m->camera->SetAspect(bbox_ratio, i); // height divided by width
-//            m->camera->SetNear(0.01f, i);
-//            m->camera->SetFar(100000.0f, i);
-//            m->camera->SetFOVOrOrthogonalHeight(gmath_radians(static_cast<float>(vfov)), true, i); // FOV to 90 degrees in radians. We want 90 degrees horizontal FOV, hence the false parameter.
-//        }
-//    } else if (m->camera != nullptr) { // shouldn't really happen since we can't be called with an empty camera
-//        BB_Camera_Delete(m->camera);
-//        m->camera = nullptr;
-//    }
+    ModuleCamera *current_camera = static_cast<ModuleCamera *>(get_scene_delegate()->get_camera().get_item()->get_module());
+    m->camera->ray_generator = current_camera->create_ray_generator();
+    m->camera->ray_generator->init(width, height, 1, 1);
 }
 
 void

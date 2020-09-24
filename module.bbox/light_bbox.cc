@@ -1,14 +1,9 @@
 //
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
-
 #include <of_object.h>
-#include <of_app.h>
-#include <dso_export.h>
-
-#include <module_scene_item.h>
-
 #include "module_light_bbox.h"
+
 #include "light_bbox.cma"
 
 #if ISOTROPIX_VERSION_NUMBER >= IX_BUILD_VERSION_NUMBER(4, 0, 2, 0, 0, 0)
@@ -18,9 +13,8 @@
 #endif
 
 IX_BEGIN_DECLARE_MODULE_CALLBACKS(ModuleLightBbox, ModuleLightBboxCallback)
-    static GMathVec3d evaluate(OfObject&object);
+    static GMathVec3f evaluate(OfObject& object);
 IX_END_DECLARE_MODULE_CALLBACKS(ModuleLightBbox)
-
 
 namespace LightBbox
 {
@@ -36,7 +30,7 @@ namespace LightBbox
     }
 }
 
-GMathVec3d IX_MODULE_CLBK::evaluate(OfObject& object)
+GMathVec3f IX_MODULE_CLBK::evaluate(OfObject& object)
 {
-    return object.get_attribute("color")->get_vec3d();
+    return static_cast<GMathVec3f>(object.get_attribute("color")->get_vec3d());
 }

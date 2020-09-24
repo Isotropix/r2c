@@ -14,9 +14,16 @@
 
 class OfAttr;
 class ModuleMaterial;
+class RayGeneratorCamera;
 
 struct LightData {
     ModuleLightBbox *light_module;
+};
+
+class BboxCamera {
+public:
+    BboxCamera(const R2cSceneDelegate *render_delegate);
+    RayGeneratorCamera *ray_generator;
 };
 
 /*! \class BboxLightInfo
@@ -26,7 +33,6 @@ public:
     int dirtiness; // dirtiness state of the item
     BboxLightInfo() : dirtiness(R2cSceneDelegate::DIRTINESS_ALL) {}
     LightData light_data;
-
 };
 
 typedef CoreHashTable<R2cItemId, BboxLightInfo> BboxLightIndex;
