@@ -24,7 +24,7 @@ public :
 
 /*! \class ModuleMaterialBbox
     \brief This class implements the Bbox Material abstract class in Clarisse. */
-class ModuleMaterialBbox : public ModuleProjectItem {
+class ModuleMaterialBbox : public ModuleMaterial {
 public:
 
     ModuleMaterialBbox();

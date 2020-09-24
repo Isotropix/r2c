@@ -209,6 +209,7 @@ R2cSceneDelegate::dispatch_scene_object_dirtiness(EventObject& sender, const Eve
 {
     OfObject *item = static_cast<OfObject *>(&sender);
     const OfAttr *attr = item->get_changing_attr();
+    CoreString name = attr->get_name();
     R2cItemDescriptor descriptor = get_item_descriptor(item);
     int transmitted_dirtiness = DIRTINESS_NONE;
 
@@ -357,7 +358,6 @@ R2cSceneDelegate::get_geometry_resource(R2cItemId id) const
 R2cShadingGroupInfo
 R2cSceneDelegate::get_shading_group_info(R2cItemId id, const unsigned int& shading_group_id) const
 {
-    // FIXME: Should be extended to support shading layer and the shading table instead
     R2cItemDescriptor *item = m_render_item_dependencies.is_key_exists(id);
     R2cShadingGroupInfo shading_group_info;
     shading_group_info.m_material.set_type(R2cItemDescriptor::TYPE_MATERIAL);

@@ -7,11 +7,11 @@
 #include "module_material_bbox.h"
 #include "bbox_utils.h"
 
-IMPLEMENT_CLASS(ModuleMaterialBbox, ModuleProjectItem)
+IMPLEMENT_CLASS(ModuleMaterialBbox, ModuleMaterial)
 
 static GMathVec3f default_shade(OfObject& /* unused */)
 {
-    return GMathVec3f(1.0f, 0.0f, 1.0f);
+    return GMathVec3f(1.0f, 0.0f, 0.0f);
 }
 
 ModuleMaterialBboxCallbacks::ModuleMaterialBboxCallbacks()
@@ -19,7 +19,7 @@ ModuleMaterialBboxCallbacks::ModuleMaterialBboxCallbacks()
 {}
 
 ModuleMaterialBbox::ModuleMaterialBbox()
-    : ModuleProjectItem()
+    : ModuleMaterial()
 {}
 
 ModuleMaterialBbox::~ModuleMaterialBbox()

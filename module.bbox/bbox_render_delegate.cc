@@ -402,8 +402,12 @@ BboxRenderDelegate::sync_camera(const unsigned int& width, const unsigned int& h
 void
 sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cgeometryid, BboxGeometryInfo& rgeometry)
 {
-    const R2cShadingGroupInfo&  shading_group = delegate.get_shading_group_info(cgeometryid, 0);
-    rgeometry.material = MaterialData(shading_group.get_material().is_null() ? nullptr : static_cast<ModuleMaterialBbox *>(shading_group.get_material().get_item()->get_module()));
+    const R2cShadingGroupInfo& shading_group = delegate.get_shading_group_info(cgeometryid, 0);
+    if (shading_group.get_material().is_null()) {
+        rgeometry.material = nullptr;
+    } else {
+        rgeometry.material = static_cast<ModuleMaterialBbox *>(shading_group.get_material().get_item()->get_module());
+    }
 }
 
 void
