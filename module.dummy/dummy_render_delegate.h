@@ -79,15 +79,15 @@ private:
 
     /*! \brief Add a new geometry (never been processed yet) to the render scene and synchronize it
      *  \param cgeometryid id of the new geometry in the scene delegate
-     *  \param rgeometry bbox geometry handle */
+     *  \param rgeometry dummy geometry handle */
     void sync_new_geometry(R2cItemId cgeometryid, BboxGeometryInfo& rgeometry) { _sync_geometry(cgeometryid, rgeometry, true); }
     /*! \brief Synchronize an existing render geometry with the one defined in the scene delegate
      *  \param cgeometryid id of the geometry in the scene delegate
-     *  \param rgeometry bbox geometry handle */
+     *  \param rgeometry dummy geometry handle */
     void sync_geometry(R2cItemId cgeometryid, BboxGeometryInfo& rgeometry) { _sync_geometry(cgeometryid, rgeometry, false); }
     /*! \brief Actual implementation of geometry synchronization whereas it is a new or an existing one
      *  \param cgeometryid id of the geometry in the scene delegate
-     *  \param rgeometry bbox geometry definition handle
+     *  \param rgeometry dummy geometry definition handle
      *  \param is_new set whether the input geometry is new or existing (there are two different codepaths) */
     void _sync_geometry(R2cItemId cgeometryid, BboxGeometryInfo& rgeometry, const bool& is_new);
     /*! \brief Synchronize all needed geometries with the render scene
@@ -96,15 +96,15 @@ private:
 
     /*! \brief Add a new instancer (never been processed yet) to the render scene and synchronize it
      *  \param cinstancerid id of the new instancer in the scene delegate
-     *  \param rinstancer bbox instancer definition handle */
+     *  \param rinstancer dummy instancer definition handle */
     inline void sync_new_instancer(R2cItemId cinstancerid, BboxInstancerInfo& rinstancer) { _sync_instancer(cinstancerid, rinstancer, true); }
     /*! \brief Synchronize an existing instancer with the one defined in the scene delegate
      *  \param cinstancerid id of the instancer in the scene delegate
-     *  \param rinstancer bbox instancer definition handle */
+     *  \param rinstancer dummy instancer definition handle */
     inline void sync_instancer(R2cItemId cinstancerid, BboxInstancerInfo& rinstancer) { _sync_instancer(cinstancerid, rinstancer, false); }
     /*! \brief Actual implementation of instancer synchronization whereas it is a new or an existing one
      *  \param cinstancerid id of the instancer in the scene delegate
-     *  \param rinstancer bbox geometry definition handle
+     *  \param rinstancer dummy geometry definition handle
      *  \param is_new set whether the input instancer is new or existing (there are two different codepaths) */
     void _sync_instancer(R2cItemId cinstancerid, BboxInstancerInfo& rinstancer, const bool& is_new);
     /*! \brief Synchronize all needed instancers with the render scene
@@ -118,7 +118,7 @@ private:
      *  \param height hight of the rendered image */
     void sync_camera(const unsigned int& width, const unsigned int& height);
     /*! \brief Cleanup the render scene according to the specified flags
-     *  \note This post cleanup is there to rebuild the render scene since bbox can only
+     *  \note This post cleanup is there to rebuild the render scene since dummy can only
      *        add new items not remove them. We are then obliged to remove the corresponding
               item collections (mesh, lights...) if an item has been removed from the scene. */
     void cleanup_scene(const CleanupFlags& cleanup);

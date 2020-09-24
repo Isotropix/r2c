@@ -2,50 +2,50 @@
 # Copyright 2020 - present Isotropix SAS. See License.txt for license information
 #
 set (SOURCES
-    layer_bbox.cc
-    light_bbox.cc
+    layer_dummy.cc
+    light_dummy.cc
     main.cc
-    material_bbox.cc
-    module_light_bbox.cc
-    module_material_bbox.cc
-    module_renderer_bbox.cc
-    bbox_render_delegate.cc
-    bbox_utils.cc
-    renderer_bbox.cc
+    material_dummy.cc
+    module_light_dummy.cc
+    module_material_dummy.cc
+    module_renderer_dummy.cc
+    dummy_render_delegate.cc
+    dummy_utils.cc
+    renderer_dummy.cc
 )
 
 set (HEADERS
-    module_light_bbox.h
-    module_material_bbox.h
-    module_renderer_bbox.h
-    bbox_render_delegate.h
-    bbox_utils.h
+    module_light_dummy.h
+    module_material_dummy.h
+    module_renderer_dummy.h
+    dummy_render_delegate.h
+    dummy_utils.h
 )
 
 set (CID_FILES
-    layer_bbox.cid
-    light_bbox.cid
-    material_bbox.cid
-    renderer_bbox.cid
+    layer_dummy.cid
+    light_dummy.cid
+    material_dummy.cid
+    renderer_dummy.cid
 )
 
 set (CID_DEPENDS
     layer_r2c_scene
 )
 
-add_clarisse_module (bbox
+add_clarisse_module (dummy
     "${SOURCES}"
     "${HEADERS}"
     "${CID_FILES}"
     "${CID_DEPENDS}"
 )
 
-target_include_directories (bbox
+target_include_directories (dummy
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries (bbox
+target_link_libraries (dummy
     PRIVATE
         # helper library
         ix_r2c

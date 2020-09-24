@@ -2,7 +2,7 @@
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
 
-#include "bbox_utils.h"
+#include "dummy_utils.h"
 
 #include <core_log.h>
 #include <gmath_matrix3x3.h>
@@ -11,8 +11,8 @@
 #include <module_camera.h>
 #include <module_geometry.h>
 #include <module_layer.h>
-#include <module_light_bbox.h>
-#include <module_material_bbox.h>
+#include <module_light_dummy.h>
+#include <module_material_dummy.h>
 #include <module_scene_object_tree.h>
 #include <of_context.h>
 #include <poly_mesh_smoothed.h>
@@ -31,7 +31,7 @@ void BboxUtils::create_light(const R2cSceneDelegate &render_delegate, R2cItemId 
     OfObject *item = idesc.get_item();
 
     // Fill the light data
-    light_info.light_data.light_module = static_cast<ModuleLightBbox *>(item->get_module());
+    light_info.light_data.light_module = static_cast<ModuleLightDummy *>(item->get_module());
 }
 
 void BboxCamera::init_ray_generator(const R2cSceneDelegate& delegate, const unsigned int width, const unsigned int height)

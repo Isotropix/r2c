@@ -6,10 +6,10 @@
 #include <of_app.h>
 #include <dso_export.h>
 
-#include <bbox_render_delegate.h>
-#include <module_renderer_bbox.h>
+#include <dummy_render_delegate.h>
+#include <module_renderer_dummy.h>
 
-#include "renderer_bbox.cma"
+#include "renderer_dummy.cma"
 
 #if ISOTROPIX_VERSION_NUMBER >= IX_BUILD_VERSION_NUMBER(4, 0, 2, 0, 0, 0)
 #define MODULE_CLASS OfModule
@@ -17,17 +17,17 @@
 #define MODULE_CLASS ModuleObject
 #endif
 
-IX_BEGIN_DECLARE_MODULE_CALLBACKS(ModuleRendererBbox, ModuleRendererCallbacks)
+IX_BEGIN_DECLARE_MODULE_CALLBACKS(ModuleRendererDummy, ModuleRendererCallbacks)
     static MODULE_CLASS *declare_module(OfObject& object, OfObjectFactory& objects);
     static void get_supported_lights(OfObject& object, CoreVector<CoreString>& supported_lights, CoreVector<CoreString>& unsupported_lights);
 	static void get_supported_geometries(OfObject& object, CoreVector<CoreString>& supported_geometries, CoreVector<CoreString>& unsupported_geometries);
 	static void get_supported_materials(OfObject& object, CoreVector<CoreString>& supported_materials, CoreVector<CoreString>& unsupported_materials);
-IX_END_DECLARE_MODULE_CALLBACKS(ModuleRendererBbox)
+IX_END_DECLARE_MODULE_CALLBACKS(ModuleRendererDummy)
 
 MODULE_CLASS *
 IX_MODULE_CLBK::declare_module(OfObject& object, OfObjectFactory& objects)
 {
-    ModuleRendererBbox *settings = new ModuleRendererBbox;
+    ModuleRendererDummy *settings = new ModuleRendererDummy;
     settings->set_object(object);
     return settings;
 }
@@ -55,11 +55,11 @@ IX_MODULE_CLBK::get_supported_materials(OfObject& object, CoreVector<CoreString>
 	unsupported_materials = BboxRenderDelegate::s_unsupported_materials;
 }
 
-namespace RendererBbox
+namespace RendererDummy
 {
     void on_register(OfApp& app, CoreVector<OfClass *>& new_classes)
     {
-        OfClass *new_class = IX_DECLARE_MODULE_CLASS(ModuleRendererBbox)
+        OfClass *new_class = IX_DECLARE_MODULE_CLASS(ModuleRendererDummy)
         new_classes.add(new_class);
 
         IX_MODULE_CLBK *module_callbacks;

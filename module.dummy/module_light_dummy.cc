@@ -4,33 +4,33 @@
 
 #include <of_app.h>
 
-#include "module_light_bbox.h"
+#include "module_light_dummy.h"
 
-IMPLEMENT_CLASS(ModuleLightBbox, ModuleLight)
+IMPLEMENT_CLASS(ModuleLightDummy, ModuleLight)
 
-static const char *base_class_name = "LightBbox";
+static const char *base_class_name = "LightDummy";
 
 static GMathVec3f default_evaluate(OfObject&)
 {
     return GMathVec3f(1.0f, 0.0f, 0.0f);
 }
 
-ModuleLightBboxCallbacks::ModuleLightBboxCallbacks()
+ModuleLightDummyCallbacks::ModuleLightDummyCallbacks()
 : cb_evaluate(default_evaluate)
 {
 }
 
-ModuleLightBbox::ModuleLightBbox() : ModuleLight()
+ModuleLightDummy::ModuleLightDummy() : ModuleLight()
 {
 }
 
-ModuleLightBbox::~ModuleLightBbox()
+ModuleLightDummy::~ModuleLightDummy()
 {
 }
 
 // TODO: is this usefull ?
 CoreString
-ModuleLightBbox::mangle_class(const CoreString& class_name)
+ModuleLightDummy::mangle_class(const CoreString& class_name)
 {
     CoreString name = base_class_name;
     name += class_name;

@@ -2,13 +2,12 @@
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
 
-class "LightBbox" "Light" {
+class "LightDummy" "Light" {
     #version 0.9
-    category "/Light/Bbox"
-    doc "An abstract Bbox light defining common attribute of Bbox lights."
-
+    category "/Light/Dummy"
+    doc "A Dummy light with a color."
     color "color" {
-        value 0 0 0
+        value 1 1 1
         doc "color of the light"
     }
 }

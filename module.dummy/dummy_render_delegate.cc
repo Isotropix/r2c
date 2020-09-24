@@ -16,11 +16,11 @@
 #include <r2c_render_buffer.h>
 #include <r2c_instancer.h>
 
-#include <module_material_bbox.h>
-#include "module_renderer_bbox.h"
-#include "bbox_utils.h"
+#include <module_material_dummy.h>
+#include "module_renderer_dummy.h"
+#include "dummy_utils.h"
 
-#include "bbox_render_delegate.h"
+#include "dummy_render_delegate.h"
 
 // private implementation
 class BboxDelegateImpl {
@@ -77,9 +77,9 @@ IMPLEMENT_CLASS(BboxRenderDelegate, R2cRenderDelegate);
 
 const CoreVector<CoreString> BboxRenderDelegate::s_supported_cameras      = { "CameraAlembic", "CameraUsd", "CameraPerspective", "CameraPerspectiveAdvanced"};
 const CoreVector<CoreString> BboxRenderDelegate::s_unsupported_cameras    = {};
-const CoreVector<CoreString> BboxRenderDelegate::s_supported_lights       = { "LightBbox" };
+const CoreVector<CoreString> BboxRenderDelegate::s_supported_lights       = { "LightDummy" };
 const CoreVector<CoreString> BboxRenderDelegate::s_unsupported_lights     = {};
-const CoreVector<CoreString> BboxRenderDelegate::s_supported_materials    = { "MaterialBbox" };
+const CoreVector<CoreString> BboxRenderDelegate::s_supported_materials    = { "MaterialDummy" };
 const CoreVector<CoreString> BboxRenderDelegate::s_unsupported_materials  = {};
 const CoreVector<CoreString> BboxRenderDelegate::s_supported_geometries   = { "SceneObject" };
 const CoreVector<CoreString> BboxRenderDelegate::s_unsupported_geometries = { "GeometryVolume", "GeometryFur", "GeometryBundle", "GeometrySphere", "GeometryCylinder", "GeometryPointArray" };
@@ -98,7 +98,7 @@ BboxRenderDelegate::~BboxRenderDelegate()
 CoreString 
 BboxRenderDelegate::get_class_name() const
 {
-    return "RendererBbox";
+    return "RendererDummy";
 }
 
 bool
@@ -106,8 +106,8 @@ BboxRenderDelegate::sync_render_settings(const float& sampling_quality)
 {
     if (!get_scene_delegate()->get_render_settings().is_null()) {
         R2cItemDescriptor renderer = get_scene_delegate()->get_render_settings();
-        if (!renderer.is_null() && renderer.get_item()->get_module()->is_kindof(ModuleRendererBbox::class_info())) {
-            ModuleRendererBbox *settings = static_cast<ModuleRendererBbox *>(renderer.get_item()->get_module());
+        if (!renderer.is_null() && renderer.get_item()->get_module()->is_kindof(ModuleRendererDummy::class_info())) {
+            ModuleRendererDummy *settings = static_cast<ModuleRendererDummy *>(renderer.get_item()->get_module());
             settings->sync(sampling_quality);
             return true;
         }
@@ -209,7 +209,7 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
 
     // Get the background color from the renderer
     R2cItemDescriptor renderer = get_scene_delegate()->get_render_settings();
-    ModuleRendererBbox *settings = static_cast<ModuleRendererBbox *>(renderer.get_item()->get_module());
+    ModuleRendererDummy *settings = static_cast<ModuleRendererDummy *>(renderer.get_item()->get_module());
     const GMathVec3f background_color = settings->get_background_color();
 
     float *result_buffer = new float[width * height * 4];
@@ -228,8 +228,6 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
             // Use this ray to raytrace the scene
             // If we hit something we take the color from the intersected material BBox and multiply it per all the light contrinutions
             // If nothing is hit we return the background renderer color
-
-            bool hit_something = false;
 
             // Raytrace the geometries
             for (const auto geom: m->geometries.index) {
@@ -406,7 +404,7 @@ sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cgeometryid, Bbo
     if (shading_group.get_material().is_null()) {
         rgeometry.material = nullptr;
     } else {
-        rgeometry.material = static_cast<ModuleMaterialBbox *>(shading_group.get_material().get_item()->get_module());
+        rgeometry.material = static_cast<ModuleMaterialDummy *>(shading_group.get_material().get_item()->get_module());
     }
 }
 
@@ -429,7 +427,7 @@ BboxRenderDelegate::_sync_geometry(R2cItemId cgeometryid, BboxGeometryInfo& rgeo
                 // create corresponding geometry resource according to the Clarisse geometry
                 BboxResourceInfo new_resource;
 
-                // Extract the bbox
+                // Extract the dummy
                 R2cItemDescriptor idesc = get_scene_delegate()->get_render_item(cgeometryid);
                 ModuleSceneObject *module = static_cast<ModuleSceneObject *>(idesc.get_item()->get_module());
                 new_resource.bbox = module->get_bbox();
@@ -551,7 +549,7 @@ BboxRenderDelegate::sync_geometries(CleanupFlags& cleanup)
     //    if (!cleanup.mesh_instances) {
     //        // we can just add new geometries to the scene since they are already synched!
     //        for (auto new_geometry : new_geometries) {
-    //            // TODO: instert in bboxes vector
+    //            // TODO: instert in dummyes vector
     //           m->scene->AddMeshInstance(new_geometry.ptr);
     //        }
     //    }
@@ -566,12 +564,12 @@ sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cinstancerid, Bb
 {
 //    // retreive the clarisse instancer
 //    R2cItemDescriptor cinstancer = delegate.get_render_item(cinstancerid);
-//    // since the bbox instancer is mimicing Clarisse, shading groups/material association are perfect match
+//    // since the dummy instancer is mimicing Clarisse, shading groups/material association are perfect match
 //    unsigned int shading_group_offset = 0;
 //    for (auto instancer : rinstancer.ptrs) {
 //        for (unsigned int sgindex = 0; sgindex < instancer->GetNumMaterials(); sgindex++) {
 //            const R2cShadingGroupInfo& shading_group = delegate.get_shading_group_info(cinstancerid, sgindex + shading_group_offset);
-//            instancer->SetMaterial(sgindex, shading_group.get_material().is_null() ? BboxUtils::get_default_material() : static_cast<ModuleMaterialBbox *>(shading_group.get_material().get_item()->get_module())->get_material());
+//            instancer->SetMaterial(sgindex, shading_group.get_material().is_null() ? BboxUtils::get_default_material() : static_cast<ModuleMaterialDummy *>(shading_group.get_material().get_item()->get_module())->get_material());
 //        }
 //        shading_group_offset += instancer->GetNumMaterials();
 //    }
@@ -599,7 +597,7 @@ BboxRenderDelegate::_sync_instancer(R2cItemId cinstancerid, BboxInstancerInfo& r
                 // create corresponding geometry resource according to the Clarisse geometry
                 BboxResourceInfo new_resource;
 
-                // Extract the bbox
+                // Extract the dummy
                 R2cItemDescriptor idesc = get_scene_delegate()->get_render_item(cinstancerid);
                 ModuleSceneObject *module = static_cast<ModuleSceneObject *>(idesc.get_item()->get_module());
                 new_resource.bbox = module->get_bbox();

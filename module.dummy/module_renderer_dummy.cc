@@ -6,14 +6,14 @@
 #include <of_object_factory.h>
 #include <of_time.h>
 
-#include "module_renderer_bbox.h"
+#include "module_renderer_dummy.h"
 
 
-IMPLEMENT_CLASS(ModuleRendererBbox, ModuleRenderer)
+IMPLEMENT_CLASS(ModuleRendererDummy, ModuleRenderer)
 
-ModuleRendererBbox::ModuleRendererBbox() : ModuleRenderer(), m_background_color(0.0f) {}
+ModuleRendererDummy::ModuleRendererDummy() : ModuleRenderer(), m_background_color(0.0f) {}
 
-ModuleRendererBbox::~ModuleRendererBbox() {}
+ModuleRendererDummy::~ModuleRendererDummy() {}
 
 template <typename T>
 inline T GetValue(OfObject& object, const char *aname, T dvalue, bool force_default, const float& mult)
@@ -24,13 +24,13 @@ inline T GetValue(OfObject& object, const char *aname, T dvalue, bool force_defa
 }
 
 void
-ModuleRendererBbox::sync(const float& sampling_quality)
+ModuleRendererDummy::sync(const float& sampling_quality)
 {
 }
 
 // doing nothing there. Just here as an example
 void
-ModuleRendererBbox::on_attribute_change(const OfAttr& attr, int& dirtiness, const int& dirtiness_flags)
+ModuleRendererDummy::on_attribute_change(const OfAttr& attr, int& dirtiness, const int& dirtiness_flags)
 {
     ModuleProjectItem::on_attribute_change(attr, dirtiness, dirtiness_flags);
     if (attr.get_name() == "background_color") {

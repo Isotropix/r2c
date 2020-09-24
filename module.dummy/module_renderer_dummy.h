@@ -8,17 +8,17 @@
 
 class OfObject;
 
-/*! \class ModuleRendererBbox
+/*! \class ModuleRendererDummy
     \brief This class implements a small subset of Bbox render settings in Clarisse.
-           This module a C++ interface to the RendererBbox OfClass which exposes
+           This module a C++ interface to the RendererDummy OfClass which exposes
            Bbox renderer specific attributes/properties. The role of the module
            is to implement what happends when users edit attributes of the renderer
            item in Clarisse. */
-class ModuleRendererBbox : public ModuleRenderer {
+class ModuleRendererDummy : public ModuleRenderer {
 public:
 
-    ModuleRendererBbox();
-    virtual ~ModuleRendererBbox() override;
+    ModuleRendererDummy();
+    virtual ~ModuleRendererDummy() override;
 
     /*! \brief Synchronize Bbox renderer to the attributes of the actual renderer item
      *  \param sampling_quality global sampling multiplier.

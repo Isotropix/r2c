@@ -4,9 +4,9 @@
 
 #include <dso_export.h>
 #include <r2c_module_layer_scene.h>
-#include <bbox_render_delegate.h>
+#include <dummy_render_delegate.h>
 
-#include "layer_bbox.cma"
+#include "layer_dummy.cma"
 
 IX_BEGIN_DECLARE_MODULE_CALLBACKS(ModuleLayerBbox, ModuleLayerR2cSceneCallbacks)
     static R2cRenderDelegate *get_render_delegate(OfObject& object);

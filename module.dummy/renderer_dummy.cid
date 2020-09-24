@@ -2,7 +2,7 @@
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
 
-class "RendererBbox" "Renderer" {
+class "RendererDummy" "Renderer" {
     #version 1.0
     category "/Renderer"
     doc "Define Bbox render settings."

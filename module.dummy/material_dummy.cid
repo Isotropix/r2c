@@ -2,12 +2,12 @@
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
 
-class "MaterialBbox" "Material" {
+class "MaterialDummy" "Material" {
     #version 0.9
-    category "/Material/Bbox"
-    doc "An abstract Bbox material."
+    category "/Material/dummy"
+    doc "A Dummy material."
     
     color "color" {
-        value 0 0 0
+        value 1 1 1
     }
 }

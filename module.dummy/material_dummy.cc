@@ -8,8 +8,8 @@
 
 #include <module_scene_item.h>
 
-#include "module_material_bbox.h"
-#include "material_bbox.cma"
+#include "module_material_dummy.h"
+#include "material_dummy.cma"
 
 #if ISOTROPIX_VERSION_NUMBER >= IX_BUILD_VERSION_NUMBER(4, 0, 2, 0, 0, 0)
 #define MODULE_CLASS OfModule
@@ -17,16 +17,16 @@
 #define MODULE_CLASS ModuleObject
 #endif
 
-class ModuleMaterialBboxCallbackOverrides : public ModuleMaterialBboxCallbacks {
+class ModuleMaterialDummyCallbackOverrides : public ModuleMaterialDummyCallbacks {
 };
 
 // WARNING: do not remove this typedef, it is needed by the macro IX_CREATE_MODULE_CLBK
-typedef ModuleMaterialBboxCallbackOverrides IX_MODULE_CLBK;
+typedef ModuleMaterialDummyCallbackOverrides IX_MODULE_CLBK;
 
 MODULE_CLASS *
 declare_module(OfObject& object, OfObjectFactory& objects)
 {
-    ModuleMaterialBbox *material = new ModuleMaterialBbox;
+    ModuleMaterialDummy *material = new ModuleMaterialDummy;
     material->set_object(object);
     return material;
 }
@@ -37,11 +37,11 @@ shade(OfObject& object)
     return GMathVec3f(object.get_attribute("color")->get_vec3d());
 }
 
-namespace MaterialBbox
+namespace MaterialDummy
 {
     void on_register(OfApp& app, CoreVector<OfClass *>& new_classes)
     {
-        OfClass *new_class = IX_DECLARE_MODULE_CLASS(ModuleMaterialBbox);
+        OfClass *new_class = IX_DECLARE_MODULE_CLASS(ModuleMaterialDummy);
         new_classes.add(new_class);
 
         IX_MODULE_CLBK *module_callbacks;

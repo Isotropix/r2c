@@ -7,9 +7,9 @@
 #include <sys_globals.h>
 
 // Forward declarations of module registration functions
-namespace MaterialBbox { void on_register(OfApp &, CoreVector<OfClass *> &); }
-namespace LightBbox { void on_register(OfApp &, CoreVector<OfClass *> &); }
-namespace RendererBbox { void on_register(OfApp &, CoreVector<OfClass *> &); }
+namespace MaterialDummy { void on_register(OfApp &, CoreVector<OfClass *> &); }
+namespace LightDummy { void on_register(OfApp &, CoreVector<OfClass *> &); }
+namespace RendererDummy { void on_register(OfApp &, CoreVector<OfClass *> &); }
 namespace LayerBbox { void on_register(OfApp &, CoreVector<OfClass *> &); }
 
 IX_BEGIN_EXTERN_C
@@ -17,9 +17,9 @@ IX_BEGIN_EXTERN_C
     DSO_EXPORT void
     on_register_module(OfApp& app, CoreVector<OfClass *>& new_classes) {
         // register module classes
-        MaterialBbox::on_register(app, new_classes);
-        LightBbox::on_register(app, new_classes);
-        RendererBbox::on_register(app, new_classes);
+        MaterialDummy::on_register(app, new_classes);
+        LightDummy::on_register(app, new_classes);
+        RendererDummy::on_register(app, new_classes);
         LayerBbox::on_register(app, new_classes);
     }
 

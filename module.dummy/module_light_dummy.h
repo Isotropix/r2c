@@ -10,15 +10,15 @@ class BboxLight;
 
 class OfObject;
 
-class ModuleLightBboxCallbacks : public ModuleLightCallbacks  {
+class ModuleLightDummyCallbacks : public ModuleLightCallbacks  {
 public :
 
-    ModuleLightBboxCallbacks();
+    ModuleLightDummyCallbacks();
 
     virtual void init_callbacks(OfClassCallbacks& callbacks)
     {
         ModuleSceneItemCallbacks::init_callbacks(callbacks);
-        ModuleLightBboxCallbacks& cb = (ModuleLightBboxCallbacks&)callbacks;
+        ModuleLightDummyCallbacks& cb = (ModuleLightDummyCallbacks&)callbacks;
         cb.cb_evaluate = cb_evaluate;
     }
 
@@ -26,17 +26,17 @@ public :
     EvaluateLightCallback cb_evaluate;
 };
 
-/*! \class ModuleLightBbox
+/*! \class ModuleLightDummy
     \brief This class implements the Bbox Light abstract class in Clarisse. */
-class ModuleLightBbox : public ModuleLight {
+class ModuleLightDummy : public ModuleLight {
 public:
 
-    ModuleLightBbox();
-    virtual ~ModuleLightBbox() override;
+    ModuleLightDummy();
+    virtual ~ModuleLightDummy() override;
 
     GMathVec3f evaluate()
     {
-        return get_callbacks<ModuleLightBboxCallbacks>()->cb_evaluate(*get_object());
+        return get_callbacks<ModuleLightDummyCallbacks>()->cb_evaluate(*get_object());
     }
 
     /*! \brief return a Clarisse UI style name from the specified Bbox shader class name.
@@ -45,8 +45,8 @@ public:
 
 private:
 
-    ModuleLightBbox(const ModuleLightBbox&) = delete;
-    ModuleLightBbox& operator=(const ModuleLightBbox&) = delete;
+    ModuleLightDummy(const ModuleLightDummy&) = delete;
+    ModuleLightDummy& operator=(const ModuleLightDummy&) = delete;
 
     DECLARE_CLASS
 };

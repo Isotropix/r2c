@@ -8,15 +8,15 @@
 #include <gmath_matrix4x4.h>
 #include <gmath_vec3.h>
 #include <r2c_scene_delegate.h>
-#include <module_light_bbox.h>
-#include <module_material_bbox.h>
+#include <module_light_dummy.h>
+#include <module_material_dummy.h>
 
 class OfAttr;
 class ModuleMaterial;
 class RayGeneratorCamera;
 
 struct LightData {
-    ModuleLightBbox *light_module;
+    ModuleLightDummy *light_module;
 };
 
 class BboxCamera {
@@ -43,11 +43,11 @@ typedef CoreHashTable<R2cItemId, BboxLightInfo> BboxLightIndex;
 // MATERIAL
 struct MaterialData {
     MaterialData(): material_module(nullptr) {}
-    MaterialData(ModuleMaterialBbox* module): material_module(module) {}
-    ModuleMaterialBbox *material_module;
+    MaterialData(ModuleMaterialDummy* module): material_module(module) {}
+    ModuleMaterialDummy *material_module;
 };
 
-/*! \class bboxResourceInfo
+/*! \class dummyResourceInfo
     \brief internal class holding the actual geometric resource data */
 class BboxResourceInfo {
 public:

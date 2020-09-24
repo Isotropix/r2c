@@ -7,14 +7,14 @@
 
 class OfObject;
 
-class ModuleMaterialBboxCallbacks : public ModuleMaterialCallbacks  {
+class ModuleMaterialDummyCallbacks : public ModuleMaterialCallbacks  {
 public :
-    ModuleMaterialBboxCallbacks();
+    ModuleMaterialDummyCallbacks();
 
     virtual void init_callbacks(OfClassCallbacks& callbacks)
     {
         ModuleMaterialCallbacks::init_callbacks(callbacks);
-        ModuleMaterialBboxCallbacks& cb = (ModuleMaterialBboxCallbacks&)callbacks;
+        ModuleMaterialDummyCallbacks& cb = (ModuleMaterialDummyCallbacks&)callbacks;
         cb.cb_shade = cb_shade;
     }
 
@@ -22,17 +22,17 @@ public :
     ShadeCallback cb_shade;
 };
 
-/*! \class ModuleMaterialBbox
+/*! \class ModuleMaterialDummy
     \brief This class implements the Bbox Material abstract class in Clarisse. */
-class ModuleMaterialBbox : public ModuleMaterial {
+class ModuleMaterialDummy : public ModuleMaterial {
 public:
 
-    ModuleMaterialBbox();
-    virtual ~ModuleMaterialBbox() override;
+    ModuleMaterialDummy();
+    virtual ~ModuleMaterialDummy() override;
 
     inline GMathVec3f shade()
     {
-        return get_callbacks<ModuleMaterialBboxCallbacks>()->cb_shade(*get_object());
+        return get_callbacks<ModuleMaterialDummyCallbacks>()->cb_shade(*get_object());
     }
 
 private:

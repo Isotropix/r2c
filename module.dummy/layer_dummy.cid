@@ -1,0 +1,8 @@
+//
+// Copyright 2020 - present Isotropix SAS. See License.txt for license information
+//
+
+class "LayerDummy" "LayerR2cScene" {
+    #version 1.0
+    doc "The Dummy Layer allows to render a scene using a Dummy renderer."
+}
