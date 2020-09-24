@@ -10,15 +10,15 @@ class BboxLight;
 
 class OfObject;
 
-class ModuleLightBboxCallback : public ModuleLightCallbacks  {
+class ModuleLightBboxCallbacks : public ModuleLightCallbacks  {
 public :
 
-    ModuleLightBboxCallback();
+    ModuleLightBboxCallbacks();
 
     virtual void init_callbacks(OfClassCallbacks& callbacks)
     {
         ModuleSceneItemCallbacks::init_callbacks(callbacks);
-        ModuleLightBboxCallback& cb = (ModuleLightBboxCallback&)callbacks;
+        ModuleLightBboxCallbacks& cb = (ModuleLightBboxCallbacks&)callbacks;
         cb.cb_evaluate = cb_evaluate;
     }
 
@@ -34,8 +34,9 @@ public:
     ModuleLightBbox();
     virtual ~ModuleLightBbox() override;
 
-    GMathVec3f evaluate() {
-        return get_callbacks<ModuleLightBboxCallback>()->cb_evaluate(*get_object());
+    GMathVec3f evaluate()
+    {
+        return get_callbacks<ModuleLightBboxCallbacks>()->cb_evaluate(*get_object());
     }
 
     /*! \brief return a Clarisse UI style name from the specified Bbox shader class name.

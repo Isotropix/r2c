@@ -6,8 +6,6 @@
 #include <module_object.h>
 #include <sys_globals.h>
 
-#include "bbox_utils.h"
-
 // Forward declarations of module registration functions
 namespace MaterialBbox { void on_register(OfApp &, CoreVector<OfClass *> &); }
 namespace LightBbox { void on_register(OfApp &, CoreVector<OfClass *> &); }

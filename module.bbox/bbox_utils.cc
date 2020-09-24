@@ -24,7 +24,6 @@
 #include <ray_generator_camera.h>
 #include <sampling_image.h>
 
-
 void BboxUtils::create_light(const R2cSceneDelegate &render_delegate, R2cItemId item_id, BboxLightInfo &light_info)
 {
     // Get the OfObject of the light

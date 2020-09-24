@@ -1,9 +1,7 @@
 //
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
-
-#ifndef REDSHIFT_UTILS_H
-#define REDSHIFT_UTILS_H
+#pragma once
 
 #include <core_hash_table.h>
 #include <gmath_bbox3.h>
@@ -11,6 +9,7 @@
 #include <gmath_vec3.h>
 #include <r2c_scene_delegate.h>
 #include <module_light_bbox.h>
+#include <module_material_bbox.h>
 
 class OfAttr;
 class ModuleMaterial;
@@ -41,6 +40,13 @@ public:
 
 typedef CoreHashTable<R2cItemId, BboxLightInfo> BboxLightIndex;
 
+// MATERIAL
+struct MaterialData {
+    MaterialData(): material_module(nullptr) {}
+    MaterialData(ModuleMaterialBbox* module): material_module(module) {}
+    ModuleMaterialBbox *material_module;
+};
+
 /*! \class bboxResourceInfo
     \brief internal class holding the actual geometric resource data */
 class BboxResourceInfo {
@@ -59,6 +65,7 @@ public:
     bool visibility;
     GMathMatrix4x4d transform;
     R2cResourceId resource; //!< id to the actual Clarisse geometry resource
+    MaterialData material;
     int dirtiness; //!< dirtiness state of the item
     BboxGeometryInfo() : resource(nullptr), dirtiness(R2cSceneDelegate::DIRTINESS_ALL) {}
 };
@@ -79,9 +86,6 @@ public:
 typedef CoreHashTable<R2cItemId, BboxInstancerInfo> BBInstancerIndex;
 
 
-class BboxUtils {
-public :
-    static void create_light(const R2cSceneDelegate& render_delegate, R2cItemId item_id, BboxLightInfo& light_info);
+namespace BboxUtils {
+    void create_light(const R2cSceneDelegate& render_delegate, R2cItemId item_id, BboxLightInfo& light_info);
 };
-
-#endif

@@ -12,9 +12,16 @@
 #define MODULE_CLASS ModuleObject
 #endif
 
-IX_BEGIN_DECLARE_MODULE_CALLBACKS(ModuleLightBbox, ModuleLightBboxCallback)
-    static GMathVec3f evaluate(OfObject& object);
-IX_END_DECLARE_MODULE_CALLBACKS(ModuleLightBbox)
+class ModuleLightBboxCallbackOverrides : public ModuleLightBboxCallbacks {
+public:
+    static GMathVec3f evaluate(OfObject& object)
+    {
+        return GMathVec3f(object.get_attribute("color")->get_vec3d());
+    }
+};
+
+// WARNING: do not remove this typedef, it is needed by the macro IX_CREATE_MODULE_CLBK
+typedef ModuleLightBboxCallbackOverrides IX_MODULE_CLBK;
 
 namespace LightBbox
 {
@@ -28,9 +35,4 @@ namespace LightBbox
 
         module_callbacks->cb_evaluate = IX_MODULE_CLBK::evaluate;
     }
-}
-
-GMathVec3f IX_MODULE_CLBK::evaluate(OfObject& object)
-{
-    return static_cast<GMathVec3f>(object.get_attribute("color")->get_vec3d());
 }

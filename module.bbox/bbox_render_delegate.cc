@@ -54,7 +54,7 @@ public:
         bool is_dirty() { return inserted.get_count() != 0 || removed.get_count() != 0 || dirty; } // return true is index is dirty
 
     } lights;
-
+    
     struct {
         BBInstancerIndex index; // index of all render instancers
         CoreVector<R2cItemId> inserted; // is filled by BboxRenderDelegate::insert_instancer when an instancer is inserted to the scene
@@ -223,7 +223,7 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
             // Compute ray for the pixel [X, Y]
             GMathRay ray = m->camera.generate_ray(width, height, pixel_x, pixel_y);
 
-            GMathVec3f final_color = light_contribution;
+            GMathVec3f final_color = background_color;
 
             // Use this ray to raytrace the scene
             // If we hit something we take the color from the intersected material BBox and multiply it per all the light contrinutions
@@ -242,8 +242,7 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
 
                 double tmin, tmax;
                 if (transformed_bbox.intersect(ray, tmin, tmax)) {
-                    final_color *= GMathVec3f(1.0, 1.0, 1.0);
-                    hit_something = true;
+                    final_color = (geom_info.material.material_module ? geom_info.material.material_module->shade() : GMathVec3f(1.0f, 0.0f, 1.0f)) * light_contribution;
                     break;
                 }
             }
@@ -259,15 +258,9 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
 
                 double tmin, tmax;
                 if (transformed_bbox.intersect(ray, tmin, tmax)) {
-                    final_color *= GMathVec3f(1.0, 1.0, 1.0);
-                    hit_something = true;
+                    final_color = GMathVec3f(1.0f, 1.0f, 0.0f) * light_contribution;
                     break;
                 }
-            }
-
-            // Hit nothing
-            if (!hit_something) {
-                final_color = background_color;
             }
 
             // Set the color for the pixel [X,Y]
@@ -409,10 +402,8 @@ BboxRenderDelegate::sync_camera(const unsigned int& width, const unsigned int& h
 void
 sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cgeometryid, BboxGeometryInfo& rgeometry)
 {
-//    for (unsigned int i = 0; i < rgeometry.materials->GetNumMaterials(); i++) {
-//        const R2cShadingGroupInfo&  shading_group = delegate.get_shading_group_info(cgeometryid, i);
-//        rgeometry.materials->SetMaterial(i, shading_group.get_material().is_null() ? BboxUtils::get_default_material() : static_cast<ModuleMaterialBbox *>(shading_group.get_material().get_item()->get_module())->get_material());
-//    }
+    const R2cShadingGroupInfo&  shading_group = delegate.get_shading_group_info(cgeometryid, 0);
+    rgeometry.material = MaterialData(shading_group.get_material().is_null() ? nullptr : static_cast<ModuleMaterialBbox *>(shading_group.get_material().get_item()->get_module()));
 }
 
 void
@@ -469,9 +460,9 @@ BboxRenderDelegate::_sync_geometry(R2cItemId cgeometryid, BboxGeometryInfo& rgeo
         rgeometry.transform = get_scene_delegate()->get_transform(cgeometryid);
     }
 
-    //    if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_SHADING_GROUP) {
-    //        sync_shading_groups(*get_scene_delegate(), cgeometryid, rgeometry);
-    //    }
+    if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_SHADING_GROUP) {
+        sync_shading_groups(*get_scene_delegate(), cgeometryid, rgeometry);
+    }
 
     if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_VISIBILITY) {
         rgeometry.visibility = get_scene_delegate()->get_visible(cgeometryid);
@@ -640,9 +631,9 @@ BboxRenderDelegate::_sync_instancer(R2cItemId cinstancerid, BboxInstancerInfo& r
         rinstancer.transform = get_scene_delegate()->get_transform(cinstancerid);
     }
 
-//    if (rinstancer.dirtiness & R2cSceneDelegate::DIRTINESS_SHADING_GROUP) {
-//        sync_shading_groups(*get_scene_delegate(), cinstancerid, rinstancer);
-//    }
+    if (rinstancer.dirtiness & R2cSceneDelegate::DIRTINESS_SHADING_GROUP) {
+        sync_shading_groups(*get_scene_delegate(), cinstancerid, rinstancer);
+    }
 
     if (rinstancer.dirtiness & R2cSceneDelegate::DIRTINESS_VISIBILITY) {
         rinstancer.visibility = get_scene_delegate()->get_visible(cinstancerid);

@@ -10,6 +10,16 @@ IMPLEMENT_CLASS(ModuleLightBbox, ModuleLight)
 
 static const char *base_class_name = "LightBbox";
 
+static GMathVec3f default_evaluate(OfObject&)
+{
+    return GMathVec3f(1.0f, 0.0f, 0.0f);
+}
+
+ModuleLightBboxCallbacks::ModuleLightBboxCallbacks()
+: cb_evaluate(default_evaluate)
+{
+}
+
 ModuleLightBbox::ModuleLightBbox() : ModuleLight()
 {
 }
@@ -18,20 +28,11 @@ ModuleLightBbox::~ModuleLightBbox()
 {
 }
 
+// TODO: is this usefull ?
 CoreString
 ModuleLightBbox::mangle_class(const CoreString& class_name)
 {
     CoreString name = base_class_name;
     name += class_name;
     return name;
-}
-
-static GMathVec3f default_evaluate(OfObject&)
-{
-    return GMathVec3f(0.0,0.0,0.0);
-}
-
-ModuleLightBboxCallback::ModuleLightBboxCallback()
-{
-    cb_evaluate = default_evaluate;
 }

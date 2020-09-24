@@ -17,16 +17,24 @@
 #define MODULE_CLASS ModuleObject
 #endif
 
-IX_BEGIN_DECLARE_MODULE_CALLBACKS(ModuleMaterialBbox, ModuleMaterialCallbacks)
-    static MODULE_CLASS *declare_module(OfObject& object, OfObjectFactory& objects);
-IX_END_DECLARE_MODULE_CALLBACKS(ModuleMaterialBbox)
+class ModuleMaterialBboxCallbackOverrides : public ModuleMaterialBboxCallbacks {
+};
+
+// WARNING: do not remove this typedef, it is needed by the macro IX_CREATE_MODULE_CLBK
+typedef ModuleMaterialBboxCallbackOverrides IX_MODULE_CLBK;
 
 MODULE_CLASS *
-IX_MODULE_CLBK::declare_module(OfObject& object, OfObjectFactory& objects)
+declare_module(OfObject& object, OfObjectFactory& objects)
 {
     ModuleMaterialBbox *material = new ModuleMaterialBbox;
     material->set_object(object);
     return material;
+}
+
+GMathVec3f
+shade(OfObject& object)
+{
+    return GMathVec3f(object.get_attribute("color")->get_vec3d());
 }
 
 namespace MaterialBbox
@@ -38,6 +46,7 @@ namespace MaterialBbox
 
         IX_MODULE_CLBK *module_callbacks;
         IX_CREATE_MODULE_CLBK(new_class, module_callbacks)
-        module_callbacks->cb_create_module = IX_MODULE_CLBK::declare_module;
+        module_callbacks->cb_create_module = declare_module;
+        module_callbacks->cb_shade = shade;
     }
 }

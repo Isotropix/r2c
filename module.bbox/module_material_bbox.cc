@@ -7,40 +7,21 @@
 #include "module_material_bbox.h"
 #include "bbox_utils.h"
 
-IMPLEMENT_CLASS(ModuleMaterialBbox, ModuleMaterial)
+IMPLEMENT_CLASS(ModuleMaterialBbox, ModuleProjectItem)
 
-static const char *base_class_name = "MaterialBbox";
-
-ModuleMaterialBbox::ModuleMaterialBbox() : ModuleMaterial()
+static GMathVec3f default_shade(OfObject& /* unused */)
 {
-    m_material = nullptr;
+    return GMathVec3f(1.0f, 0.0f, 1.0f);
 }
+
+ModuleMaterialBboxCallbacks::ModuleMaterialBboxCallbacks()
+: cb_shade(default_shade)
+{}
+
+ModuleMaterialBbox::ModuleMaterialBbox()
+    : ModuleProjectItem()
+{}
 
 ModuleMaterialBbox::~ModuleMaterialBbox()
 {
-}
-
-void
-ModuleMaterialBbox::on_attribute_change(const OfAttr& attr, int& dirtiness, const int& dirtiness_flags)
-{
-    ModuleMaterial::on_attribute_change(attr, dirtiness, dirtiness_flags);
-}
-
-void
-ModuleMaterialBbox::on_material_rename(OfObject& object, const EventInfo& evtid, void *data)
-{
-}
-
-CoreString
-ModuleMaterialBbox::mangle_class(const CoreString& class_name)
-{
-    CoreString name = base_class_name;
-    name += class_name;
-    return name;
-}
-
-void
-ModuleMaterialBbox::module_constructor(OfObject& object)
-{
-    ModuleMaterial::module_constructor(object);
 }
