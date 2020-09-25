@@ -255,7 +255,6 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
             task_manager.add_task(tasks[task_id], false);
             ++task_id;
             next_buffer_entry += bucket_width * bucket_height * 4;
-            LOG_INFO_VAR4(offset_x, offset_y, bucket_width, bucket_height);
         }
     }
     task_manager.wait_until_completed();
