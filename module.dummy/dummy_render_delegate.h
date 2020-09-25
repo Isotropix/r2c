@@ -61,7 +61,7 @@ public:
 	static const CoreVector<CoreString> s_supported_geometries;
 	static const CoreVector<CoreString> s_unsupported_geometries;
 
-    void render_scene(float* result_buffer, R2cRenderBuffer *render_buffer, unsigned int width, unsigned int height, const R2cRenderBuffer::Region& reg, const GMathVec3f& light_contribution, const GMathVec3f& background_color) const;
+    void render_region(float* result_buffer, R2cRenderBuffer *render_buffer, unsigned int width, unsigned int height, const R2cRenderBuffer::Region& reg, const GMathVec3f& light_contribution, const GMathVec3f& background_color) const;
 
 private:
 
