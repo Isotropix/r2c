@@ -32,9 +32,9 @@ declare_module(OfObject& object, OfObjectFactory& objects)
 }
 
 GMathVec3f
-shade(OfObject& object)
+shade(OfObject& object, const GMathVec3f& ray_dir, const GMathVec3f& normal)
 {
-    return GMathVec3f(object.get_attribute("color")->get_vec3d());
+    return fabs(ray_dir.dot(normal)) * GMathVec3f(object.get_attribute("color")->get_vec3d());
 }
 
 namespace MaterialDummy

@@ -18,7 +18,7 @@ public :
         cb.cb_shade = cb_shade;
     }
 
-    typedef GMathVec3f (*ShadeCallback) (OfObject& object);
+    typedef GMathVec3f (*ShadeCallback) (OfObject& object, const GMathVec3f& ray_dir, const GMathVec3f& normal);
     ShadeCallback cb_shade;
 };
 
@@ -30,9 +30,9 @@ public:
     ModuleMaterialDummy();
     virtual ~ModuleMaterialDummy() override;
 
-    inline GMathVec3f shade()
+    inline GMathVec3f shade(const GMathVec3f& ray_dir, const GMathVec3f& normal)
     {
-        return get_callbacks<ModuleMaterialDummyCallbacks>()->cb_shade(*get_object());
+        return get_callbacks<ModuleMaterialDummyCallbacks>()->cb_shade(*get_object(), ray_dir, normal);
     }
 
 private:

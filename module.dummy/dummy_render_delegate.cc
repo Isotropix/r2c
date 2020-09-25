@@ -18,7 +18,6 @@
 
 #include <module_material_dummy.h>
 #include "module_renderer_dummy.h"
-#include "dummy_utils.h"
 
 #include "dummy_render_delegate.h"
 
@@ -207,11 +206,6 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
         light_contribution += light_data.light_module->evaluate();
     }
 
-    // Get the background color from the renderer
-    R2cItemDescriptor renderer = get_scene_delegate()->get_render_settings();
-    ModuleRendererDummy *settings = static_cast<ModuleRendererDummy *>(renderer.get_item()->get_module());
-    const GMathVec3f background_color = settings->get_background_color();
-
     float *result_buffer = new float[width * height * 4];
 
     // Browse our image and for each pixel we compute a ray and raytrace the scene
@@ -222,44 +216,7 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
 
             // Compute ray for the pixel [X, Y]
             GMathRay ray = m->camera.generate_ray(width, height, pixel_x, pixel_y);
-
-            GMathVec3f final_color = background_color;
-
-            // Use this ray to raytrace the scene
-            // If we hit something we take the color from the intersected material BBox and multiply it per all the light contrinutions
-            // If nothing is hit we return the background renderer color
-
-            // Raytrace the geometries
-            for (const auto geom: m->geometries.index) {
-                const BboxGeometryInfo& geom_info = geom.get_value();
-                const BboxResourceInfo* resource_info = m->resources.index.is_key_exists(geom_info.resource);
-                CORE_ASSERT(resource_info != nullptr);
-
-                GMathBbox3d transformed_bbox;
-                resource_info->bbox.transform_bbox_and_get_bbox(geom_info.transform, transformed_bbox);
-
-                double tmin, tmax;
-                if (transformed_bbox.intersect(ray, tmin, tmax)) {
-                    final_color = (geom_info.material.material_module ? geom_info.material.material_module->shade() : GMathVec3f(1.0f, 0.0f, 1.0f)) * light_contribution;
-                    break;
-                }
-            }
-            
-            // Raytrace the instancers
-            for (const auto instancer: m->instancers.index) {
-                const BboxInstancerInfo& instancer_info = instancer.get_value();
-                const BboxResourceInfo* resource_info = m->resources.index.is_key_exists(instancer_info.resource);
-                CORE_ASSERT(resource_info != nullptr);
-
-                GMathBbox3d transformed_bbox;
-                resource_info->bbox.transform_bbox_and_get_bbox(instancer_info.transform, transformed_bbox);
-
-                double tmin, tmax;
-                if (transformed_bbox.intersect(ray, tmin, tmax)) {
-                    final_color = GMathVec3f(1.0f, 1.0f, 0.0f) * light_contribution;
-                    break;
-                }
-            }
+            GMathVec3f final_color = raytrace_scene(ray, light_contribution);
 
             // Set the color for the pixel [X,Y]
             result_buffer[pixel_index]     = final_color[0];
@@ -275,6 +232,34 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
     render_buffer->finalize();
 
     delete [] result_buffer;
+}
+
+GMathVec3f
+BboxRenderDelegate::raytrace_scene(const GMathRay& ray, const GMathVec3f& light_contribution)
+{
+    // Use this ray to raytrace the scene
+    // If we hit something we take the color from the intersected material BBox and multiply it per all the light contrinutions
+    // If nothing is hit we return the background renderer color
+    double closest_hit_t = gmath_infinity;
+    GMathVec3d closest_hit_normal;
+    MaterialData closest_hit_material;
+
+    // For simplicity, we handle instancers and geometries the same way
+    raytrace_objects(ray, m->geometries.index, closest_hit_t, closest_hit_normal, closest_hit_material);
+    raytrace_objects(ray, m->instancers.index, closest_hit_t, closest_hit_normal, closest_hit_material);
+
+    if (closest_hit_t != gmath_infinity)
+    {
+        if (closest_hit_material.material_module)
+            return closest_hit_material.material_module->shade(GMathVec3f(ray.get_direction()), GMathVec3f(closest_hit_normal)) * light_contribution;
+        else
+            return GMathVec3f(1.0f, 0.0f, 1.0f) * light_contribution;
+    }
+    
+    // Get the background color from the renderer
+    R2cItemDescriptor renderer = get_scene_delegate()->get_render_settings();
+    ModuleRendererDummy *settings = static_cast<ModuleRendererDummy *>(renderer.get_item()->get_module());
+    return settings->get_background_color();
 }
 
 float
@@ -562,6 +547,12 @@ BboxRenderDelegate::sync_geometries(CleanupFlags& cleanup)
 void
 sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cinstancerid, BboxInstancerInfo& rinstancer)
 {
+    const R2cShadingGroupInfo& shading_group = delegate.get_shading_group_info(cinstancerid, 0);
+    if (shading_group.get_material().is_null()) {
+        rinstancer.material = nullptr;
+    } else {
+        rinstancer.material = static_cast<ModuleMaterialDummy *>(shading_group.get_material().get_item()->get_module());
+    }
 //    // retreive the clarisse instancer
 //    R2cItemDescriptor cinstancer = delegate.get_render_item(cinstancerid);
 //    // since the dummy instancer is mimicing Clarisse, shading groups/material association are perfect match

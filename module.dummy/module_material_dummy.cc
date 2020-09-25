@@ -9,7 +9,7 @@
 
 IMPLEMENT_CLASS(ModuleMaterialDummy, ModuleMaterial)
 
-static GMathVec3f default_shade(OfObject& /* unused */)
+static GMathVec3f default_shade(OfObject& /* object */, const GMathVec3f& /* ray_dir */, const GMathVec3f& /* normal */ )
 {
     return GMathVec3f(1.0f, 0.0f, 0.0f);
 }

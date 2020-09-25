@@ -6,6 +6,7 @@
 #define REDSHIFT_RENDER_DELEGATE_H
 
 #include <r2c_render_delegate.h>
+#include "dummy_utils.h"
 
 class BboxDelegateImpl;
 class BboxGeometryInfo;
@@ -122,6 +123,35 @@ private:
      *        add new items not remove them. We are then obliged to remove the corresponding
               item collections (mesh, lights...) if an item has been removed from the scene. */
     void cleanup_scene(const CleanupFlags& cleanup);
+
+
+    GMathVec3f raytrace_scene(const GMathRay& ray, const GMathVec3f& light_contribution);
+
+    template<class OBJECTS_INDEX>
+    void raytrace_objects(const GMathRay& ray, const OBJECTS_INDEX& index, double &closest_hit_t, GMathVec3d &closest_hit_normal, MaterialData& closest_hit_material)
+    {
+        for (const auto object: index)
+        {
+            const auto &object_info = object.get_value();
+            const BboxResourceInfo *resource_info = m->resources.index.is_key_exists(object_info.resource);
+            CORE_ASSERT(resource_info != nullptr);
+
+            Bbox transformed_bbox;
+            resource_info->bbox.transform_bbox_and_get_bbox(object_info.transform, transformed_bbox);
+
+            double tmin, tmax;
+            GMathVec3d normal;
+            if (transformed_bbox.intersect(ray, tmin, tmax, normal))
+            {
+                if (tmin < closest_hit_t)
+                {
+                    closest_hit_t = tmin;
+                    closest_hit_normal = normal;
+                    closest_hit_material = object_info.material;
+                }
+            }
+        }
+    }
 
     BboxDelegateImpl *m; // private implementation
     DECLARE_CLASS
