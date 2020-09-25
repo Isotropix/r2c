@@ -31,9 +31,6 @@
 class BboxDelegateImpl {
 public:
       BboxCamera camera; // Bbox render camera
-//    RenderingBlockSink *sink; // Bbox BlockSink that fills the Clarisse's render buffer
-//    RenderingAbortChecker *abort_checker; // Bbox AbortChecker that notifies the renderer to stop
-//    RenderingProgress *progress; // Bbox rendering progress
 
     struct {
         BBResourceIndex index; // the index of all current resources where we store deduplicated data
@@ -68,13 +65,6 @@ public:
         bool is_dirty() { return inserted.get_count() != 0 || removed.get_count() != 0 || dirty; } // return true is index is dirty
 
     } instancers;
-
-    inline BboxDelegateImpl()
-    {
-    }
-
-    ~BboxDelegateImpl() {
-    }
 };
 
 IMPLEMENT_CLASS(BboxRenderDelegate, R2cRenderDelegate);
@@ -201,9 +191,7 @@ public :
     RenderRegionTask(): reg(0,0,0,0) {}
 
     virtual void execution_entry(const unsigned int& id) {
-        dummy_render_delegate->render_scene(buffer, render_buffer, total_width, total_height, reg, light_contribution);
-        if (progress_bar)
-            progress_bar->increment(progress_scale);
+        dummy_render_delegate->render_scene(buffer_ptr, render_buffer, total_width, total_height, reg, light_contribution);
     }
 
     unsigned int total_width;
@@ -212,19 +200,15 @@ public :
     GMathVec3f light_contribution;
     R2cRenderBuffer *render_buffer;
     const BboxRenderDelegate *dummy_render_delegate;
-    float* buffer;
-    // ThreadGeometryData *thread_data;
-
-    AppProgressBar *progress_bar;
-    float progress_scale;
+    float* buffer_ptr;
 };
 
 
 void
 BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling_quality)
 {
-    const unsigned int width = static_cast<unsigned int>(render_buffer->get_width());
-    const unsigned int height = static_cast<unsigned int>(render_buffer->get_height());
+    const unsigned int width = render_buffer->get_width();
+    const unsigned int height = render_buffer->get_height();
 
     sync_camera(width, height);
     sync();
@@ -259,21 +243,17 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
             tasks[task_id].total_height          = height;
             tasks[task_id].reg                   = R2cRenderBuffer::Region(offset_x, offset_y, w, h);
             tasks[task_id].light_contribution    = light_contribution;
-            tasks[task_id].progress_bar          = nullptr;
             tasks[task_id].render_buffer         = render_buffer;
             tasks[task_id].dummy_render_delegate = this;
-            tasks[task_id].buffer                = next_buffer_entry;
+            tasks[task_id].buffer_ptr            = next_buffer_entry;
             task_manager.add_task(tasks[task_id], false);
             ++task_id;
             next_buffer_entry += w * h * 4;
         }
     }
     task_manager.wait_until_completed();
-    // render_buffer->fill_rgba_region(image_buffer, width, R2cRenderBuffer::Region(0,0, width, height), false);
     render_buffer->finalize();
     delete[] image_buffer;
-
-    // render_scene(render_buffer, width, height, R2cRenderBuffer::Region(0,0, width / 2, height / 2), light_contribution);
 }
 
 void
