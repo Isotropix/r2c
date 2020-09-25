@@ -18,7 +18,7 @@ IX_END_DECLARE_MODULE_CALLBACKS(ModuleLayerDummy)
 R2cRenderDelegate *
 IX_MODULE_CLBK::get_render_delegate(OfObject& object)
 {
-    return new BboxRenderDelegate;
+    return new BboxRenderDelegate(&object.get_application());
 }
 
 namespace LayerDummy

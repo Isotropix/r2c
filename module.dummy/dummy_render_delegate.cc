@@ -5,7 +5,9 @@
 #include <core_log.h>
 #include <sys_thread_lock.h>
 #include <of_object.h>
+#include <of_app.h>
 
+#include <app_progress_bar.h>
 #include <image_canvas.h>
 #include <image_map_channel.h>
 #include <module_layer.h>
@@ -13,8 +15,9 @@
 #include <module_particle.h>
 
 #include <r2c_scene_delegate.h>
-#include <r2c_render_buffer.h>
 #include <r2c_instancer.h>
+
+#include <sys_thread_task_manager.h>
 
 #include <module_material_dummy.h>
 #include "module_renderer_dummy.h"
@@ -85,9 +88,10 @@ const CoreVector<CoreString> BboxRenderDelegate::s_unsupported_materials  = {};
 const CoreVector<CoreString> BboxRenderDelegate::s_supported_geometries   = { "SceneObject" };
 const CoreVector<CoreString> BboxRenderDelegate::s_unsupported_geometries = { "GeometryVolume", "GeometryFur", "GeometryBundle", "GeometrySphere", "GeometryCylinder", "GeometryPointArray" };
 
-BboxRenderDelegate::BboxRenderDelegate() : R2cRenderDelegate()
+BboxRenderDelegate::BboxRenderDelegate(OfApp *app) : R2cRenderDelegate()
 {
     m = new BboxDelegateImpl;
+    m_app = app;
 }
 
 BboxRenderDelegate::~BboxRenderDelegate()
@@ -192,6 +196,30 @@ BboxRenderDelegate::dirty_geometry(R2cItemDescriptor item, const int& dirtiness)
     }
 }
 
+class RenderRegionTask : public SysThreadTask {
+public :
+    RenderRegionTask(): reg(0,0,0,0) {}
+
+    virtual void execution_entry(const unsigned int& id) {
+        dummy_render_delegate->render_scene(buffer, render_buffer, total_width, total_height, reg, light_contribution);
+        if (progress_bar)
+            progress_bar->increment(progress_scale);
+    }
+
+    unsigned int total_width;
+    unsigned int total_height;
+    R2cRenderBuffer::Region reg;
+    GMathVec3f light_contribution;
+    R2cRenderBuffer *render_buffer;
+    const BboxRenderDelegate *dummy_render_delegate;
+    float* buffer;
+    // ThreadGeometryData *thread_data;
+
+    AppProgressBar *progress_bar;
+    float progress_scale;
+};
+
+
 void
 BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling_quality)
 {
@@ -207,19 +235,82 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
         const LightData& light_data = light.get_value().light_data;
         light_contribution += light_data.light_module->evaluate();
     }
+    
+    const unsigned int task_w = gmath_min(32u, width);
+    const unsigned int task_h = gmath_min(32u, height);
+    const unsigned int bucket_count_x = (unsigned int)gmath_ceil((float)width / task_w);
+    const unsigned int bucket_count_y = (unsigned int)gmath_ceil((float)height / task_h);
+    const unsigned int task_count = bucket_count_x * bucket_count_y;
 
-    float *result_buffer = new float[width * height * 4];
+    SysThreadTaskManager task_manager(&m_app->get_thread_manager());
+    CoreVector<RenderRegionTask> tasks(task_count);
 
+    unsigned int task_id = 0;
+    float* image_buffer = new float[width * height * 4];
+    float *next_buffer_entry = image_buffer;
+    for(unsigned int j = 0; j < bucket_count_y; ++j) {
+        unsigned int offset_y = j * task_h;
+        unsigned int h = gmath_min(task_h, height - offset_y);
+        for(unsigned int i = 0; i < bucket_count_x; ++i) {
+            unsigned int offset_x = i * task_w;
+            unsigned int w = gmath_min(task_w, width - offset_x);
+            
+            tasks[task_id].total_width           = width;
+            tasks[task_id].total_height          = height;
+            tasks[task_id].reg                   = R2cRenderBuffer::Region(offset_x, offset_y, w, h);
+            tasks[task_id].light_contribution    = light_contribution;
+            tasks[task_id].progress_bar          = nullptr;
+            tasks[task_id].render_buffer         = render_buffer;
+            tasks[task_id].dummy_render_delegate = this;
+            tasks[task_id].buffer                = next_buffer_entry;
+            task_manager.add_task(tasks[task_id], false);
+            ++task_id;
+            next_buffer_entry += w * h * 4;
+        }
+    }
+    task_manager.wait_until_completed();
+    // render_buffer->fill_rgba_region(image_buffer, width, R2cRenderBuffer::Region(0,0, width, height), false);
+    render_buffer->finalize();
+    delete[] image_buffer;
+
+    // render_scene(render_buffer, width, height, R2cRenderBuffer::Region(0,0, width / 2, height / 2), light_contribution);
+}
+
+void
+BboxRenderDelegate::render_scene(float* result_buffer, R2cRenderBuffer *render_buffer, unsigned int width, unsigned int height, const R2cRenderBuffer::Region& reg, const GMathVec3f& light_contribution) const
+{
     // Browse our image and for each pixel we compute a ray and raytrace the scene
-    for (unsigned int pixel_y = 0; pixel_y < height; ++pixel_y) {
-        for (unsigned int pixel_x = 0; pixel_x < width; ++pixel_x) {
-            // Pixel index
-            const unsigned int pixel_index = (pixel_y * width + pixel_x) * 4;
-
+    for (unsigned int pixel_y = 0; pixel_y < reg.height; ++pixel_y) {
+        for (unsigned int pixel_x = 0; pixel_x < reg.width; ++pixel_x) {
             // Compute ray for the pixel [X, Y]
-            GMathRay ray = m->camera.generate_ray(width, height, pixel_x, pixel_y);
-            GMathVec3f final_color = raytrace_scene(ray, light_contribution);
+            GMathRay ray = m->camera.generate_ray(width, height, pixel_x + reg.offset_x, pixel_y + reg.offset_y);
+            
+            // Get the background color from the renderer
+            R2cItemDescriptor renderer = get_scene_delegate()->get_render_settings();
+            ModuleRendererDummy *settings = static_cast<ModuleRendererDummy *>(renderer.get_item()->get_module());
+            GMathVec3f final_color = settings->get_background_color();
 
+            // Use this ray to raytrace the scene
+            // If we hit something we take the color from the intersected material BBox and multiply it per all the light contrinutions
+            // If nothing is hit we return the background renderer color
+            double closest_hit_t = gmath_infinity;
+            GMathVec3d closest_hit_normal;
+            MaterialData closest_hit_material;
+
+            // For simplicity, we handle instancers and geometries the same way
+            raytrace_objects(ray, m->geometries.index, m->resources.index, closest_hit_t, closest_hit_normal, closest_hit_material);
+            raytrace_objects(ray, m->instancers.index, m->resources.index, closest_hit_t, closest_hit_normal, closest_hit_material);
+
+            if (closest_hit_t != gmath_infinity)
+            {
+                if (closest_hit_material.material_module)
+                    final_color = closest_hit_material.material_module->shade(GMathVec3f(ray.get_direction()), GMathVec3f(closest_hit_normal)) * light_contribution;
+                else
+                    final_color = GMathVec3f(1.0f, 0.0f, 1.0f) * light_contribution;
+            }
+
+            // Pixel index
+            const unsigned int pixel_index = (pixel_y * reg.width + pixel_x) * 4;
             // Set the color for the pixel [X,Y]
             result_buffer[pixel_index]     = final_color[0];
             result_buffer[pixel_index + 1] = final_color[1];
@@ -229,39 +320,7 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
     }
 
     // Write the new buffer to the image
-    R2cRenderBuffer::Region reg(0,0, width, height);
-    render_buffer->fill_rgba_region(result_buffer, width, reg, false);
-    render_buffer->finalize();
-
-    delete [] result_buffer;
-}
-
-GMathVec3f
-BboxRenderDelegate::raytrace_scene(const GMathRay& ray, const GMathVec3f& light_contribution)
-{
-    // Use this ray to raytrace the scene
-    // If we hit something we take the color from the intersected material BBox and multiply it per all the light contrinutions
-    // If nothing is hit we return the background renderer color
-    double closest_hit_t = gmath_infinity;
-    GMathVec3d closest_hit_normal;
-    MaterialData closest_hit_material;
-
-    // For simplicity, we handle instancers and geometries the same way
-    raytrace_objects(ray, m->geometries.index, m->resources.index, closest_hit_t, closest_hit_normal, closest_hit_material);
-    raytrace_objects(ray, m->instancers.index, m->resources.index, closest_hit_t, closest_hit_normal, closest_hit_material);
-
-    if (closest_hit_t != gmath_infinity)
-    {
-        if (closest_hit_material.material_module)
-            return closest_hit_material.material_module->shade(GMathVec3f(ray.get_direction()), GMathVec3f(closest_hit_normal)) * light_contribution;
-        else
-            return GMathVec3f(1.0f, 0.0f, 1.0f) * light_contribution;
-    }
-    
-    // Get the background color from the renderer
-    R2cItemDescriptor renderer = get_scene_delegate()->get_render_settings();
-    ModuleRendererDummy *settings = static_cast<ModuleRendererDummy *>(renderer.get_item()->get_module());
-    return settings->get_background_color();
+    render_buffer->fill_rgba_region(result_buffer, reg.width, reg, false);
 }
 
 float

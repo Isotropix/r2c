@@ -38,9 +38,9 @@ shade(OfObject& object, const GMathVec3f& ray_direction, const GMathVec3f& norma
     OfAttr *attr_color = object.get_attribute("color");
     if (attr_color->is_textured()) {
         ModuleTextureDummy *texture_dummy = (ModuleTextureDummy *)attr_color->get_texture()->get_module();
-        return ray_direction.dot(normal) * texture_dummy->evaluate(ray_direction);
+        return fabs(ray_direction.dot(normal)) * texture_dummy->evaluate(ray_direction);
     } else {
-        return ray_direction.dot(normal) * GMathVec3f(attr_color->get_vec3d());
+        return fabs(ray_direction.dot(normal)) * GMathVec3f(attr_color->get_vec3d());
     }
 }
 

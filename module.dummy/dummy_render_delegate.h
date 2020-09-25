@@ -4,6 +4,7 @@
 #pragma once
 
 #include <r2c_render_delegate.h>
+#include <r2c_render_buffer.h>
 #include "dummy_utils.h"
 
 class BboxDelegateImpl;
@@ -30,7 +31,7 @@ public:
         bool lights; //!< true if lights have been removed from the scene
     };
 
-    BboxRenderDelegate();
+    BboxRenderDelegate(OfApp *app);
     virtual ~BboxRenderDelegate() override;
 
     CoreString get_class_name() const override;
@@ -68,6 +69,8 @@ public:
 	static const CoreVector<CoreString> s_unsupported_materials;
 	static const CoreVector<CoreString> s_supported_geometries;
 	static const CoreVector<CoreString> s_unsupported_geometries;
+
+    void render_scene(float* result_buffer, R2cRenderBuffer *render_buffer, unsigned int width, unsigned int height, const R2cRenderBuffer::Region& reg, const GMathVec3f& light_contribution) const;
 
 private:
 
@@ -122,11 +125,8 @@ private:
               item collections (mesh, lights...) if an item has been removed from the scene. */
     void cleanup_scene(const CleanupFlags& cleanup);
 
-
-    GMathVec3f raytrace_scene(const GMathRay& ray, const GMathVec3f& light_contribution);
-
     template<class OBJECTS_INDEX>
-    void raytrace_objects(const GMathRay& ray, const OBJECTS_INDEX& index, const BBResourceIndex& resources_index, double &closest_hit_t, GMathVec3d &closest_hit_normal, MaterialData& closest_hit_material)
+    void raytrace_objects(const GMathRay& ray, const OBJECTS_INDEX& index, const BBResourceIndex& resources_index, double &closest_hit_t, GMathVec3d &closest_hit_normal, MaterialData& closest_hit_material) const
     {
         for (const auto object: index)
         {
@@ -134,17 +134,25 @@ private:
             const BboxResourceInfo *resource_info = resources_index.is_key_exists(object_info.resource);
             CORE_ASSERT(resource_info != nullptr);
 
-            Bbox transformed_bbox;
-            resource_info->bbox.transform_bbox_and_get_bbox(object_info.transform, transformed_bbox);
+            GMathMatrix4x4d inverse_transform;
+            GMathRay transformed_ray;
+            GMathMatrix4x4d::get_inverse(object_info.transform, inverse_transform);
+            transformed_ray.transform(ray, inverse_transform);
 
             double tmin, tmax;
             GMathVec3d normal;
-            if (transformed_bbox.intersect(ray, tmin, tmax, normal))
+            // if (transformed_bbox.intersect(ray, tmin, tmax, normal))
+            if (resource_info->bbox.intersect(transformed_ray, tmin, tmax, normal))
             {
                 if (tmin < closest_hit_t)
                 {
+                    GMathMatrix4x4d inverse_transpose_transform;
+                    GMathMatrix4x4d::transpose(inverse_transform, inverse_transpose_transform);
+                    GMathVec3d transformed_normal;
+                    GMathMatrix4x4d::multiply(transformed_normal, normal, inverse_transpose_transform);
+
                     closest_hit_t = tmin;
-                    closest_hit_normal = normal;
+                    closest_hit_normal = transformed_normal;
                     closest_hit_material = object_info.material;
                 }
             }
@@ -152,5 +160,6 @@ private:
     }
 
     BboxDelegateImpl *m; // private implementation
+    OfApp *m_app;
     DECLARE_CLASS
 };
