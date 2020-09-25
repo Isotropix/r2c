@@ -30,8 +30,8 @@
 // private implementation
 class BboxDelegateImpl {
 public:
-      BboxCamera camera; // Bbox render camera
-
+    BboxCamera camera; // Bbox render camera
+    
     struct {
         BBResourceIndex index; // the index of all current resources where we store deduplicated data
     } resources;
@@ -190,13 +190,14 @@ public :
     RenderRegionTask(): reg(0,0,0,0) {}
 
     virtual void execution_entry(const unsigned int& id) {
-        dummy_render_delegate->render_scene(buffer_ptr, render_buffer, total_width, total_height, reg, light_contribution);
+        dummy_render_delegate->render_region(buffer_ptr, render_buffer, total_width, total_height, reg, light_contribution, background_color);
     }
 
     unsigned int total_width;
     unsigned int total_height;
     R2cRenderBuffer::Region reg;
     GMathVec3f light_contribution;
+    GMathVec3f background_color;
     R2cRenderBuffer *render_buffer;
     const BboxRenderDelegate *dummy_render_delegate;
     float* buffer_ptr;
@@ -218,6 +219,11 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
         const LightData& light_data = light.get_value().light_data;
         light_contribution += light_data.light_module->evaluate();
     }
+
+    // Get the background color from the renderer
+    R2cItemDescriptor renderer = get_scene_delegate()->get_render_settings();
+    ModuleRendererDummy *settings = static_cast<ModuleRendererDummy *>(renderer.get_item()->get_module());
+    GMathVec3f background_color = settings->get_background_color();
     
     const unsigned int task_w = gmath_min(32u, width);
     const unsigned int task_h = gmath_min(32u, height);
@@ -233,21 +239,23 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
     float *next_buffer_entry = image_buffer;
     for(unsigned int j = 0; j < bucket_count_y; ++j) {
         unsigned int offset_y = j * task_h;
-        unsigned int h = gmath_min(task_h, height - offset_y);
+        unsigned int bucket_height = gmath_min(task_h, height - offset_y);
         for(unsigned int i = 0; i < bucket_count_x; ++i) {
             unsigned int offset_x = i * task_w;
-            unsigned int w = gmath_min(task_w, width - offset_x);
-            
+            unsigned int bucket_width = gmath_min(task_w, width - offset_x);
+
             tasks[task_id].total_width           = width;
             tasks[task_id].total_height          = height;
-            tasks[task_id].reg                   = R2cRenderBuffer::Region(offset_x, offset_y, w, h);
+            tasks[task_id].reg                   = R2cRenderBuffer::Region(offset_x, offset_y, bucket_width, bucket_height);
             tasks[task_id].light_contribution    = light_contribution;
+            tasks[task_id].background_color      = background_color;
             tasks[task_id].render_buffer         = render_buffer;
             tasks[task_id].dummy_render_delegate = this;
             tasks[task_id].buffer_ptr            = next_buffer_entry;
             task_manager.add_task(tasks[task_id], false);
             ++task_id;
-            next_buffer_entry += w * h * 4;
+            next_buffer_entry += bucket_width * bucket_height * 4;
+            LOG_INFO_VAR4(offset_x, offset_y, bucket_width, bucket_height);
         }
     }
     task_manager.wait_until_completed();
@@ -256,18 +264,16 @@ BboxRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling
 }
 
 void
-BboxRenderDelegate::render_scene(float* result_buffer, R2cRenderBuffer *render_buffer, unsigned int width, unsigned int height, const R2cRenderBuffer::Region& reg, const GMathVec3f& light_contribution) const
+BboxRenderDelegate::render_region(float* result_buffer, R2cRenderBuffer *render_buffer, unsigned int width, unsigned int height, const R2cRenderBuffer::Region& reg, const GMathVec3f& light_contribution, const GMathVec3f& background_color) const
 {
+    render_buffer->notify_start_render_region(reg, true);
     // Browse our image and for each pixel we compute a ray and raytrace the scene
     for (unsigned int pixel_y = 0; pixel_y < reg.height; ++pixel_y) {
         for (unsigned int pixel_x = 0; pixel_x < reg.width; ++pixel_x) {
             // Compute ray for the pixel [X, Y]
             GMathRay ray = m->camera.generate_ray(width, height, pixel_x + reg.offset_x, pixel_y + reg.offset_y);
             
-            // Get the background color from the renderer
-            R2cItemDescriptor renderer = get_scene_delegate()->get_render_settings();
-            ModuleRendererDummy *settings = static_cast<ModuleRendererDummy *>(renderer.get_item()->get_module());
-            GMathVec3f final_color = settings->get_background_color();
+            GMathVec3f final_color = background_color;
 
             // Use this ray to raytrace the scene
             // If we hit something we take the color from the intersected material BBox and multiply it per all the light contrinutions
@@ -290,69 +296,30 @@ BboxRenderDelegate::render_scene(float* result_buffer, R2cRenderBuffer *render_b
 
             // Pixel index
             const unsigned int pixel_index = (pixel_y * reg.width + pixel_x) * 4;
+            // const unsigned int pixel_index = ((reg.offset_y + pixel_y) * width + reg.offset_x + pixel_x) * 4;
             // Set the color for the pixel [X,Y]
-            result_buffer[pixel_index]     = final_color[0];
+            result_buffer[pixel_index + 0] = final_color[0];
             result_buffer[pixel_index + 1] = final_color[1];
             result_buffer[pixel_index + 2] = final_color[2];
             result_buffer[pixel_index + 3] = 1.0f;
         }
     }
-
     // Write the new buffer to the image
-    render_buffer->fill_rgba_region(result_buffer, reg.width, reg, false);
+    render_buffer->fill_rgba_region(result_buffer, reg.width, reg, true);
 }
 
 float
 BboxRenderDelegate::get_render_progress() const
 {
-    return 1.0f; //m->progress ? m->progress->get_current_progress() : 0.f;
+    return 1.0f;
 }
 
 void
 BboxRenderDelegate::sync()
 {
-    CleanupFlags cleanup;
-    sync_geometries(cleanup);
-    sync_instancers(cleanup);
-    sync_lights(cleanup);
-    // cleanup the scene in the event we removed items
-    cleanup_scene(cleanup);
-}
-
-void
-BboxRenderDelegate::cleanup_scene(const CleanupFlags& cleanup)
-{
-//    // since we can't remove geometries we must repopulate all geometries etc... :'(
-//    if (cleanup.mesh_instances) {
-//        m->scene->ClearInstanceMaterialOverrides();
-//        m->scene->ClearMeshInstances();
-//        // adding instances
-//        for (auto geometry : m->geometries.index) {
-//            const BboxGeometryInfo& geo = geometry.get_value();
-//            geo.ptr->SetTemplate(geo.materials->GetTemplate(), m->scene->AddInstanceMaterialOverride(geo.materials));
-//            m->scene->AddMeshInstance(geometry.get_value().ptr);
-//        }
-//    }
-
-//    if (cleanup.meshes) {
-//        m->scene->ClearMeshes();
-//        // adding mesh resources
-//        for (auto resource: m->resources.index) m->scene->AddMesh(resource.get_value().ptr);
-//    }
-
-//    if (cleanup.point_clouds) {
-//        m->scene->ClearMeshPointClouds();
-//        for (auto instancer: m->instancers.index) {
-//            for (auto point_cloud : instancer.get_value().ptrs) {
-//                m->scene->AddMeshPointCloud(point_cloud);
-//            }
-//        }
-//    }
-
-//    if (cleanup.lights) {
-//        m->scene->ClearLights();
-//        for (auto light : m->lights.index) m->scene->AddLight(light.get_value().ptr);
-//    }
+    sync_geometries();
+    sync_instancers();
+    sync_lights();
 }
 
 void
@@ -501,7 +468,7 @@ BboxRenderDelegate::_sync_geometry(R2cItemId cgeometryid, BboxGeometryInfo& rgeo
 
 
 void
-BboxRenderDelegate::sync_geometries(CleanupFlags& cleanup)
+BboxRenderDelegate::sync_geometries()
 {
     if (m->geometries.is_dirty()) {
         // iterating through geometries to see if we need to sync any of them
@@ -513,10 +480,6 @@ BboxRenderDelegate::sync_geometries(CleanupFlags& cleanup)
                 sync_geometry(geometry.get_key(), geometry.get_value());
             }
         }
-        // check if geometries have been removed and in that case we will have to
-        // rebuild the render scene since we can't remove items from the scene using
-        // the Bbox API
-        cleanup.mesh_instances = m->geometries.removed.get_count() > 0;
         // let's see if we have to remove geometries from the scene
         for (auto removed_item : m->geometries.removed) {
             BboxGeometryInfo *geometry = m->geometries.index.is_key_exists(removed_item);
@@ -528,24 +491,9 @@ BboxRenderDelegate::sync_geometries(CleanupFlags& cleanup)
                 if (stored_resource != nullptr) { // there's a resource bound to the current geometry
                     stored_resource->refcount--;
                     if (stored_resource->refcount == 0) { // no one is using that resource anymore so let's delete it
-                        // TODO: replace this: BB_MeshBase_Delete(stored_resource->ptr);
                         m->resources.index.remove(geometry->resource);
-                    //    switch(stored_resource->type) {
-                    //        case BboxResourceInfo::TYPE_POINT_CLOUD:
-                    //            cleanup.point_clouds |= true;
-                    //            break;
-                    //        case BboxResourceInfo::TYPE_HAIR:
-                    //            cleanup.hairs |= true;
-                    //            break;
-                    //        default:
-                    //            cleanup.meshes |= true;
-                    //            break;
-                    //    }
                     }
                 }
-                // TODO replace this: BB_MeshInstance_Delete(geometry->ptr);
-                // TODO replace this: BB_InstanceMaterialOverrides_Delete(geometry->materials);
-
                 m->geometries.index.remove(removed_item);
                 if (m->geometries.index.get_count() == 0) break; // finished
             }
@@ -570,14 +518,6 @@ BboxRenderDelegate::sync_geometries(CleanupFlags& cleanup)
         }
         // since we processed all pending inserted geometries we have to clear the array
         m->geometries.inserted.remove_all();
-
-    //    if (!cleanup.mesh_instances) {
-    //        // we can just add new geometries to the scene since they are already synched!
-    //        for (auto new_geometry : new_geometries) {
-    //            // TODO: instert in dummyes vector
-    //           m->scene->AddMeshInstance(new_geometry.ptr);
-    //        }
-    //    }
     }
     // our geometries are now perfectly synched
     m->geometries.dirty = false;
@@ -593,17 +533,6 @@ sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cinstancerid, Bb
     } else {
         rinstancer.material = static_cast<ModuleMaterialDummy *>(shading_group.get_material().get_item()->get_module());
     }
-//    // retreive the clarisse instancer
-//    R2cItemDescriptor cinstancer = delegate.get_render_item(cinstancerid);
-//    // since the dummy instancer is mimicing Clarisse, shading groups/material association are perfect match
-//    unsigned int shading_group_offset = 0;
-//    for (auto instancer : rinstancer.ptrs) {
-//        for (unsigned int sgindex = 0; sgindex < instancer->GetNumMaterials(); sgindex++) {
-//            const R2cShadingGroupInfo& shading_group = delegate.get_shading_group_info(cinstancerid, sgindex + shading_group_offset);
-//            instancer->SetMaterial(sgindex, shading_group.get_material().is_null() ? BboxUtils::get_default_material() : static_cast<ModuleMaterialDummy *>(shading_group.get_material().get_item()->get_module())->get_material());
-//        }
-//        shading_group_offset += instancer->GetNumMaterials();
-//    }
 }
 
 void
@@ -617,10 +546,8 @@ BboxRenderDelegate::_sync_instancer(R2cItemId cinstancerid, BboxInstancerInfo& r
             m->instancers.inserted.add(cinstancerid);
             // mark it as clean since we will rebuild it anyway
             rinstancer.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
-        } else { // it's a new instancer and let's create its resources
-            // BboxUtils::CreateInstancer(rinstancer, m->resources.index, *get_scene_delegate(), m->scene, cinstancerid);
-            
-            // it's a new geometry so let's first see if the geometry already defined a resource
+        } else {
+            // it's a new instancer so let's first see if the instancer already defined a resource
             R2cGeometryResource cresource = get_scene_delegate()->get_geometry_resource(cinstancerid);
             BboxResourceInfo *stored_resource = m->resources.index.is_key_exists(cresource.get_id());
             
@@ -651,7 +578,6 @@ BboxRenderDelegate::_sync_instancer(R2cItemId cinstancerid, BboxInstancerInfo& r
             // back pointer to the clarisse resource since when we are dirty it's too late to get it back
             rinstancer.resource = cresource.get_id();
 
-        //    rgeometry.ptr->SetTemplate(mesh, m->scene->AddInstanceMaterialOverride(rgeometry.materials));
             // since that was a new geometry we will need to set the matrix, materials and visibility flags
             rinstancer.dirtiness = R2cSceneDelegate::DIRTINESS_KINEMATIC |
                                     R2cSceneDelegate::DIRTINESS_SHADING_GROUP |
@@ -676,7 +602,7 @@ BboxRenderDelegate::_sync_instancer(R2cItemId cinstancerid, BboxInstancerInfo& r
 }
 
 void
-BboxRenderDelegate::sync_instancers(CleanupFlags& cleanup)
+BboxRenderDelegate::sync_instancers()
 {
     if (m->instancers.is_dirty()) {
         // iterating through instancers to see if we need to sync any of them
@@ -692,8 +618,6 @@ BboxRenderDelegate::sync_instancers(CleanupFlags& cleanup)
         // rebuild the render scene since we can't remove items from the scene using
         // the Bbox API
 
-    //    cleanup.point_clouds |= m->instancers.removed.get_count() > 0;
-
         // let's see if we have to remove instancers from the scene
         for (auto removed_item : m->instancers.removed) {
             BboxInstancerInfo *instancer = m->instancers.index.is_key_exists(removed_item);
@@ -705,19 +629,7 @@ BboxRenderDelegate::sync_instancers(CleanupFlags& cleanup)
                 if (stored_resource != nullptr) { // there's a resource bound to the current geometry
                     stored_resource->refcount--;
                     if (stored_resource->refcount == 0) { // no one is using that resource anymore so let's delete it
-                        // TODO: replace this: BB_MeshBase_Delete(stored_resource->ptr);
                         m->resources.index.remove(instancer->resource);
-                    //    switch(stored_resource->type) {
-                    //        case BboxResourceInfo::TYPE_POINT_CLOUD:
-                    //            cleanup.point_clouds |= true;
-                    //            break;
-                    //        case BboxResourceInfo::TYPE_HAIR:
-                    //            cleanup.hairs |= true;
-                    //            break;
-                    //        default:
-                    //            cleanup.meshes |= true;
-                    //            break;
-                    //    }
                     }
                 }
                 m->instancers.index.remove(removed_item);
@@ -776,10 +688,9 @@ sync_light(const R2cSceneDelegate& delegate, R2cItemId clightid, BboxLightInfo& 
 }
 
 void
-BboxRenderDelegate::sync_lights(CleanupFlags& cleanup)
+BboxRenderDelegate::sync_lights()
 {
     if (m->lights.is_dirty()) {
-        cleanup.lights = m->lights.removed.get_count() > 0;
         // remove lights first
         for (auto removed_item : m->lights.removed) {
             BboxLightInfo *light = m->lights.index.is_key_exists(removed_item);
@@ -808,12 +719,6 @@ BboxRenderDelegate::sync_lights(CleanupFlags& cleanup)
         }
         m->lights.inserted.remove_all();
 
-        if (!cleanup.lights) {
-            // we can just add new lights since they are already synched!
-            for (auto new_light : new_lights) {
-//               m->scene->AddLight(new_light.ptr);
-            }
-        }
         // iterating through lights to see if we need to sync any of them
         for (auto light : m->lights.index) {
             if (light.get_value().dirtiness != R2cSceneDelegate::DIRTINESS_NONE) {

@@ -22,15 +22,6 @@ class BboxInstancerInfo;
 class BboxRenderDelegate : public R2cRenderDelegate {
 public:
 
-    struct CleanupFlags { //!< Defines cleanup info used to cleanup the scene after a sync
-        CleanupFlags() : hairs(false), point_clouds(false), meshes(false), mesh_instances(false) {}
-        bool hairs; //!< true if curve/mesh geometry have been removed from the scene
-        bool point_clouds; //!< true if point clouds geometry have been removed from the scene
-        bool meshes; //!< true if meshes have been removed from the scene
-        bool mesh_instances; //!< true if mesh instances have been removed from the scene
-        bool lights; //!< true if lights have been removed from the scene
-    };
-
     BboxRenderDelegate(OfApp *app);
     virtual ~BboxRenderDelegate() override;
 
@@ -70,7 +61,7 @@ public:
 	static const CoreVector<CoreString> s_supported_geometries;
 	static const CoreVector<CoreString> s_unsupported_geometries;
 
-    void render_scene(float* result_buffer, R2cRenderBuffer *render_buffer, unsigned int width, unsigned int height, const R2cRenderBuffer::Region& reg, const GMathVec3f& light_contribution) const;
+    void render_scene(float* result_buffer, R2cRenderBuffer *render_buffer, unsigned int width, unsigned int height, const R2cRenderBuffer::Region& reg, const GMathVec3f& light_contribution, const GMathVec3f& background_color) const;
 
 private:
 
@@ -94,7 +85,7 @@ private:
     void _sync_geometry(R2cItemId cgeometryid, BboxGeometryInfo& rgeometry, const bool& is_new);
     /*! \brief Synchronize all needed geometries with the render scene
      *  \param cleanup output cleanup flags to do post cleanup with the render scene */
-    void sync_geometries(CleanupFlags& cleanup);
+    void sync_geometries();
 
     /*! \brief Add a new instancer (never been processed yet) to the render scene and synchronize it
      *  \param cinstancerid id of the new instancer in the scene delegate
@@ -111,19 +102,14 @@ private:
     void _sync_instancer(R2cItemId cinstancerid, BboxInstancerInfo& rinstancer, const bool& is_new);
     /*! \brief Synchronize all needed instancers with the render scene
      *  \param cleanup output cleanup flags to do post cleanup with the render scene */
-    void sync_instancers(CleanupFlags& cleanup);
+    void sync_instancers();
     /*! \brief Synchronize the render scene lights with the scene delegate
      *  \param cleanup output cleanup flags to do post cleanup with the render scene */
-    void sync_lights(CleanupFlags& cleanup);
+    void sync_lights();
     /*! \brief Synchronize the render camera with the scene delegate
      *  \param width width of the rendered image
      *  \param height hight of the rendered image */
     void sync_camera(const unsigned int& width, const unsigned int& height);
-    /*! \brief Cleanup the render scene according to the specified flags
-     *  \note This post cleanup is there to rebuild the render scene since dummy can only
-     *        add new items not remove them. We are then obliged to remove the corresponding
-              item collections (mesh, lights...) if an item has been removed from the scene. */
-    void cleanup_scene(const CleanupFlags& cleanup);
 
     template<class OBJECTS_INDEX>
     void raytrace_objects(const GMathRay& ray, const OBJECTS_INDEX& index, const BBResourceIndex& resources_index, double &closest_hit_t, GMathVec3d &closest_hit_normal, MaterialData& closest_hit_material) const
