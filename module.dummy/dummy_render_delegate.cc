@@ -106,7 +106,6 @@ BboxRenderDelegate::sync_render_settings(const float& sampling_quality)
             settings->sync(sampling_quality);
             return true;
         }
-
     }
     return false;
 }

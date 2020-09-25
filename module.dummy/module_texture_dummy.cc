@@ -2,8 +2,6 @@
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
 
-#include <of_app.h>
-
 #include "module_texture_dummy.h"
 #include "dummy_utils.h"
 
@@ -19,15 +17,10 @@ static GMathVec3f evaluate_texture_default(OfObject& /* unused */, const GMathVe
 ModuleTextureDummyCallbacks::ModuleTextureDummyCallbacks()
     : cb_evaluate(evaluate_texture_default)
 {
-
 }
 
 
 ModuleTextureDummy::ModuleTextureDummy() : ModuleTextureOperator()
-{
-}
-
-ModuleTextureDummy::~ModuleTextureDummy()
 {
 }
 

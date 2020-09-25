@@ -5,8 +5,6 @@
 
 #include <module_texture_operator.h>
 
-
-
 class ModuleTextureDummyCallbacks : public ModuleGlObjectCallbacks  {
 public :
 
@@ -29,7 +27,6 @@ class ModuleTextureDummy : public ModuleTextureOperator {
 public:
 
     ModuleTextureDummy();
-    virtual ~ModuleTextureDummy() override;
 
     GMathVec3f evaluate(const GMathVec3f& ray_direction) {
         return get_callbacks<ModuleTextureDummyCallbacks>()->cb_evaluate(*get_object(), ray_direction);
