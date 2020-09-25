@@ -19,12 +19,14 @@
 #include <module_material_dummy.h>
 #include "module_renderer_dummy.h"
 
+#include <module_texture_dummy.h>
+#include "dummy_utils.h"
+
 #include "dummy_render_delegate.h"
 
 // private implementation
 class BboxDelegateImpl {
 public:
-
       BboxCamera camera; // Bbox render camera
 //    RenderingBlockSink *sink; // Bbox BlockSink that fills the Clarisse's render buffer
 //    RenderingAbortChecker *abort_checker; // Bbox AbortChecker that notifies the renderer to stop
@@ -245,8 +247,8 @@ BboxRenderDelegate::raytrace_scene(const GMathRay& ray, const GMathVec3f& light_
     MaterialData closest_hit_material;
 
     // For simplicity, we handle instancers and geometries the same way
-    raytrace_objects(ray, m->geometries.index, closest_hit_t, closest_hit_normal, closest_hit_material);
-    raytrace_objects(ray, m->instancers.index, closest_hit_t, closest_hit_normal, closest_hit_material);
+    raytrace_objects(ray, m->geometries.index, m->resources.index, closest_hit_t, closest_hit_normal, closest_hit_material);
+    raytrace_objects(ray, m->instancers.index, m->resources.index, closest_hit_t, closest_hit_normal, closest_hit_material);
 
     if (closest_hit_t != gmath_infinity)
     {

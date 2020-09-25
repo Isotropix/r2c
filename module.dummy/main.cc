@@ -10,7 +10,8 @@
 namespace MaterialDummy { void on_register(OfApp &, CoreVector<OfClass *> &); }
 namespace LightDummy { void on_register(OfApp &, CoreVector<OfClass *> &); }
 namespace RendererDummy { void on_register(OfApp &, CoreVector<OfClass *> &); }
-namespace LayerBbox { void on_register(OfApp &, CoreVector<OfClass *> &); }
+namespace LayerDummy { void on_register(OfApp &, CoreVector<OfClass *> &); }
+namespace TextureDummy { void on_register(OfApp &, CoreVector<OfClass *> &); }
 
 IX_BEGIN_EXTERN_C
 
@@ -20,7 +21,8 @@ IX_BEGIN_EXTERN_C
         MaterialDummy::on_register(app, new_classes);
         LightDummy::on_register(app, new_classes);
         RendererDummy::on_register(app, new_classes);
-        LayerBbox::on_register(app, new_classes);
+        LayerDummy::on_register(app, new_classes);
+        TextureDummy::on_register(app, new_classes);
     }
 
 IX_END_EXTERN_C

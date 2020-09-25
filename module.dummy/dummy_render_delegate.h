@@ -1,9 +1,7 @@
 //
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
-
-#ifndef REDSHIFT_RENDER_DELEGATE_H
-#define REDSHIFT_RENDER_DELEGATE_H
+#pragma once
 
 #include <r2c_render_delegate.h>
 #include "dummy_utils.h"
@@ -128,12 +126,12 @@ private:
     GMathVec3f raytrace_scene(const GMathRay& ray, const GMathVec3f& light_contribution);
 
     template<class OBJECTS_INDEX>
-    void raytrace_objects(const GMathRay& ray, const OBJECTS_INDEX& index, double &closest_hit_t, GMathVec3d &closest_hit_normal, MaterialData& closest_hit_material)
+    void raytrace_objects(const GMathRay& ray, const OBJECTS_INDEX& index, const BBResourceIndex& resources_index, double &closest_hit_t, GMathVec3d &closest_hit_normal, MaterialData& closest_hit_material)
     {
         for (const auto object: index)
         {
             const auto &object_info = object.get_value();
-            const BboxResourceInfo *resource_info = m->resources.index.is_key_exists(object_info.resource);
+            const BboxResourceInfo *resource_info = resources_index.is_key_exists(object_info.resource);
             CORE_ASSERT(resource_info != nullptr);
 
             Bbox transformed_bbox;
@@ -156,5 +154,3 @@ private:
     BboxDelegateImpl *m; // private implementation
     DECLARE_CLASS
 };
-
-#endif

@@ -4,7 +4,7 @@
 
 class "LightDummy" "Light" {
     #version 0.9
-    category "/Light/Dummy"
+    category "/Light/Dummy/Lights"
     doc "A Dummy light with a color."
     color "color" {
         value 1 1 1

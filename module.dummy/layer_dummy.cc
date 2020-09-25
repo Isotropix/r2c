@@ -8,9 +8,9 @@
 
 #include "layer_dummy.cma"
 
-IX_BEGIN_DECLARE_MODULE_CALLBACKS(ModuleLayerBbox, ModuleLayerR2cSceneCallbacks)
+IX_BEGIN_DECLARE_MODULE_CALLBACKS(ModuleLayerDummy, ModuleLayerR2cSceneCallbacks)
     static R2cRenderDelegate *get_render_delegate(OfObject& object);
-IX_END_DECLARE_MODULE_CALLBACKS(ModuleLayerBbox)
+IX_END_DECLARE_MODULE_CALLBACKS(ModuleLayerDummy)
 
 //!
 //! This callback must be implemented to specify which Render Delegate to attach to the Scene Delegate
@@ -21,11 +21,11 @@ IX_MODULE_CLBK::get_render_delegate(OfObject& object)
     return new BboxRenderDelegate;
 }
 
-namespace LayerBbox
+namespace LayerDummy
 {
     void on_register(OfApp& app, CoreVector<OfClass *>& new_classes)
     {
-        OfClass *new_class = IX_DECLARE_MODULE_CLASS(ModuleLayerBbox)
+        OfClass *new_class = IX_DECLARE_MODULE_CLASS(ModuleLayerDummy)
         new_classes.add(new_class);
 
         IX_MODULE_CLBK *module_callbacks;

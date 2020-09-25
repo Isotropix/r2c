@@ -3,11 +3,13 @@
 //
 
 class "MaterialDummy" "Material" {
-    #version 0.9
+    #version 1.0
     category "/Material/dummy"
     doc "A Dummy material."
     
     color "color" {
         value 1 1 1
+        texturable yes
+        texture_filter "TextureDummy" // VERY IMPORTANT COMMENT
     }
 }

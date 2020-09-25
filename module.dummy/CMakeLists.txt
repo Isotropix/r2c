@@ -12,6 +12,8 @@ set (SOURCES
     dummy_render_delegate.cc
     dummy_utils.cc
     renderer_dummy.cc
+    texture_dummy.cc
+    module_texture_dummy.cc
 )
 
 set (HEADERS
@@ -20,6 +22,7 @@ set (HEADERS
     module_renderer_dummy.h
     dummy_render_delegate.h
     dummy_utils.h
+    module_texture_dummy.h
 )
 
 set (CID_FILES
@@ -27,6 +30,7 @@ set (CID_FILES
     light_dummy.cid
     material_dummy.cid
     renderer_dummy.cid
+    texture_dummy.cid
 )
 
 set (CID_DEPENDS
