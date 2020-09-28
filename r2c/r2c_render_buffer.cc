@@ -15,13 +15,15 @@
 class ClarisseLayerRenderBufferImpl {
 public:
 
-    ClarisseLayerRenderBufferImpl(ModuleLayerR2cScene& ilayer, ImageCanvas& icanvas) : layer(&ilayer), canvas(&icanvas) {}
+    ClarisseLayerRenderBufferImpl(ModuleLayerR2cScene& ilayer, ImageCanvas& icanvas, const R2cRenderBuffer::Region& region): layer(&ilayer), canvas(&icanvas), render_region(region) {}
 
     ModuleLayerR2cScene *layer;
     ImageCanvas *canvas;
+    R2cRenderBuffer::Region render_region;
 };
 
-ClarisseLayerRenderBuffer::ClarisseLayerRenderBuffer(ModuleLayerR2cScene& layer, ImageCanvas& canvas) : R2cRenderBuffer(), m(new ClarisseLayerRenderBufferImpl(layer, canvas))
+ClarisseLayerRenderBuffer::ClarisseLayerRenderBuffer(ModuleLayerR2cScene& layer, ImageCanvas& canvas, const R2cRenderBuffer::Region& region)
+: R2cRenderBuffer(), m(new ClarisseLayerRenderBufferImpl(layer, canvas, region))
 {
 }
 
@@ -40,6 +42,12 @@ unsigned int
 ClarisseLayerRenderBuffer::get_height() const
 {
     return static_cast<unsigned int>(m->canvas->get_height());
+}
+
+R2cRenderBuffer::Region
+ClarisseLayerRenderBuffer::get_render_region() const
+{
+    return m->render_region;
 }
 
 void

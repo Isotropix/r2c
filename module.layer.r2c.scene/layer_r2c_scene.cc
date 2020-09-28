@@ -85,8 +85,15 @@ IX_MODULE_CLBK::get_image(OfObject& object, const QUALITY_LEVEL& quality, const 
         canvas->get_pyramid()->set_repeat_mode(ImagePixel::RESET, ImagePixel::RESET);
         layer->start_progress(quality);
 
+        R2cRenderBuffer::Region render_region(0, 0, w, h);
+        if (region) {
+            render_region.offset_x  = static_cast<unsigned int>((*region)[0] * w);
+            render_region.offset_y  = static_cast<unsigned int>((*region)[1] * h);
+            render_region.width     = static_cast<unsigned int>(ceilf((*region)[2] * w));
+            render_region.height    = static_cast<unsigned int>(ceilf((*region)[3] * h));
+        }
         // synching is now done let's call the render
-        ClarisseLayerRenderBuffer render_buffer(*layer, *canvas);
+        ClarisseLayerRenderBuffer render_buffer(*layer, *canvas, render_region);
         scene->get_render_delegate()->render(&render_buffer, sampling_quality);
         const bool is_interrupted = object.get_application().must_stop_evaluation();
         canvas->finalize(is_interrupted == false);

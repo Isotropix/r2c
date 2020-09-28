@@ -31,6 +31,9 @@ public:
     //! Return the height of the buffer
     virtual unsigned int get_height() const = 0;
 
+    //! Return the target render region
+    virtual Region get_render_region() const { return Region(0, 0, get_width(), get_height()); }
+
     /*! \brief Helper to fill the RGBA render buffer
         \note Please refer to R2cRenderBuffer::fill_region for more information. */
     inline void fill_rgba_region(const float *rgba, const unsigned int& src_stride, const Region& region, const bool& lock) {
@@ -69,10 +72,11 @@ class ClarisseLayerRenderBufferImpl;
 class R2C_EXPORT ClarisseLayerRenderBuffer : public R2cRenderBuffer {
 public:
 
-    ClarisseLayerRenderBuffer(ModuleLayerR2cScene& layer, ImageCanvas& canvas);
+    ClarisseLayerRenderBuffer(ModuleLayerR2cScene& layer, ImageCanvas& canvas, const Region& region);
     virtual ~ClarisseLayerRenderBuffer() override;
     unsigned int get_width() const override;
     unsigned int get_height() const override;
+    Region get_render_region() const override;
 
     void fill_region(const unsigned int& layer_id, const float *src_data, const unsigned int& src_stride, const R2cRenderBuffer::Region& region, const bool& lock) override;
     void notify_start_render_region(const Region& region, const bool& lock, const unsigned int& thread_id) const override;
