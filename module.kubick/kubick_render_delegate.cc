@@ -543,9 +543,11 @@ KubickRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampli
     m->progress.set_float(0.0f);
 
     // Extract the image dimensions and synchronize our internal scene representation
-    const unsigned int width = render_buffer->get_width();
-    const unsigned int height = render_buffer->get_height();
-    sync_camera(width, height);
+    R2cRenderBuffer::Region render_region = render_buffer->get_render_region();
+    const unsigned int total_width  = render_buffer->get_width();
+    const unsigned int total_height = render_buffer->get_height();
+
+    sync_camera(total_width, total_height);
     sync();
 
     // Browse all the light in the scene and compute the light contribution (very simple lighting)
@@ -561,10 +563,10 @@ KubickRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampli
     GMathVec3f background_color = settings->get_background_color();
     
     /************************ Create render tasks ************************/
-    const unsigned int task_w = gmath_min(32u, width);
-    const unsigned int task_h = gmath_min(32u, height);
-    const unsigned int bucket_count_x = (unsigned int)gmath_ceil((float)width / task_w);
-    const unsigned int bucket_count_y = (unsigned int)gmath_ceil((float)height / task_h);
+    const unsigned int task_w = gmath_min(64u, render_region.width);
+    const unsigned int task_h = gmath_min(64u, render_region.height);
+    const unsigned int bucket_count_x = (unsigned int)gmath_ceil((float)render_region.width / task_w);
+    const unsigned int bucket_count_y = (unsigned int)gmath_ceil((float)render_region.height / task_h);
     const unsigned int task_count = bucket_count_x * bucket_count_y;
     const float progress_increment = 1.0f / task_count;
 
@@ -575,20 +577,20 @@ KubickRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampli
     CoreVector<RenderRegionTask> tasks(task_count);
 
     // This should be created the least amount of times (when the image size is updated for example)
-    float* image_buffer = new float[width * height * 4];
+    float* image_buffer = new float[render_region.width * render_region.height * 4];
     float *next_buffer_entry = image_buffer;
 
     unsigned int task_id = 0;
     for(unsigned int j = 0; j < bucket_count_y; ++j) {
-        unsigned int offset_y = j * task_h;
-        unsigned int bucket_height = gmath_min(task_h, height - offset_y);
+        unsigned int offset_y = render_region.offset_y + j * task_h;
+        unsigned int bucket_height = gmath_min(task_h, render_region.offset_y + render_region.height - offset_y);
         for(unsigned int i = 0; i < bucket_count_x; ++i) {
-            unsigned int offset_x = i * task_w;
-            unsigned int bucket_width = gmath_min(task_w, width - offset_x);
+            unsigned int offset_x = render_region.offset_x + i * task_w;
+            unsigned int bucket_width = gmath_min(task_w, render_region.offset_x + render_region.width - offset_x);
 
             // Fill task data
-            tasks[task_id].data.width                 = width;
-            tasks[task_id].data.height                = height;
+            tasks[task_id].data.width                 = total_width;
+            tasks[task_id].data.height                = total_height;
             tasks[task_id].data.region                = R2cRenderBuffer::Region(offset_x, offset_y, bucket_width, bucket_height);
             tasks[task_id].data.light_contribution    = light_contribution;
             tasks[task_id].data.background_color      = background_color;
