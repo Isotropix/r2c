@@ -2,16 +2,16 @@
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
 
+// Clarisse includes
 #include <dso_export.h>
 #include <module_object.h>
-#include <sys_globals.h>
 
 // Forward declarations of module registration functions
 namespace MaterialDummy { void on_register(OfApp &, CoreVector<OfClass *> &); }
-namespace LightDummy { void on_register(OfApp &, CoreVector<OfClass *> &); }
+namespace LightDummy    { void on_register(OfApp &, CoreVector<OfClass *> &); }
 namespace RendererDummy { void on_register(OfApp &, CoreVector<OfClass *> &); }
-namespace LayerDummy { void on_register(OfApp &, CoreVector<OfClass *> &); }
-namespace TextureDummy { void on_register(OfApp &, CoreVector<OfClass *> &); }
+namespace LayerDummy    { void on_register(OfApp &, CoreVector<OfClass *> &); }
+namespace TextureDummy  { void on_register(OfApp &, CoreVector<OfClass *> &); }
 
 IX_BEGIN_EXTERN_C
 

@@ -5,7 +5,7 @@
 class "RendererDummy" "Renderer" {
     #version 1.0
     category "/Renderer"
-    doc "Define Bbox render settings."
+    doc "Define Dummy render settings."
 
     color "background_color" {
         value 0 0 0

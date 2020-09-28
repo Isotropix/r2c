@@ -2,20 +2,18 @@
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
 
-//#include <of_object.h>
-//#include <of_app.h>
-//#include <dso_export.h>
+// Local includes
+#include "./module_texture_dummy.h"
+#include "./texture_dummy.cma"
 
-#include "module_texture_dummy.h"
-#include "texture_dummy.cma"
-
+// WARNING: keep those lines for compatibility reasons
 #if ISOTROPIX_VERSION_NUMBER >= IX_BUILD_VERSION_NUMBER(4, 0, 2, 0, 0, 0)
 #define MODULE_CLASS OfModule
 #else
 #define MODULE_CLASS ModuleObject
 #endif
 
-// Create a class that implements functoin that will be then pluged to the module callback
+// Create a class that implements function that will be then pluged to the module callback
 class ModuleTextureDummyCallbacksOverrides : public ModuleTextureDummyCallbacks {
 public :
     // Here we store the attributes because calling object.get_attribute("attr") can be very slow
@@ -23,7 +21,7 @@ public :
         const OfAttr *color;
     };
 
-    // Create a module data that will exist during the life object
+    // Create a module data that will exist during the object's lifetime
     static void * create_module_data(const OfObject& object)
     {
         TextureDummyModuleData *data = new TextureDummyModuleData();;
@@ -64,8 +62,8 @@ namespace TextureDummy
         IX_CREATE_MODULE_CLBK(new_class, module_callbacks)
 
         // Plug the previous defined function to the module callback created above
-        module_callbacks->cb_create_module_data = IX_MODULE_CLBK::create_module_data;
-        module_callbacks->cb_destroy_module_data = IX_MODULE_CLBK::destroy_module_data;
-        module_callbacks->cb_evaluate = IX_MODULE_CLBK::evaluate;
+        module_callbacks->cb_create_module_data     = IX_MODULE_CLBK::create_module_data;
+        module_callbacks->cb_destroy_module_data    = IX_MODULE_CLBK::destroy_module_data;
+        module_callbacks->cb_evaluate               = IX_MODULE_CLBK::evaluate;
     }
 }

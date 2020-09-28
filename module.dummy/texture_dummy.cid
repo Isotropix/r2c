@@ -8,7 +8,7 @@ class "TextureDummy" "TextureOperator" {
     // REFERENCE TO IT!
 
     #version 1.0
-    category "/Texture/Dummy/Salut"
+    category "/Texture/Dummy"
     doc "A dummy texture."
 
     color "color" {

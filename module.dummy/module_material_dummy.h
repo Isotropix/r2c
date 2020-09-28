@@ -7,6 +7,8 @@
 
 class OfObject;
 
+/*! \class ModuleMaterialDummyCallbacks
+    \brief declares custom callbacks for our own material representation.*/
 class ModuleMaterialDummyCallbacks : public ModuleMaterialCallbacks  {
 public :
     ModuleMaterialDummyCallbacks();
@@ -23,18 +25,19 @@ public :
 };
 
 /*! \class ModuleMaterialDummy
-    \brief This class implements the Bbox Material abstract class in Clarisse. */
+    \brief This class implements the Dummy Material abstract class in Clarisse. The role
+           of the module is to implement what happends when users edit attributes of the
+           material item in Clarisse. */
 class ModuleMaterialDummy : public ModuleMaterial {
 public:
-
-    ModuleMaterialDummy();
-    virtual ~ModuleMaterialDummy() override;
-
     inline GMathVec3f shade(const GMathVec3f& ray_dir, const GMathVec3f& normal)
     {
         return get_callbacks<ModuleMaterialDummyCallbacks>()->cb_shade(*get_object(), ray_dir, normal);
     }
 
 private:
+    ModuleMaterialDummy(const ModuleMaterialDummy&) = delete;
+    ModuleMaterialDummy& operator=(const ModuleMaterialDummy&) = delete;
+
     DECLARE_CLASS
 };

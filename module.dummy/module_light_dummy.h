@@ -6,13 +6,13 @@
 
 #include <module_light.h>
 
-class BboxLight;
-
+// Forward declaration
 class OfObject;
 
+/*! \class ModuleLightDummyCallbacks
+    \brief declares custom callbacks for our own light representation */
 class ModuleLightDummyCallbacks : public ModuleLightCallbacks  {
 public :
-
     ModuleLightDummyCallbacks();
 
     virtual void init_callbacks(OfClassCallbacks& callbacks)
@@ -27,24 +27,17 @@ public :
 };
 
 /*! \class ModuleLightDummy
-    \brief This class implements the Bbox Light abstract class in Clarisse. */
+    \brief This class implements the Dummy Light abstract class in Clarisse. The role
+           of the module is to implement what happends when users edit attributes of the
+           light item in Clarisse. */
 class ModuleLightDummy : public ModuleLight {
 public:
-
-    ModuleLightDummy();
-    virtual ~ModuleLightDummy() override;
-
     GMathVec3f evaluate()
     {
         return get_callbacks<ModuleLightDummyCallbacks>()->cb_evaluate(*get_object());
     }
 
-    /*! \brief return a Clarisse UI style name from the specified Bbox shader class name.
-     * \param class_name Bbox shader class name. */
-    static CoreString mangle_class(const CoreString& class_name);
-
 private:
-
     ModuleLightDummy(const ModuleLightDummy&) = delete;
     ModuleLightDummy& operator=(const ModuleLightDummy&) = delete;
 

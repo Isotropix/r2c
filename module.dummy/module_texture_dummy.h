@@ -3,8 +3,11 @@
 //
 #pragma once
 
+// Clarisse includes
 #include <module_texture_operator.h>
 
+/*! \class ModuleTextureDummyCallbacks
+    \brief declares custom callbacks for our own texture representation.*/
 class ModuleTextureDummyCallbacks : public ModuleGlObjectCallbacks  {
 public :
 
@@ -25,25 +28,11 @@ public :
     \brief This class implements the Texture abstract class in Clarisse. */
 class ModuleTextureDummy : public ModuleTextureOperator {
 public:
-
-    ModuleTextureDummy();
-
-    GMathVec3f evaluate(const GMathVec3f& ray_direction) {
+    GMathVec3f evaluate(const GMathVec3f& ray_direction)
+    {
         return get_callbacks<ModuleTextureDummyCallbacks>()->cb_evaluate(*get_object(), ray_direction);
     }
 
-    /*! \brief return a Clarisse UI style name from the specified Dummy shader class name.
-     * \param class_name Dummy shader class name. */
-    static CoreString mangle_class(const CoreString& class_name);
-
-protected:
-
-    void module_constructor(OfObject& object) override;
-
-    /*! \brief Synchronizing Dummy texture shader to the new Clarisse attribute value when changed */
-    void on_attribute_change(const OfAttr& attr, int& dirtiness, const int& dirtiness_flags) override;
-
 private:
-
     DECLARE_CLASS
 };

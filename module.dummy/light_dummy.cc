@@ -1,18 +1,22 @@
 //
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
+
+// Clarisse includes
 #include <of_object.h>
-#include "module_light_dummy.h"
 
-#include "light_dummy.cma"
+// Local includes
+#include "./module_light_dummy.h"
+#include "./light_dummy.cma"
 
+// WARNING: keep those lines for compatibility reasons
 #if ISOTROPIX_VERSION_NUMBER >= IX_BUILD_VERSION_NUMBER(4, 0, 2, 0, 0, 0)
 #define MODULE_CLASS OfModule
 #else
 #define MODULE_CLASS ModuleObject
 #endif
 
-// Create a class that implements functoin that will be then pluged to the module callback
+// Create a class that implements function that will be then pluged to the module callback
 class ModuleLightDummyCallbackOverrides : public ModuleLightDummyCallbacks {
 public:
 
@@ -21,10 +25,10 @@ public:
         const OfAttr *color;
     };
 
-    // Create a module data that will exist during the life object
+    // Create a module data that will exist during the object's lifetime
     static void * create_module_data(const OfObject& object)
     {
-        LightDummyModuleData *data = new LightDummyModuleData();;
+        LightDummyModuleData *data = new LightDummyModuleData();
         data->color = object.get_attribute("color");
         return data;
     }
@@ -50,7 +54,7 @@ typedef ModuleLightDummyCallbackOverrides IX_MODULE_CLBK;
 
 namespace LightDummy
 {
-// This method is called when opening Clarisse and it register the module
+    // This method is called when opening Clarisse and it registers the module
     void on_register(OfApp& app, CoreVector<OfClass *>& new_classes)
     {
         // Create the new class
@@ -62,8 +66,8 @@ namespace LightDummy
         IX_CREATE_MODULE_CLBK(new_class, module_callbacks)
 
         // Plug the previous defined function to the module callback created above
-        module_callbacks->cb_create_module_data = IX_MODULE_CLBK::create_module_data;
-        module_callbacks->cb_destroy_module_data = IX_MODULE_CLBK::destroy_module_data;
-        module_callbacks->cb_evaluate = IX_MODULE_CLBK::evaluate;
+        module_callbacks->cb_create_module_data     = IX_MODULE_CLBK::create_module_data;
+        module_callbacks->cb_destroy_module_data    = IX_MODULE_CLBK::destroy_module_data;
+        module_callbacks->cb_evaluate               = IX_MODULE_CLBK::evaluate;
     }
 }

@@ -10,6 +10,6 @@ class "MaterialDummy" "Material" {
     color "color" {
         value 1 1 1
         texturable yes
-        texture_filter "TextureDummy" // VERY IMPORTANT COMMENT
+        texture_filter "TextureDummy" // IMPORTANT: used to filter linkable textures from Clarisse's GUI (native textures will *NOT* work at all)
     }
 }

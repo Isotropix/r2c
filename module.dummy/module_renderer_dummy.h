@@ -9,26 +9,17 @@
 class OfObject;
 
 /*! \class ModuleRendererDummy
-    \brief This class implements a small subset of Bbox render settings in Clarisse.
+    \brief This class implements a small subset of Dummy render settings in Clarisse.
            This module a C++ interface to the RendererDummy OfClass which exposes
-           Bbox renderer specific attributes/properties. The role of the module
+           Dummy renderer specific attributes/properties. The role of the module
            is to implement what happends when users edit attributes of the renderer
            item in Clarisse. */
 class ModuleRendererDummy : public ModuleRenderer {
 public:
-
     ModuleRendererDummy();
-    virtual ~ModuleRendererDummy() override;
-
-    /*! \brief Synchronize Bbox renderer to the attributes of the actual renderer item
-     *  \param sampling_quality global sampling multiplier.
-     *  \note  The multiplier should affect all sampling values so that a sampling_quality of 0.0 should result to 1 spp. */
-    void sync(const float& sampling_quality);
-
     const GMathVec3f get_background_color() { return m_background_color; }
 
 protected:
-
     /*! \brief Event method called when a user modifies an attribute of the item
      *  \param attr The attribute that has been modified.
      *  \param dirtiness dirtiness type sent from the attribute.
@@ -38,6 +29,5 @@ protected:
 private:
 
     GMathVec3f m_background_color;
-
     DECLARE_CLASS
 };
