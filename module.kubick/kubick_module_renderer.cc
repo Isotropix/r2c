@@ -2,15 +2,16 @@
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
 
-#include "module_renderer_dummy.h"
+// Local includes
+#include "./kubick_module_renderer.h"
 
 // Needs to be kept outside the header
-IMPLEMENT_CLASS(ModuleRendererDummy, ModuleRenderer)
+IMPLEMENT_CLASS(ModuleRendererKubick, ModuleRenderer)
 
-ModuleRendererDummy::ModuleRendererDummy() : ModuleRenderer(), m_background_color(0.0f) {}
+ModuleRendererKubick::ModuleRendererKubick() : ModuleRenderer(), m_background_color(0.0f) {}
 
 void
-ModuleRendererDummy::on_attribute_change(const OfAttr& attr, int& dirtiness, const int& dirtiness_flags)
+ModuleRendererKubick::on_attribute_change(const OfAttr& attr, int& dirtiness, const int& dirtiness_flags)
 {
     ModuleProjectItem::on_attribute_change(attr, dirtiness, dirtiness_flags);
     if (attr.get_name() == "background_color") {

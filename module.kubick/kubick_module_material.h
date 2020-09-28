@@ -7,16 +7,16 @@
 
 class OfObject;
 
-/*! \class ModuleMaterialDummyCallbacks
+/*! \class ModuleMaterialKubickCallbacks
     \brief declares custom callbacks for our own material representation.*/
-class ModuleMaterialDummyCallbacks : public ModuleMaterialCallbacks  {
+class ModuleMaterialKubickCallbacks : public ModuleMaterialCallbacks  {
 public :
-    ModuleMaterialDummyCallbacks();
+    ModuleMaterialKubickCallbacks();
 
     virtual void init_callbacks(OfClassCallbacks& callbacks)
     {
         ModuleMaterialCallbacks::init_callbacks(callbacks);
-        ModuleMaterialDummyCallbacks& cb = (ModuleMaterialDummyCallbacks&)callbacks;
+        ModuleMaterialKubickCallbacks& cb = (ModuleMaterialKubickCallbacks&)callbacks;
         cb.cb_shade = cb_shade;
     }
 
@@ -24,20 +24,20 @@ public :
     ShadeCallback cb_shade;
 };
 
-/*! \class ModuleMaterialDummy
+/*! \class ModuleMaterialKubick
     \brief This class implements the Dummy Material abstract class in Clarisse. The role
            of the module is to implement what happends when users edit attributes of the
            material item in Clarisse. */
-class ModuleMaterialDummy : public ModuleMaterial {
+class ModuleMaterialKubick : public ModuleMaterial {
 public:
     inline GMathVec3f shade(const GMathVec3f& ray_dir, const GMathVec3f& normal)
     {
-        return get_callbacks<ModuleMaterialDummyCallbacks>()->cb_shade(*get_object(), ray_dir, normal);
+        return get_callbacks<ModuleMaterialKubickCallbacks>()->cb_shade(*get_object(), ray_dir, normal);
     }
 
 private:
-    ModuleMaterialDummy(const ModuleMaterialDummy&) = delete;
-    ModuleMaterialDummy& operator=(const ModuleMaterialDummy&) = delete;
+    ModuleMaterialKubick(const ModuleMaterialKubick&) = delete;
+    ModuleMaterialKubick& operator=(const ModuleMaterialKubick&) = delete;
 
     DECLARE_CLASS
 };

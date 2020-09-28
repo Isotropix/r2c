@@ -2,14 +2,15 @@
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
 
-#include "dummy_utils.h"
+// Local includes
+#include "./kubick_utils.h"
 
 // Clarisse includes
 #include <module_camera.h>
 #include <ray_generator_camera.h>
 #include <sampling_image.h>
 
-void DummyCamera::init_ray_generator(const R2cSceneDelegate& delegate, const unsigned int width, const unsigned int height)
+void KubickCamera::init_ray_generator(const R2cSceneDelegate& delegate, const unsigned int width, const unsigned int height)
 {
     // Extract the ray generator from the scene's camera
     ModuleCamera *current_camera = static_cast<ModuleCamera *>(delegate.get_camera().get_item()->get_module());
@@ -17,7 +18,7 @@ void DummyCamera::init_ray_generator(const R2cSceneDelegate& delegate, const uns
     m_ray_generator->init(width, height, 1, 1);
 }
 
-GMathRay DummyCamera::generate_ray(const unsigned int width, const unsigned int height, const unsigned int x, const unsigned int y)
+GMathRay KubickCamera::generate_ray(const unsigned int width, const unsigned int height, const unsigned int x, const unsigned int y)
 {
     // Create image sampler
     GMathVec2d image_sample, min, max;
@@ -34,12 +35,12 @@ GMathRay DummyCamera::generate_ray(const unsigned int width, const unsigned int 
     return ray;
 }
 
-void DummyUtils::create_light(const R2cSceneDelegate &render_delegate, R2cItemId item_id, DummyLightInfo &light_info)
+void KubickUtils::create_light(const R2cSceneDelegate &render_delegate, R2cItemId item_id, KubickLightInfo &light_info)
 {
     // Get the OfObject of the light
     R2cItemDescriptor idesc = render_delegate.get_render_item(item_id);
     OfObject *item = idesc.get_item();
 
     // Fill the light data
-    light_info.light_data.light_module = static_cast<ModuleLightDummy *>(item->get_module());
+    light_info.light_data.light_module = static_cast<ModuleLightKubick *>(item->get_module());
 }

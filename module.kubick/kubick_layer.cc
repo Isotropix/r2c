@@ -6,12 +6,12 @@
 #include <r2c_module_layer_scene.h>
 
 // Local includes
-#include "./dummy_render_delegate.h"
-#include "layer_dummy.cma"
+#include "./kubick_render_delegate.h"
+#include "./kubick_layer.cma"
 
-IX_BEGIN_DECLARE_MODULE_CALLBACKS(ModuleLayerDummy, ModuleLayerR2cSceneCallbacks)
+IX_BEGIN_DECLARE_MODULE_CALLBACKS(KubickModuleLayer, ModuleLayerR2cSceneCallbacks)
     static R2cRenderDelegate *get_render_delegate(OfObject& object);
-IX_END_DECLARE_MODULE_CALLBACKS(ModuleLayerDummy)
+IX_END_DECLARE_MODULE_CALLBACKS(KubickModuleLayer)
 
 //!
 //! This callback must be implemented to specify which Render Delegate to attach to the Scene Delegate
@@ -19,15 +19,15 @@ IX_END_DECLARE_MODULE_CALLBACKS(ModuleLayerDummy)
 R2cRenderDelegate *
 IX_MODULE_CLBK::get_render_delegate(OfObject& object)
 {
-    return new DummyRenderDelegate(&object.get_application());
+    return new KubickRenderDelegate(&object.get_application());
 }
 
-namespace LayerDummy
+namespace KubickLayer
 {
     // This method is called when opening Clarisse and it registers the module
     void on_register(OfApp& app, CoreVector<OfClass *>& new_classes)
     {
-        OfClass *new_class = IX_DECLARE_MODULE_CLASS(ModuleLayerDummy)
+        OfClass *new_class = IX_DECLARE_MODULE_CLASS(KubickModuleLayer)
         new_classes.add(new_class);
 
         IX_MODULE_CLBK *module_callbacks;

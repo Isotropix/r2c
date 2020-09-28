@@ -2,16 +2,17 @@
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
 
-#include "module_material_dummy.h"
+// Local includes
+#include "./kubick_module_material.h"
 
 // Needs to be kept outside the header
-IMPLEMENT_CLASS(ModuleMaterialDummy, ModuleMaterial)
+IMPLEMENT_CLASS(ModuleMaterialKubick, ModuleMaterial)
 
 static GMathVec3f default_shade(OfObject& /* object */, const GMathVec3f& /* ray_dir */, const GMathVec3f& /* normal */ )
 {
     return GMathVec3f(1.0f, 0.0f, 0.0f);
 }
 
-ModuleMaterialDummyCallbacks::ModuleMaterialDummyCallbacks()
+ModuleMaterialKubickCallbacks::ModuleMaterialKubickCallbacks()
 : cb_shade(default_shade)
 {}

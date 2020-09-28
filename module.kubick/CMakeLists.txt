@@ -2,54 +2,54 @@
 # Copyright 2020 - present Isotropix SAS. See License.txt for license information
 #
 set (SOURCES
-    layer_dummy.cc
-    light_dummy.cc
+    kubick_layer.cc
+    kubick_light.cc
     main.cc
-    material_dummy.cc
-    module_light_dummy.cc
-    module_material_dummy.cc
-    module_renderer_dummy.cc
-    dummy_render_delegate.cc
-    dummy_utils.cc
-    renderer_dummy.cc
-    texture_dummy.cc
-    module_texture_dummy.cc
+    kubick_material.cc
+    kubick_module_light.cc
+    kubick_module_material.cc
+    kubick_module_renderer.cc
+    kubick_render_delegate.cc
+    kubick_utils.cc
+    kubick_renderer.cc
+    kubick_texture.cc
+    kubick_module_texture.cc
 )
 
 set (HEADERS
-    module_light_dummy.h
-    module_material_dummy.h
-    module_renderer_dummy.h
-    dummy_render_delegate.h
-    dummy_utils.h
-    module_texture_dummy.h
+    kubick_module_light.h
+    kubick_module_material.h
+    kubick_module_renderer.h
+    kubick_render_delegate.h
+    kubick_utils.h
+    kubick_module_texture.h
 )
 
 set (CID_FILES
-    layer_dummy.cid
-    light_dummy.cid
-    material_dummy.cid
-    renderer_dummy.cid
-    texture_dummy.cid
+    kubick_layer.cid
+    kubick_light.cid
+    kubick_material.cid
+    kubick_renderer.cid
+    kubick_texture.cid
 )
 
 set (CID_DEPENDS
     layer_r2c_scene
 )
 
-add_clarisse_module (dummy
+add_clarisse_module (kubick
     "${SOURCES}"
     "${HEADERS}"
     "${CID_FILES}"
     "${CID_DEPENDS}"
 )
 
-target_include_directories (dummy
+target_include_directories (kubick
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries (dummy
+target_link_libraries (kubick
     PRIVATE
         # helper library
         ix_r2c
