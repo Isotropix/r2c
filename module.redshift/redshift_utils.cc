@@ -113,7 +113,7 @@ RenderingBlockSink::OutputBlock(unsigned int layer_id, unsigned int denoisePassI
 void
 RenderingBlockSink::NotifyWillRenderBlock(unsigned int offsetX, unsigned int offsetY, unsigned int width, unsigned int height)
 {
-    m_render_buffer->notify_start_render_region(R2cRenderBuffer::Region(offsetX, offsetY, width, height), true);
+    m_render_buffer->notify_start_render_region(R2cRenderBuffer::Region(offsetX, offsetY, width, height), true, /* thread_id = */ 0);
 }
 
 void

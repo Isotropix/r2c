@@ -127,11 +127,11 @@ ClarisseLayerRenderBuffer::fill_region(const unsigned int& layer_id, const float
 }
 
 void
-ClarisseLayerRenderBuffer::notify_start_render_region(const Region& region, const bool& lock) const
+ClarisseLayerRenderBuffer::notify_start_render_region(const Region& region, const bool& lock, const unsigned int &thread_id) const
 {
     GMathVec4i cregion(static_cast<int>(region.offset_x), static_cast<int>(region.offset_y), static_cast<int>(region.width), static_cast<int>(region.height));
     // the method is already thread safe
-    m->layer->bucket_render_start(cregion, 0);
+    m->layer->bucket_render_start(cregion, thread_id);
 }
 
 void
