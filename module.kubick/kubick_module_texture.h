@@ -20,7 +20,7 @@ public :
         cb.cb_evaluate = cb_evaluate;
     }
 
-    typedef GMathVec3f (*EvaluateTextureCallback) (OfObject& object, const GMathVec3f& ray_direction);
+    typedef GMathVec3f (*EvaluateTextureCallback) (OfObject& object);
     EvaluateTextureCallback cb_evaluate;
 };
 
@@ -28,9 +28,9 @@ public :
     \brief This class implements the Texture abstract class in Clarisse. */
 class ModuleTextureKubick : public ModuleTextureOperator {
 public:
-    GMathVec3f evaluate(const GMathVec3f& ray_direction)
+    GMathVec3f evaluate()
     {
-        return get_callbacks<ModuleTextureKubickCallbacks>()->cb_evaluate(*get_object(), ray_direction);
+        return get_callbacks<ModuleTextureKubickCallbacks>()->cb_evaluate(*get_object());
     }
 
 private:

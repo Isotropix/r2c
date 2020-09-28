@@ -37,11 +37,11 @@ public :
     }
 
     // Evaluate the texture and return the result
-    static  GMathVec3f evaluate(OfObject& object, const GMathVec3f& ray_direction)
+    static  GMathVec3f evaluate(OfObject& object)
     {
         // Here we do a very simple example, but you could add arguments to the function and create a complex evaluation method
         TextureDummyModuleData *data = static_cast<TextureDummyModuleData *>(object.get_module_data());
-        return GMathVec3f(data->color->get_vec3d()) * ray_direction;
+        return GMathVec3f(data->color->get_vec3d());
     }
 };
 

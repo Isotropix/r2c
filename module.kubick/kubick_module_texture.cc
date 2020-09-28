@@ -8,7 +8,7 @@
 // Needs to be kept outside the header
 IMPLEMENT_CLASS(ModuleTextureKubick, ModuleTextureOperator)
 
-static GMathVec3f evaluate_texture_default(OfObject& /* unused */, const GMathVec3f& ray_direction)
+static GMathVec3f evaluate_texture_default(OfObject& /* unused */)
 {
     return GMathVec3f(1.0f, 0.0f, 0.0f);
 }

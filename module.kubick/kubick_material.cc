@@ -47,7 +47,7 @@ public :
         if (attr_color->is_textured()) {
             // Evaluate the texture and return the result
             ModuleTextureKubick *texture_dummy = (ModuleTextureKubick *)attr_color->get_texture()->get_module();
-            return fabs(ray_direction.dot(normal)) * texture_dummy->evaluate(ray_direction);
+            return fabs(ray_direction.dot(normal)) * texture_dummy->evaluate();
         } else {
             return fabs(ray_direction.dot(normal)) * GMathVec3f(attr_color->get_vec3d());
         }
