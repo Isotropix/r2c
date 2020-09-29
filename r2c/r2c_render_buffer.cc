@@ -107,20 +107,18 @@ ClarisseLayerRenderBuffer::fill_region(const unsigned int& layer_id, const float
         red->get_tiles(tiles, cregion);
         for (auto tile_handle : tiles) {
             const ImageMapTile& tile = *tile_handle.get_object();
-            int x = gmath_maxi(tile.get_x(), cregion[0]);
-            int y = gmath_maxi(tile.get_y(), cregion[1]);
+            int x_start = gmath_maxi(tile.get_x(), cregion[0]);
+            int y_start = gmath_maxi(tile.get_y(), cregion[1]);
 
-            int tx_end = tile.get_x() + static_cast<int>(tile.get_width());
-            int ty_end = tile.get_y() + static_cast<int>(tile.get_height());
-            int rx_end = static_cast<int>(region.offset_x + region.width);
-            int ry_end = static_cast<int>(region.offset_y + region.height);
+            int x_end = gmath_mini(tile.get_x() + tile.get_width(), cregion[0] + cregion[2]);
+            int y_end = gmath_mini(tile.get_y() + tile.get_height(), cregion[1] + cregion[3]);
 
             // clamping the region to the tile region since we don't want to
             // notify we updated outside of our region
-            progress_region[0] = x;
-            progress_region[1] = y;
-            progress_region[2] = tx_end > rx_end ? rx_end - tile.get_x() : static_cast<int>(tile.get_width());
-            progress_region[3] = ty_end > ry_end ? ry_end - tile.get_y() : static_cast<int>(tile.get_height());
+            progress_region[0] = x_start;
+            progress_region[1] = y_start;
+            progress_region[2] = x_end - x_start;
+            progress_region[3] = y_end - y_start;
             // notifying the subregion in the corresponding tile
             m->layer->update_region(progress_region, true, progress);
         }
