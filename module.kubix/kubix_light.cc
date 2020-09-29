@@ -6,8 +6,8 @@
 #include <of_object.h>
 
 // Local includes
-#include "./kubick_module_light.h"
-#include "./kubick_light.cma"
+#include "./kubix_module_light.h"
+#include "./kubix_light.cma"
 
 // WARNING: keep those lines for compatibility reasons
 #if ISOTROPIX_VERSION_NUMBER >= IX_BUILD_VERSION_NUMBER(4, 0, 2, 0, 0, 0)
@@ -17,18 +17,18 @@
 #endif
 
 // Create a class that implements function that will be then pluged to the module callback
-class ModuleLightKubickCallbackOverrides : public ModuleLightKubickCallbacks {
+class ModuleLightKubixCallbackOverrides : public ModuleLightKubixCallbacks {
 public:
 
     // Here we store the attributes because calling object.get_attribute("attr") can be very slow
-    struct KubickLightModuleData {
+    struct KubixLightModuleData {
         const OfAttr *color;
     };
 
     // Create a module data that will exist during the object's lifetime
     static void * create_module_data(const OfObject& object)
     {
-        KubickLightModuleData *data = new KubickLightModuleData();
+        KubixLightModuleData *data = new KubixLightModuleData();
         data->color = object.get_attribute("color");
         return data;
     }
@@ -36,7 +36,7 @@ public:
     // Destroy the module data when the object is destroyed
     static bool destroy_module_data(const OfObject& object, void *data)
     {
-        delete (KubickLightModuleData *)data;
+        delete (KubixLightModuleData *)data;
         return true;
     }
 
@@ -44,24 +44,24 @@ public:
     static GMathVec3f evaluate(OfObject& object)
     {
         // Here we do a very simple example, but you could add arguments to the function and create a complex evaluation method
-        const KubickLightModuleData *data = static_cast<KubickLightModuleData *>(object.get_module_data());
+        const KubixLightModuleData *data = static_cast<KubixLightModuleData *>(object.get_module_data());
         return GMathVec3f(data->color->get_vec3d());
     }
 };
 
 // WARNING: do not remove this typedef, it is needed by the macro IX_CREATE_MODULE_CLBK
-typedef ModuleLightKubickCallbackOverrides IX_MODULE_CLBK;
+typedef ModuleLightKubixCallbackOverrides IX_MODULE_CLBK;
 
-namespace KubickLight
+namespace KubixLight
 {
     // This method is called when opening Clarisse and it registers the module
     void on_register(OfApp& app, CoreVector<OfClass *>& new_classes)
     {
         // Create the new class
-        OfClass *new_class = IX_DECLARE_MODULE_CLASS(ModuleLightKubick);
+        OfClass *new_class = IX_DECLARE_MODULE_CLASS(ModuleLightKubix);
         new_classes.add(new_class);
 
-        // Create the ModuleTextureKubickCallbacks and init it
+        // Create the ModuleTextureKubixCallbacks and init it
         IX_MODULE_CLBK *module_callbacks;
         IX_CREATE_MODULE_CLBK(new_class, module_callbacks)
 

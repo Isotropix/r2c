@@ -3,14 +3,14 @@
 //
 
 // Local includes
-#include "./kubick_utils.h"
+#include "./kubix_utils.h"
 
 // Clarisse includes
 #include <module_camera.h>
 #include <ray_generator_camera.h>
 #include <sampling_image.h>
 
-void KubickCamera::init_ray_generator(const R2cSceneDelegate& delegate, const unsigned int width, const unsigned int height)
+void KubixCamera::init_ray_generator(const R2cSceneDelegate& delegate, const unsigned int width, const unsigned int height)
 {
     // Extract the ray generator from the scene's camera
     ModuleCamera *current_camera = static_cast<ModuleCamera *>(delegate.get_camera().get_item()->get_module());
@@ -18,7 +18,7 @@ void KubickCamera::init_ray_generator(const R2cSceneDelegate& delegate, const un
     m_ray_generator->init(width, height, 1, 1);
 }
 
-GMathRay KubickCamera::generate_ray(const unsigned int width, const unsigned int height, const unsigned int x, const unsigned int y)
+GMathRay KubixCamera::generate_ray(const unsigned int width, const unsigned int height, const unsigned int x, const unsigned int y)
 {
     // Create image sampler
     GMathVec2d image_sample, min, max;
@@ -35,12 +35,12 @@ GMathRay KubickCamera::generate_ray(const unsigned int width, const unsigned int
     return ray;
 }
 
-void KubickUtils::create_light(const R2cSceneDelegate &render_delegate, R2cItemId item_id, KubickLightInfo &light_info)
+void KubixUtils::create_light(const R2cSceneDelegate &render_delegate, R2cItemId item_id, KubixLightInfo &light_info)
 {
     // Get the OfObject of the light
     R2cItemDescriptor idesc = render_delegate.get_render_item(item_id);
     OfObject *item = idesc.get_item();
 
     // Fill the light data
-    light_info.light_data.light_module = static_cast<ModuleLightKubick *>(item->get_module());
+    light_info.light_data.light_module = static_cast<ModuleLightKubix *>(item->get_module());
 }

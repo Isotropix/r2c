@@ -9,16 +9,16 @@
 // Forward declaration
 class OfObject;
 
-/*! \class ModuleLightKubickCallbacks
+/*! \class ModuleLightKubixCallbacks
     \brief declares custom callbacks for our own light representation */
-class ModuleLightKubickCallbacks : public ModuleLightCallbacks  {
+class ModuleLightKubixCallbacks : public ModuleLightCallbacks  {
 public :
-    ModuleLightKubickCallbacks();
+    ModuleLightKubixCallbacks();
 
     virtual void init_callbacks(OfClassCallbacks& callbacks)
     {
         ModuleSceneItemCallbacks::init_callbacks(callbacks);
-        ModuleLightKubickCallbacks& cb = (ModuleLightKubickCallbacks&)callbacks;
+        ModuleLightKubixCallbacks& cb = (ModuleLightKubixCallbacks&)callbacks;
         cb.cb_evaluate = cb_evaluate;
     }
 
@@ -26,20 +26,20 @@ public :
     EvaluateLightCallback cb_evaluate;
 };
 
-/*! \class ModuleLightKubick
+/*! \class ModuleLightKubix
     \brief This class implements the Dummy Light abstract class in Clarisse. The role
            of the module is to implement what happends when users edit attributes of the
            light item in Clarisse. */
-class ModuleLightKubick : public ModuleLight {
+class ModuleLightKubix : public ModuleLight {
 public:
     GMathVec3f evaluate()
     {
-        return get_callbacks<ModuleLightKubickCallbacks>()->cb_evaluate(*get_object());
+        return get_callbacks<ModuleLightKubixCallbacks>()->cb_evaluate(*get_object());
     }
 
 private:
-    ModuleLightKubick(const ModuleLightKubick&) = delete;
-    ModuleLightKubick& operator=(const ModuleLightKubick&) = delete;
+    ModuleLightKubix(const ModuleLightKubix&) = delete;
+    ModuleLightKubix& operator=(const ModuleLightKubix&) = delete;
 
     DECLARE_CLASS
 };

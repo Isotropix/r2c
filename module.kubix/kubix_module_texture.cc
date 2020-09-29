@@ -3,16 +3,16 @@
 //
 
 // Local includes
-#include "./kubick_module_texture.h"
+#include "./kubix_module_texture.h"
 
 // Needs to be kept outside the header
-IMPLEMENT_CLASS(ModuleTextureKubick, ModuleTextureOperator)
+IMPLEMENT_CLASS(ModuleTextureKubix, ModuleTextureOperator)
 
 static GMathVec3f evaluate_texture_default(OfObject& /* unused */)
 {
     return GMathVec3f(1.0f, 0.0f, 0.0f);
 }
 
-ModuleTextureKubickCallbacks::ModuleTextureKubickCallbacks()
+ModuleTextureKubixCallbacks::ModuleTextureKubixCallbacks()
     : cb_evaluate(evaluate_texture_default)
 {}

@@ -13,8 +13,8 @@
 #include <r2c_scene_delegate.h>
 
 // Local includes
-#include "./kubick_module_material.h"
-#include "./kubick_module_light.h"
+#include "./kubix_module_material.h"
+#include "./kubix_module_light.h"
 
 // Forward declaration
 class RayGeneratorCamera;
@@ -23,12 +23,12 @@ class RayGeneratorCamera;
 /*********************************** CUSTOM GEOMETRY ***********************************/
 
 // Example of simple custom geometry. Here we simply raytrace against bounding boxes.
-class KubickBbox {
+class KubixBbox {
 public:
-    KubickBbox() {}
+    KubixBbox() {}
 
     template <class U>
-    inline KubickBbox(const GMathBbox3<U>& clarisse_bbox)
+    inline KubixBbox(const GMathBbox3<U>& clarisse_bbox)
         : m_params{ clarisse_bbox[0], clarisse_bbox[1] } {
     }
 
@@ -67,7 +67,7 @@ public:
         vertices[7][0] = m_params[0][0]; vertices[7][1] = m_params[1][1]; vertices[7][2] = m_params[1][2];
     }
 
-    inline void transform_bbox_and_get_bbox(const GMathMatrix4x4d& matrix, KubickBbox& result) const {
+    inline void transform_bbox_and_get_bbox(const GMathMatrix4x4d& matrix, KubixBbox& result) const {
         GMathVec3d bbox_vertices[9];
         get_corner_vertices(bbox_vertices);
         result[0][0] = result[0][1] = result[0][2] = gmath_infinity;
@@ -96,7 +96,7 @@ private:
 
 /*********************************** CAMERA ***********************************/
 
-class KubickCamera {
+class KubixCamera {
 public:
     void init_ray_generator(const R2cSceneDelegate &delegate, const unsigned int width, const unsigned int height);
     GMathRay generate_ray(const unsigned int width, const unsigned int height, const unsigned int x, const unsigned int y);
@@ -109,75 +109,75 @@ private :
 /*********************************** LIGHT ***********************************/
 
 struct LightData {
-    ModuleLightKubick *light_module;
+    ModuleLightKubix *light_module;
 };
 
-/*! \class KubickLightInfo
+/*! \class KubixLightInfo
     \brief internal class holding Bbox light data */
-class KubickLightInfo {
+class KubixLightInfo {
 public:
-    KubickLightInfo() : dirtiness(R2cSceneDelegate::DIRTINESS_ALL) {}
+    KubixLightInfo() : dirtiness(R2cSceneDelegate::DIRTINESS_ALL) {}
 
     LightData light_data;
     int dirtiness; // dirtiness state of the item
 };
 
-typedef CoreHashTable<R2cItemId, KubickLightInfo> KubickLightIndex;
+typedef CoreHashTable<R2cItemId, KubixLightInfo> KubixLightIndex;
 
 
 /*********************************** MATERIAL ***********************************/
 
 struct MaterialData {
     MaterialData(): material_module(nullptr) {}
-    MaterialData(ModuleMaterialKubick* module): material_module(module) {}
-    ModuleMaterialKubick *material_module;
+    MaterialData(ModuleMaterialKubix* module): material_module(module) {}
+    ModuleMaterialKubix *material_module;
 };
 
-/*! \class KubickResourceInfo
+/*! \class KubixResourceInfo
     \brief internal class holding the actual geometric resource data */
-class KubickResourceInfo {
+class KubixResourceInfo {
 public:
     unsigned int refcount; //!< internal refcount used to keep track of the number of requesters
-    KubickBbox bbox;
-    KubickResourceInfo() : refcount(0) {}
+    KubixBbox bbox;
+    KubixResourceInfo() : refcount(0) {}
 };
 
-typedef CoreHashTable<R2cResourceId, KubickResourceInfo> KubickResourceIndex;
+typedef CoreHashTable<R2cResourceId, KubixResourceInfo> KubixResourceIndex;
 
 
 /*********************************** GEOMETRY ***********************************/
 
-/*! \class KubickGeometryInfo
+/*! \class KubixGeometryInfo
     \brief internal class holding Bbox geometry data (instance pointing to a resource) */
-class KubickGeometryInfo {
+class KubixGeometryInfo {
 public:
     bool visibility;
     GMathMatrix4x4d transform;
     R2cResourceId resource; //!< id to the actual Clarisse geometry resource
     MaterialData material;
     int dirtiness; //!< dirtiness state of the item
-    KubickGeometryInfo() : resource(nullptr), dirtiness(R2cSceneDelegate::DIRTINESS_ALL) {}
+    KubixGeometryInfo() : resource(nullptr), dirtiness(R2cSceneDelegate::DIRTINESS_ALL) {}
 };
 
-typedef CoreHashTable<R2cItemId, KubickGeometryInfo> DummyGeometryIndex;
+typedef CoreHashTable<R2cItemId, KubixGeometryInfo> DummyGeometryIndex;
 
 /*! \class BBInstancerInfo
     \brief internal class holding instancer data which is basically a list of Bbox point clouds instancing a geometry */
-class KubickInstancerInfo {
+class KubixInstancerInfo {
 public:
     bool visibility;
     GMathMatrix4x4d transform;
     R2cResourceId resource; //!< id to the actual Clarisse geometry resource
     MaterialData material;
     int dirtiness; //!< dirtiness state of the item
-    KubickInstancerInfo() : resource(nullptr), dirtiness(R2cSceneDelegate::DIRTINESS_ALL) {}
+    KubixInstancerInfo() : resource(nullptr), dirtiness(R2cSceneDelegate::DIRTINESS_ALL) {}
 };
 
-typedef CoreHashTable<R2cItemId, KubickInstancerInfo> KubickInstancerIndex;
+typedef CoreHashTable<R2cItemId, KubixInstancerInfo> KubixInstancerIndex;
 
 
 /*********************************** HELPERS ***********************************/
 
-namespace KubickUtils {
-    void create_light(const R2cSceneDelegate& render_delegate, R2cItemId item_id, KubickLightInfo& light_info);
+namespace KubixUtils {
+    void create_light(const R2cSceneDelegate& render_delegate, R2cItemId item_id, KubixLightInfo& light_info);
 };

@@ -3,16 +3,16 @@
 //
 
 // Local includes
-#include "./kubick_module_material.h"
+#include "./kubix_module_material.h"
 
 // Needs to be kept outside the header
-IMPLEMENT_CLASS(ModuleMaterialKubick, ModuleMaterial)
+IMPLEMENT_CLASS(ModuleMaterialKubix, ModuleMaterial)
 
 static GMathVec3f default_shade(OfObject& /* object */, const GMathVec3f& /* ray_dir */, const GMathVec3f& /* normal */ )
 {
     return GMathVec3f(1.0f, 0.0f, 0.0f);
 }
 
-ModuleMaterialKubickCallbacks::ModuleMaterialKubickCallbacks()
+ModuleMaterialKubixCallbacks::ModuleMaterialKubixCallbacks()
 : cb_shade(default_shade)
 {}

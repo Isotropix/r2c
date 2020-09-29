@@ -2,14 +2,14 @@
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
 
-class "KubickTexture" "TextureOperator" {
+class "KubixTexture" "TextureOperator" {
     // WARNING DO NOT CHANGE THIS CLASS NAME SINCE WE HEAVILY RELY ON IT.
     // IF YOU DO SO MAKE SURE TO SEARCH IN THE CODE WHERE WE MAKE
     // REFERENCE TO IT!
 
     #version 1.0
-    category "/Texture/Kubick"
-    doc "A Kubick texture."
+    category "/Texture/Kubix"
+    doc "A Kubix texture."
 
     color "color" {
         value 1 1 1

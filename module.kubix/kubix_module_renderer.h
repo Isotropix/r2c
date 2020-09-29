@@ -8,15 +8,15 @@
 
 class OfObject;
 
-/*! \class ModuleRendererKubick
+/*! \class ModuleRendererKubix
     \brief This class implements a small subset of Dummy render settings in Clarisse.
-           This module a C++ interface to the KubickRenderer OfClass which exposes
+           This module a C++ interface to the KubixRenderer OfClass which exposes
            Dummy renderer specific attributes/properties. The role of the module
            is to implement what happends when users edit attributes of the renderer
            item in Clarisse. */
-class ModuleRendererKubick : public ModuleRenderer {
+class ModuleRendererKubix : public ModuleRenderer {
 public:
-    ModuleRendererKubick();
+    ModuleRendererKubix();
     const GMathVec3f get_background_color() { return m_background_color; }
 
 protected:

@@ -1,0 +1,15 @@
+//
+// Copyright 2020 - present Isotropix SAS. See License.txt for license information
+//
+
+class "KubixMaterial" "Material" {
+    #version 1.0
+    category "/Material/Kubix"
+    doc "A Kubix material."
+    
+    color "color" {
+        value 1 1 1
+        texturable yes
+        texture_filter "KubixTexture" // IMPORTANT: used to filter linkable textures from Clarisse's GUI (native textures will *NOT* work at all)
+    }
+}

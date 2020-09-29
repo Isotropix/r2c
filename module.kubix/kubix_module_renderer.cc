@@ -3,15 +3,15 @@
 //
 
 // Local includes
-#include "./kubick_module_renderer.h"
+#include "./kubix_module_renderer.h"
 
 // Needs to be kept outside the header
-IMPLEMENT_CLASS(ModuleRendererKubick, ModuleRenderer)
+IMPLEMENT_CLASS(ModuleRendererKubix, ModuleRenderer)
 
-ModuleRendererKubick::ModuleRendererKubick() : ModuleRenderer(), m_background_color(0.0f) {}
+ModuleRendererKubix::ModuleRendererKubix() : ModuleRenderer(), m_background_color(0.0f) {}
 
 void
-ModuleRendererKubick::on_attribute_change(const OfAttr& attr, int& dirtiness, const int& dirtiness_flags)
+ModuleRendererKubix::on_attribute_change(const OfAttr& attr, int& dirtiness, const int& dirtiness_flags)
 {
     ModuleProjectItem::on_attribute_change(attr, dirtiness, dirtiness_flags);
     if (attr.get_name() == "background_color") {

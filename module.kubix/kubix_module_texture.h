@@ -6,17 +6,17 @@
 // Clarisse includes
 #include <module_texture_operator.h>
 
-/*! \class ModuleTextureKubickCallbacks
+/*! \class ModuleTextureKubixCallbacks
     \brief declares custom callbacks for our own texture representation.*/
-class ModuleTextureKubickCallbacks : public ModuleGlObjectCallbacks  {
+class ModuleTextureKubixCallbacks : public ModuleGlObjectCallbacks  {
 public :
 
-    ModuleTextureKubickCallbacks();
+    ModuleTextureKubixCallbacks();
 
     virtual void init_callbacks(OfClassCallbacks& callbacks)
     {
         ModuleGlObjectCallbacks::init_callbacks(callbacks);
-        ModuleTextureKubickCallbacks& cb = (ModuleTextureKubickCallbacks&)callbacks;
+        ModuleTextureKubixCallbacks& cb = (ModuleTextureKubixCallbacks&)callbacks;
         cb.cb_evaluate = cb_evaluate;
     }
 
@@ -24,13 +24,13 @@ public :
     EvaluateTextureCallback cb_evaluate;
 };
 
-/*! \class ModuleTextureKubick
+/*! \class ModuleTextureKubix
     \brief This class implements the Texture abstract class in Clarisse. */
-class ModuleTextureKubick : public ModuleTextureOperator {
+class ModuleTextureKubix : public ModuleTextureOperator {
 public:
     GMathVec3f evaluate()
     {
-        return get_callbacks<ModuleTextureKubickCallbacks>()->cb_evaluate(*get_object());
+        return get_callbacks<ModuleTextureKubixCallbacks>()->cb_evaluate(*get_object());
     }
 
 private:

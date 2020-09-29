@@ -3,8 +3,8 @@
 //
 
 // Local includes
-#include "./kubick_module_texture.h"
-#include "./kubick_texture.cma"
+#include "./kubix_module_texture.h"
+#include "./kubix_texture.cma"
 
 // WARNING: keep those lines for compatibility reasons
 #if ISOTROPIX_VERSION_NUMBER >= IX_BUILD_VERSION_NUMBER(4, 0, 2, 0, 0, 0)
@@ -14,7 +14,7 @@
 #endif
 
 // Create a class that implements function that will be then pluged to the module callback
-class ModuleTextureDummyCallbacksOverrides : public ModuleTextureKubickCallbacks {
+class ModuleTextureDummyCallbacksOverrides : public ModuleTextureKubixCallbacks {
 public :
     // Here we store the attributes because calling object.get_attribute("attr") can be very slow
     struct TextureDummyModuleData {
@@ -48,16 +48,16 @@ public :
 // WARNING: do not remove this typedef, it is needed by the macro IX_CREATE_MODULE_CLBK
 typedef ModuleTextureDummyCallbacksOverrides IX_MODULE_CLBK;
 
-namespace KubickTexture
+namespace KubixTexture
 {
     // This method is called when opening Clarisse and it register the module
     void on_register(OfApp& app, CoreVector<OfClass *>& new_classes)
     {
         // Create the new class
-        OfClass *new_class = IX_DECLARE_MODULE_CLASS(ModuleTextureKubick);
+        OfClass *new_class = IX_DECLARE_MODULE_CLASS(ModuleTextureKubix);
         new_classes.add(new_class);
 
-        // Create the ModuleTextureKubickCallbacks and init it
+        // Create the ModuleTextureKubixCallbacks and init it
         IX_MODULE_CLBK *module_callbacks;
         IX_CREATE_MODULE_CLBK(new_class, module_callbacks)
 
