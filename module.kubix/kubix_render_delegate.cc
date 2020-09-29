@@ -641,6 +641,7 @@ void raytrace_objects(const GMathRay& ray, const CoreHashTable<R2cItemId, OBJECT
                 GMathMatrix4x4d::transpose(inverse_transform, inverse_transpose_transform);
                 GMathVec3d transformed_normal;
                 GMathMatrix4x4d::multiply(transformed_normal, normal, inverse_transpose_transform);
+                transformed_normal.normalize();
 
                 closest_hit_t = tmin;
                 closest_hit_normal = transformed_normal;
