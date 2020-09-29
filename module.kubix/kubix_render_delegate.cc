@@ -132,6 +132,7 @@ KubixRenderDelegate::remove_geometry(R2cItemDescriptor item)
     KubixGeometryInfo *geometry = m->geometries.index.is_key_exists(item.get_id());
     if (geometry != nullptr) { // make sure it is indeed in our index
         m->geometries.removed.add(item.get_id());
+        geometry->dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
     }
 }
 
