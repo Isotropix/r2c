@@ -1,7 +1,7 @@
 //
 // Copyright 2020 - present Isotropix SAS. See License.txt for license information
 //
-#include "./kubix_render_delegate.h"
+#include "./spherix_render_delegate.h"
 
 // Clarisse includes
 #include <module_scene_object.h>
@@ -11,84 +11,85 @@
 #include <sys_thread_task_manager.h>
 
 // Local includes
-#include "./kubix_module_renderer.h"
+#include "./spherix_external_renderer.h"
+#include "./spherix_module_renderer.h"
 
 // private implementation
-class KubixRenderDelegateImpl {
+class SpherixRenderDelegateImpl {
 public:
-    KubixCamera camera;
+    SpherixCamera camera;
     // rendering progress (warning: this variable is updated in a multithreaded context)
     CoreAtomic32 progress;
     // We store this to be able to access the SysThreadTaskManager
     OfApp *app;
     
     struct {
-        KubixResourceIndex index; // the index of all current resources where we store deduplicated data
+        SpherixResourceIndex index; // the index of all current resources where we store deduplicated data
     } resources;
 
     template<class INDEX>
     struct ClarisseToDummyObjectsMapping {
         INDEX index; // index of all render object (can be geometries, lights or instancers) which are instances pointing to a object resource
-        CoreVector<R2cItemId> inserted; // is filled by KubixRenderDelegate::insert_xxx when a object is inserted to the scene
-        CoreVector<R2cItemId> removed; // is filled by KubixRenderDelegate::remove_xxx when a object is removed from the scene
+        CoreVector<R2cItemId> inserted; // is filled by SpherixRenderDelegate::insert_xxx when a object is inserted to the scene
+        CoreVector<R2cItemId> removed; // is filled by SpherixRenderDelegate::remove_xxx when a object is removed from the scene
 
         bool dirty; // flag set when we receive dirtiness so that we don't need to iterate the whole index to know that it is dirty
         bool is_dirty() { return inserted.get_count() != 0 || removed.get_count() != 0 || dirty; } // return true is index is dirty
     };
 
     ClarisseToDummyObjectsMapping<DummyGeometryIndex> geometries;
-    ClarisseToDummyObjectsMapping<KubixLightIndex> lights;
-    ClarisseToDummyObjectsMapping<KubixInstancerIndex> instancers;
+    ClarisseToDummyObjectsMapping<SpherixLightIndex> lights;
+    ClarisseToDummyObjectsMapping<SpherixInstancerIndex> instancers;
 };
 
-IMPLEMENT_CLASS(KubixRenderDelegate, R2cRenderDelegate);
+IMPLEMENT_CLASS(SpherixRenderDelegate, R2cRenderDelegate);
 
-const CoreVector<CoreString> KubixRenderDelegate::s_supported_cameras      = { "CameraAlembic", "CameraUsd", "CameraPerspective", "CameraPerspectiveAdvanced"};
-const CoreVector<CoreString> KubixRenderDelegate::s_unsupported_cameras    = {};
-const CoreVector<CoreString> KubixRenderDelegate::s_supported_lights       = { "KubixLight" };
-const CoreVector<CoreString> KubixRenderDelegate::s_unsupported_lights     = {};
-const CoreVector<CoreString> KubixRenderDelegate::s_supported_materials    = { "KubixMaterial" };
-const CoreVector<CoreString> KubixRenderDelegate::s_unsupported_materials  = {};
-const CoreVector<CoreString> KubixRenderDelegate::s_supported_geometries   = { "SceneObject" };
-const CoreVector<CoreString> KubixRenderDelegate::s_unsupported_geometries = { "GeometryBundle", "GeometryPointArray" };
+const CoreVector<CoreString> SpherixRenderDelegate::s_supported_cameras      = { "CameraAlembic", "CameraUsd", "CameraPerspective", "CameraPerspectiveAdvanced"};
+const CoreVector<CoreString> SpherixRenderDelegate::s_unsupported_cameras    = {};
+const CoreVector<CoreString> SpherixRenderDelegate::s_supported_lights       = { "LightSpherix", "SpherixLightDistant" };
+const CoreVector<CoreString> SpherixRenderDelegate::s_unsupported_lights     = {};
+const CoreVector<CoreString> SpherixRenderDelegate::s_supported_materials    = { "MaterialSpherix", "SpherixMaterialDiffuse", "SpherixMaterialReflection" };
+const CoreVector<CoreString> SpherixRenderDelegate::s_unsupported_materials  = {};
+const CoreVector<CoreString> SpherixRenderDelegate::s_supported_geometries   = { "SceneObject" };
+const CoreVector<CoreString> SpherixRenderDelegate::s_unsupported_geometries = { "GeometryBundle", "GeometryPointArray" };
 
-KubixRenderDelegate::KubixRenderDelegate(OfApp *app) : R2cRenderDelegate()
+SpherixRenderDelegate::SpherixRenderDelegate(OfApp *app) : R2cRenderDelegate()
 {
-    m = new KubixRenderDelegateImpl;
+    m = new SpherixRenderDelegateImpl;
     m->app = app;
 }
 
-KubixRenderDelegate::~KubixRenderDelegate()
+SpherixRenderDelegate::~SpherixRenderDelegate()
 {
     clear();
     delete m;
 }
 
 CoreString 
-KubixRenderDelegate::get_class_name() const
+SpherixRenderDelegate::get_class_name() const
 {
-    return "KubixRenderer";
+    return "SpherixRenderer";
 }
 
 void
-KubixRenderDelegate::insert_light(R2cItemDescriptor item)
+SpherixRenderDelegate::insert_light(R2cItemDescriptor item)
 {
     m->lights.inserted.add(item.get_id());
 }
 
 void
-KubixRenderDelegate::remove_light(R2cItemDescriptor item)
+SpherixRenderDelegate::remove_light(R2cItemDescriptor item)
 {
-    KubixLightInfo *light = m->lights.index.is_key_exists(item.get_id());
+    SpherixLightInfo *light = m->lights.index.is_key_exists(item.get_id());
     if (light != nullptr) { // make sure it is indeed in our index
         m->lights.removed.add(item.get_id());
     }
 }
 
 void
-KubixRenderDelegate::dirty_light(R2cItemDescriptor item, const int& dirtiness)
+SpherixRenderDelegate::dirty_light(R2cItemDescriptor item, const int& dirtiness)
 {
-    KubixLightInfo *light = m->lights.index.is_key_exists(item.get_id());
+    SpherixLightInfo *light = m->lights.index.is_key_exists(item.get_id());
     if (light != nullptr) { // make sure it is indeed in our index
         m->lights.dirty = true;
         light->dirtiness |= dirtiness;
@@ -96,24 +97,24 @@ KubixRenderDelegate::dirty_light(R2cItemDescriptor item, const int& dirtiness)
 }
 
 void
-KubixRenderDelegate::insert_instancer(R2cItemDescriptor item)
+SpherixRenderDelegate::insert_instancer(R2cItemDescriptor item)
 {
     m->instancers.inserted.add(item.get_id());
 }
 
 void
-KubixRenderDelegate::remove_instancer(R2cItemDescriptor item)
+SpherixRenderDelegate::remove_instancer(R2cItemDescriptor item)
 {
-    KubixInstancerInfo *instancer = m->instancers.index.is_key_exists(item.get_id());
+    SpherixInstancerInfo *instancer = m->instancers.index.is_key_exists(item.get_id());
     if (instancer != nullptr) { // make sure it is indeed in our index
         m->instancers.removed.add(item.get_id());
     }
 }
 
 void
-KubixRenderDelegate::dirty_instancer(R2cItemDescriptor item, const int& dirtiness)
+SpherixRenderDelegate::dirty_instancer(R2cItemDescriptor item, const int& dirtiness)
 {
-    KubixInstancerInfo *instancer = m->instancers.index.is_key_exists(item.get_id());
+    SpherixInstancerInfo *instancer = m->instancers.index.is_key_exists(item.get_id());
     if (instancer != nullptr) { // make sure it is indeed in our index
         m->instancers.dirty = true;
         instancer->dirtiness |= dirtiness;
@@ -121,25 +122,24 @@ KubixRenderDelegate::dirty_instancer(R2cItemDescriptor item, const int& dirtines
 }
 
 void
-KubixRenderDelegate::insert_geometry(R2cItemDescriptor item)
+SpherixRenderDelegate::insert_geometry(R2cItemDescriptor item)
 {
     m->geometries.inserted.add(item.get_id());
 }
 
 void
-KubixRenderDelegate::remove_geometry(R2cItemDescriptor item)
+SpherixRenderDelegate::remove_geometry(R2cItemDescriptor item)
 {
-    KubixGeometryInfo *geometry = m->geometries.index.is_key_exists(item.get_id());
+    SpherixGeometryInfo *geometry = m->geometries.index.is_key_exists(item.get_id());
     if (geometry != nullptr) { // make sure it is indeed in our index
         m->geometries.removed.add(item.get_id());
-        geometry->dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
     }
 }
 
 void
-KubixRenderDelegate::dirty_geometry(R2cItemDescriptor item, const int& dirtiness)
+SpherixRenderDelegate::dirty_geometry(R2cItemDescriptor item, const int& dirtiness)
 {
-    KubixGeometryInfo *geometry = m->geometries.index.is_key_exists(item.get_id());
+    SpherixGeometryInfo *geometry = m->geometries.index.is_key_exists(item.get_id());
     if (geometry != nullptr) { // make sure it is indeed in our index
         m->geometries.dirty = true;
         geometry->dirtiness |= dirtiness;
@@ -147,13 +147,13 @@ KubixRenderDelegate::dirty_geometry(R2cItemDescriptor item, const int& dirtiness
 }
 
 float
-KubixRenderDelegate::get_render_progress() const
+SpherixRenderDelegate::get_render_progress() const
 {
     return m->progress.get_float();
 }
 
 void
-KubixRenderDelegate::sync()
+SpherixRenderDelegate::sync()
 {
     // Called before each render
     sync_geometries();
@@ -162,7 +162,7 @@ KubixRenderDelegate::sync()
 }
 
 void
-KubixRenderDelegate::clear()
+SpherixRenderDelegate::clear()
 {
     // !!! make sure to clear everything !!!
     // clearing instances
@@ -188,24 +188,24 @@ KubixRenderDelegate::clear()
 }
 
 void
-KubixRenderDelegate::sync_camera(const unsigned int& width, const unsigned int& height)
+SpherixRenderDelegate::sync_camera(const unsigned int& width, const unsigned int& height)
 {
     m->camera.init_ray_generator(*get_scene_delegate(), width, height);
 }
 
 void
-sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cgeometryid, KubixGeometryInfo& rgeometry)
+sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cgeometryid, SpherixGeometryInfo& rgeometry)
 {
     const R2cShadingGroupInfo& shading_group = delegate.get_shading_group_info(cgeometryid, 0);
     if (shading_group.get_material().is_null()) {
         rgeometry.material = nullptr;
     } else {
-        rgeometry.material = static_cast<ModuleMaterialKubix *>(shading_group.get_material().get_item()->get_module());
+        rgeometry.material = static_cast<ModuleMaterialSpherix *>(shading_group.get_material().get_item()->get_module());
     }
 }
 
 void
-KubixRenderDelegate::_sync_geometry(R2cItemId cgeometryid, KubixGeometryInfo& rgeometry, const bool& is_new)
+SpherixRenderDelegate::_sync_geometry(R2cItemId cgeometryid, SpherixGeometryInfo& rgeometry, const bool& is_new)
 {
     if (rgeometry.dirtiness & R2cSceneDelegate::DIRTINESS_GEOMETRY) {
         if (!is_new) {
@@ -220,15 +220,15 @@ KubixRenderDelegate::_sync_geometry(R2cItemId cgeometryid, KubixGeometryInfo& rg
             rgeometry.resource = cresource.get_id();
             
             // Create or increment ref count of stored resource
-            KubixResourceInfo *stored_resource = m->resources.index.is_key_exists(rgeometry.resource);
+            SpherixResourceInfo *stored_resource = m->resources.index.is_key_exists(rgeometry.resource);
             if (stored_resource == nullptr) { // the resource doesn't exists so let's create it
                 // create corresponding geometry resource according to the Clarisse geometry
-                KubixResourceInfo new_resource;
+                SpherixResourceInfo new_resource;
 
                 // Extract its bbox
                 R2cItemDescriptor idesc = get_scene_delegate()->get_render_item(cgeometryid);
                 ModuleSceneObject *module = static_cast<ModuleSceneObject *>(idesc.get_item()->get_module());
-                new_resource.bbox = module->get_bbox();
+                new_resource.sphere = module->get_bbox();
 
                 new_resource.refcount = 1;
                 // adding the new resource
@@ -259,7 +259,7 @@ KubixRenderDelegate::_sync_geometry(R2cItemId cgeometryid, KubixGeometryInfo& rg
 }
 
 void
-KubixRenderDelegate::sync_geometries()
+SpherixRenderDelegate::sync_geometries()
 {
     if (m->geometries.is_dirty()) {
         // iterating through geometries to see if we need to sync any of them
@@ -273,12 +273,12 @@ KubixRenderDelegate::sync_geometries()
         }
         // let's see if we have to remove geometries from the scene
         for (auto removed_item : m->geometries.removed) {
-            KubixGeometryInfo *geometry = m->geometries.index.is_key_exists(removed_item);
+            SpherixGeometryInfo *geometry = m->geometries.index.is_key_exists(removed_item);
             // check the current geometry exists in the scene
             if (geometry != nullptr) {
                 // doing proper cleanup. Let's cleanup the resource
                 // get the resource if it exists
-                KubixResourceInfo *stored_resource = m->resources.index.is_key_exists(geometry->resource);
+                SpherixResourceInfo *stored_resource = m->resources.index.is_key_exists(geometry->resource);
                 if (stored_resource != nullptr) { // there's a resource bound to the current geometry
                     stored_resource->refcount--;
                     if (stored_resource->refcount == 0) { // no one is using that resource anymore so let's delete it
@@ -296,8 +296,8 @@ KubixRenderDelegate::sync_geometries()
         // that sync_geometry remove and add items if the topology changes. This
         // is why it is very important to first sync the index, remove and finally add.
         // let's see if we have to create new geometries
-        KubixGeometryInfo geometry;
-        CoreVector<KubixGeometryInfo> new_geometries(0, m->geometries.inserted.get_count());
+        SpherixGeometryInfo geometry;
+        CoreVector<SpherixGeometryInfo> new_geometries(0, m->geometries.inserted.get_count());
         for (auto inserted_item : m->geometries.inserted) {
             // initializing the new geometry
             geometry.dirtiness = R2cSceneDelegate::DIRTINESS_ALL;
@@ -316,7 +316,7 @@ KubixRenderDelegate::sync_geometries()
 
 /*! \brief shading group synchronization helper */
 void
-sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cinstancerid, KubixInstancerInfo& rinstancer)
+sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cinstancerid, SpherixInstancerInfo& rinstancer)
 {
     // To simplify the example we do not handle the material on the scatterer,
     // in a real scenario each objects of the instancers will be raytraced and so the instancer does not need a material
@@ -324,7 +324,7 @@ sync_shading_groups(const R2cSceneDelegate& delegate, R2cItemId cinstancerid, Ku
 }
 
 void
-KubixRenderDelegate::_sync_instancer(R2cItemId cinstancerid, KubixInstancerInfo& rinstancer, const bool& is_new)
+SpherixRenderDelegate::_sync_instancer(R2cItemId cinstancerid, SpherixInstancerInfo& rinstancer, const bool& is_new)
 {
     // WARNING: this method is very similar (if not identical) to sync_geometry
     // This is only to show the intended use of R2C
@@ -341,15 +341,15 @@ KubixRenderDelegate::_sync_instancer(R2cItemId cinstancerid, KubixInstancerInfo&
             R2cGeometryResource cresource = get_scene_delegate()->get_geometry_resource(cinstancerid);
             rinstancer.resource = cresource.get_id();
 
-            KubixResourceInfo *stored_resource = m->resources.index.is_key_exists(rinstancer.resource);
+            SpherixResourceInfo *stored_resource = m->resources.index.is_key_exists(rinstancer.resource);
             if (stored_resource == nullptr) { // the resource doesn't exists so let's create it
                 // create corresponding geometry resource according to the Clarisse geometry
-                KubixResourceInfo new_resource;
+                SpherixResourceInfo new_resource;
 
                 // Extract its bbox
                 R2cItemDescriptor idesc = get_scene_delegate()->get_render_item(cinstancerid);
                 ModuleSceneObject *module = static_cast<ModuleSceneObject *>(idesc.get_item()->get_module());
-                new_resource.bbox = module->get_bbox();
+                new_resource.sphere = module->get_bbox();
 
                 new_resource.refcount = 1;
                 // adding the new resource
@@ -378,7 +378,7 @@ KubixRenderDelegate::_sync_instancer(R2cItemId cinstancerid, KubixInstancerInfo&
 }
 
 void
-KubixRenderDelegate::sync_instancers()
+SpherixRenderDelegate::sync_instancers()
 {
     if (m->instancers.is_dirty()) {
         // iterating through instancers to see if we need to sync any of them
@@ -393,12 +393,12 @@ KubixRenderDelegate::sync_instancers()
 
         // let's see if we have to remove instancers from the scene
         for (auto removed_item : m->instancers.removed) {
-            KubixInstancerInfo *instancer = m->instancers.index.is_key_exists(removed_item);
+            SpherixInstancerInfo *instancer = m->instancers.index.is_key_exists(removed_item);
             // check the current instancer exists in the scene
             if (instancer != nullptr) {
                 // now doing proper cleanup. Let's cleanup resources
                 // get the resources if they exist
-                KubixResourceInfo *stored_resource = m->resources.index.is_key_exists(instancer->resource);
+                SpherixResourceInfo *stored_resource = m->resources.index.is_key_exists(instancer->resource);
                 if (stored_resource != nullptr) { // there's a resource bound to the current geometry
                     stored_resource->refcount--;
                     if (stored_resource->refcount == 0) { // no one is using that resource anymore so let's delete it
@@ -416,8 +416,8 @@ KubixRenderDelegate::sync_instancers()
         // that sync_instancers remove and add items if the topology changes. This
         // is why it is very important to first sync the index, remove and finally add.
         // let's see if we have to create new geometries
-        KubixInstancerInfo instancer;
-        CoreVector<KubixInstancerInfo> new_instancers(0, m->instancers.inserted.get_count());
+        SpherixInstancerInfo instancer;
+        CoreVector<SpherixInstancerInfo> new_instancers(0, m->instancers.inserted.get_count());
         for (auto inserted_item : m->instancers.inserted) {
             // since we create them we need to make them as fully dirty
             instancer.dirtiness = R2cSceneDelegate::DIRTINESS_ALL;
@@ -436,19 +436,19 @@ KubixRenderDelegate::sync_instancers()
 
 /*! \brief light synchronization helper */
 void
-sync_light(const R2cSceneDelegate& delegate, R2cItemId clightid, KubixLightInfo& rlight)
+sync_light(const R2cSceneDelegate& delegate, R2cItemId clightid, SpherixLightInfo& rlight)
 {
     // Our lights only have a color, so there's nothing to do here...
     rlight.dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
 }
 
 void
-KubixRenderDelegate::sync_lights()
+SpherixRenderDelegate::sync_lights()
 {
     if (m->lights.is_dirty()) {
         // remove lights first
         for (auto removed_item : m->lights.removed) {
-            KubixLightInfo *light = m->lights.index.is_key_exists(removed_item);
+            SpherixLightInfo *light = m->lights.index.is_key_exists(removed_item);
             // check the current light exists in the scene
             if (light != nullptr) {
                 m->lights.index.remove(removed_item);
@@ -457,13 +457,12 @@ KubixRenderDelegate::sync_lights()
         }
         m->lights.removed.remove_all();
 
-        LOG_INFO_VAR(m->lights.inserted.get_count());
         // creating new lights
-        KubixLightInfo light;
-        CoreVector<KubixLightInfo> new_lights(0, m->lights.inserted.get_count());
+        SpherixLightInfo light;
+        CoreVector<SpherixLightInfo> new_lights(0, m->lights.inserted.get_count());
         for (auto inserted_item : m->lights.inserted) {
             // create corresponding light according to the Clarisse light
-            KubixUtils::create_light(*get_scene_delegate(), inserted_item, light);
+            SpherixUtils::create_light(*get_scene_delegate(), inserted_item, light);
             light.dirtiness = R2cSceneDelegate::DIRTINESS_ALL;
             // and sync it to its attributes
             // synching the new light
@@ -486,28 +485,28 @@ KubixRenderDelegate::sync_lights()
 }
 
 void
-KubixRenderDelegate::get_supported_cameras(CoreVector<CoreString>& supported_cameras, CoreVector<CoreString>& unsupported_cameras) const
+SpherixRenderDelegate::get_supported_cameras(CoreVector<CoreString>& supported_cameras, CoreVector<CoreString>& unsupported_cameras) const
 {
 	supported_cameras = s_supported_cameras;
 	unsupported_cameras = s_unsupported_cameras;
 }
 
 void
-KubixRenderDelegate::get_supported_materials(CoreVector<CoreString>& supported_materials, CoreVector<CoreString>& unsupported_materials) const
+SpherixRenderDelegate::get_supported_materials(CoreVector<CoreString>& supported_materials, CoreVector<CoreString>& unsupported_materials) const
 {
 	supported_materials = s_supported_materials;
 	unsupported_materials = s_unsupported_materials;
 }
 
 void
-KubixRenderDelegate::get_supported_lights(CoreVector<CoreString>& supported_lights, CoreVector<CoreString>& unsupported_lights) const
+SpherixRenderDelegate::get_supported_lights(CoreVector<CoreString>& supported_lights, CoreVector<CoreString>& unsupported_lights) const
 {
 	supported_lights = s_supported_lights;
 	unsupported_lights = s_unsupported_lights;
 }
 
 void
-KubixRenderDelegate::get_supported_geometries(CoreVector<CoreString>& supported_geometries, CoreVector<CoreString>& unsupported_geometries) const
+SpherixRenderDelegate::get_supported_geometries(CoreVector<CoreString>& supported_geometries, CoreVector<CoreString>& unsupported_geometries) const
 {
 	supported_geometries = s_supported_geometries;
 	unsupported_geometries = s_unsupported_geometries;
@@ -523,8 +522,8 @@ public :
         if (progress)
             progress->add_float(progress_increment);
     }
-    KubixRenderDelegate::RenderData data;
-    const KubixRenderDelegate *dummy_render_delegate;
+    SpherixRenderDelegate::RenderData data;
+    const SpherixRenderDelegate *dummy_render_delegate;
 
     // To show the overall render progress
     CoreAtomic32 *progress;
@@ -532,36 +531,36 @@ public :
 };
 
 void
-KubixRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling_quality)
+SpherixRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling_quality)
 {
     // Reset the rendering progress
     m->progress.set_float(0.0f);
 
     // Extract the image dimensions and synchronize our internal scene representation
-    R2cRenderBuffer::Region render_region = render_buffer->get_render_region();
-    const unsigned int total_width  = render_buffer->get_width();
-    const unsigned int total_height = render_buffer->get_height();
-
-    sync_camera(total_width, total_height);
+    const unsigned int width = render_buffer->get_width();
+    const unsigned int height = render_buffer->get_height();
+    sync_camera(width, height);
     sync();
 
     // Browse all the light in the scene and compute the light contribution (very simple lighting)
     GMathVec3f light_contribution = GMathVec3f(0.0f, 0.0f, 0.0f);
     for (auto light : m->lights.index) {
         const LightData& light_data = light.get_value().light_data;
-        light_contribution += light_data.light_module->evaluate();
+        light_contribution += light_data.shader_light->evaluate();
     }
 
     // Get the background color from the renderer, to demonstrate render settings usage
     R2cItemDescriptor renderer = get_scene_delegate()->get_render_settings();
-    ModuleRendererKubix *settings = static_cast<ModuleRendererKubix *>(renderer.get_item()->get_module());
+    ModuleRendererSpherix *settings = static_cast<ModuleRendererSpherix *>(renderer.get_item()->get_module());
     GMathVec3f background_color = settings->get_background_color();
     
     /************************ Create render tasks ************************/
-    const unsigned int task_w = gmath_min(64u, render_region.width);
-    const unsigned int task_h = gmath_min(64u, render_region.height);
-    const unsigned int bucket_count_x = (unsigned int)gmath_ceil((float)render_region.width / task_w);
-    const unsigned int bucket_count_y = (unsigned int)gmath_ceil((float)render_region.height / task_h);
+
+    // The bucket size needs to be 64x64 (this will be fix in the futur)
+    const unsigned int task_w = gmath_min(64u, width);
+    const unsigned int task_h = gmath_min(64u, height);
+    const unsigned int bucket_count_x = (unsigned int)gmath_ceil((float)width / task_w);
+    const unsigned int bucket_count_y = (unsigned int)gmath_ceil((float)height / task_h);
     const unsigned int task_count = bucket_count_x * bucket_count_y;
     const float progress_increment = 1.0f / task_count;
 
@@ -572,20 +571,20 @@ KubixRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& samplin
     CoreVector<RenderRegionTask> tasks(task_count);
 
     // This should be created the least amount of times (when the image size is updated for example)
-    float* image_buffer = new float[render_region.width * render_region.height * 4];
+    float* image_buffer = new float[width * height * 4];
     float *next_buffer_entry = image_buffer;
 
     unsigned int task_id = 0;
     for(unsigned int j = 0; j < bucket_count_y; ++j) {
-        unsigned int offset_y = render_region.offset_y + j * task_h;
-        unsigned int bucket_height = gmath_min(task_h, render_region.offset_y + render_region.height - offset_y);
+        unsigned int offset_y = j * task_h;
+        unsigned int bucket_height = gmath_min(task_h, height - offset_y);
         for(unsigned int i = 0; i < bucket_count_x; ++i) {
-            unsigned int offset_x = render_region.offset_x + i * task_w;
-            unsigned int bucket_width = gmath_min(task_w, render_region.offset_x + render_region.width - offset_x);
+            unsigned int offset_x = i * task_w;
+            unsigned int bucket_width = gmath_min(task_w, width - offset_x);
 
             // Fill task data
-            tasks[task_id].data.width                 = total_width;
-            tasks[task_id].data.height                = total_height;
+            tasks[task_id].data.width                 = width;
+            tasks[task_id].data.height                = height;
             tasks[task_id].data.region                = R2cRenderBuffer::Region(offset_x, offset_y, bucket_width, bucket_height);
             tasks[task_id].data.light_contribution    = light_contribution;
             tasks[task_id].data.background_color      = background_color;
@@ -609,35 +608,36 @@ KubixRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& samplin
 }
 
 template<class OBJECT_INFO>
-void raytrace_objects(const GMathRay& ray, const CoreHashTable<R2cItemId, OBJECT_INFO>& index, const KubixResourceIndex& resources_index, double &closest_hit_t, GMathVec3d &closest_hit_normal, MaterialData& closest_hit_material)
+void raytrace_objects(const GMathRay& ray, const CoreHashTable<R2cItemId, OBJECT_INFO>& index, const SpherixResourceIndex& resources_index, double &closest_hit_t, GMathVec3d &closest_hit_normal, MaterialData& closest_hit_material)
 {
-    // Very simple linear raytracer, only supporting bboxes
+    // Very simple linear raytracer, only supporting spheres
     for (const auto object: index)
     {
         const OBJECT_INFO& object_info = object.get_value();
-        const KubixResourceInfo *resource_info = resources_index.is_key_exists(object_info.resource);
+        const SpherixResourceInfo *resource_info = resources_index.is_key_exists(object_info.resource);
 
         // Transform ray to object space
+        GMathMatrix4x4d transform = object_info.transform;
+        transform.translate(resource_info->sphere.get_center());
         GMathMatrix4x4d inverse_transform;
         GMathRay transformed_ray;
-        GMathMatrix4x4d::get_inverse(object_info.transform, inverse_transform);
+        GMathMatrix4x4d::get_inverse(transform, inverse_transform);
         transformed_ray.transform(ray, inverse_transform);
 
-        // Test intersection with bbox
-        double tmin, tmax;
+        // Test intersection with sphere
+        double t;
         GMathVec3d normal;
-        if (resource_info->bbox.intersect(transformed_ray, tmin, tmax, normal))
+        if (resource_info->sphere.intersect(transformed_ray, t, normal))
         {
             // If hit closer than closest, record hit infos
-            if (tmin < closest_hit_t)
+            if (t < closest_hit_t)
             {
                 GMathMatrix4x4d inverse_transpose_transform;
                 GMathMatrix4x4d::transpose(inverse_transform, inverse_transpose_transform);
                 GMathVec3d transformed_normal;
                 GMathMatrix4x4d::multiply(transformed_normal, normal, inverse_transpose_transform);
-                transformed_normal.normalize();
 
-                closest_hit_t = tmin;
+                closest_hit_t = t;
                 closest_hit_normal = transformed_normal;
                 closest_hit_material = object_info.material;
             }
@@ -646,7 +646,7 @@ void raytrace_objects(const GMathRay& ray, const CoreHashTable<R2cItemId, OBJECT
 }
 
 void
-KubixRenderDelegate::render_region(RenderData& render_data, const unsigned int& thread_id) const
+SpherixRenderDelegate::render_region(RenderData& render_data, const unsigned int& thread_id) const
 {
     // Used to display a green box around the rendered region
     render_data.render_buffer->notify_start_render_region(render_data.region, true, thread_id);
@@ -663,7 +663,7 @@ KubixRenderDelegate::render_region(RenderData& render_data, const unsigned int& 
             GMathVec3f final_color = render_data.background_color;
 
             // Use this ray to raytrace the scene
-            // If we hit something we take the color from the intersected material BBox and multiply it per all the lights contribution
+            // If we hit something we take the color from the intersected material Sphere and multiply it per all the lights contribution
             // If nothing is hit we return the background renderer color
             double closest_hit_t = gmath_infinity;
             GMathVec3d closest_hit_normal;
@@ -676,12 +676,11 @@ KubixRenderDelegate::render_region(RenderData& render_data, const unsigned int& 
             if (closest_hit_t != gmath_infinity)
             {
                 // If the object doesn't have an assigned material, use default color
-                if (closest_hit_material.material_module)
-                    final_color = closest_hit_material.material_module->shade(GMathVec3f(ray.get_direction()), GMathVec3f(closest_hit_normal)) * render_data.light_contribution;
+                if (closest_hit_material.material)
+                    final_color = closest_hit_material.material->evaluate(ray.get_direction().get_data(), closest_hit_normal.get_data()) * render_data.light_contribution;
                 else
                     final_color = GMathVec3f(1.0f, 0.0f, 1.0f) * render_data.light_contribution;
             }
-
             const unsigned int pixel_index = (pixel_y * render_data.region.width + pixel_x) * 4;
             render_data.buffer_ptr[pixel_index + 0] = final_color[0];
             render_data.buffer_ptr[pixel_index + 1] = final_color[1];

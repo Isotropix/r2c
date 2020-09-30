@@ -1,0 +1,23 @@
+//
+// Copyright 2020 - present Isotropix SAS. See License.txt for license information
+//
+
+class "TextureSpherix" "Texture" {
+    // WARNING DO NOT CHANGE THIS CLASS NAME SINCE WE HEAVILY RELY ON IT.
+    // IF YOU DO SO MAKE SURE TO SEARCH IN THE CODE WHERE WE MAKE
+    // REFERENCE TO IT!
+
+    #version 1.0
+    abstract yes
+    category "/Texture/Spherix"
+    doc "An abstract Spherix light."
+
+    // hidding Clarisse specific attributes
+    // TODO: We should introduce a new Abstract Material Class to avoid just that
+    set "arbitrary_output_variables" {
+        hidden yes
+    }
+    set "export_aovs" {
+        hidden yes
+    }
+}

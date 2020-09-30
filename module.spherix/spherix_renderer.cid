@@ -1,0 +1,13 @@
+//
+// Copyright 2020 - present Isotropix SAS. See License.txt for license information
+//
+
+class "SpherixRenderer" "Renderer" {
+    #version 1.0
+    category "/Renderer"
+    doc "Spherix render settings."
+
+    color "background_color" {
+        value 0 0 0
+    }
+}
