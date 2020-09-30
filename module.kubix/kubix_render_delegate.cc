@@ -27,7 +27,7 @@ public:
     } resources;
 
     template<class INDEX>
-    struct ClarisseToDummyObjectsMapping {
+    struct ClarisseToKubixObjectsMapping {
         INDEX index; // index of all render object (can be geometries, lights or instancers) which are instances pointing to a object resource
         CoreVector<R2cItemId> inserted; // is filled by KubixRenderDelegate::insert_xxx when a object is inserted to the scene
         CoreVector<R2cItemId> removed; // is filled by KubixRenderDelegate::remove_xxx when a object is removed from the scene
@@ -36,9 +36,9 @@ public:
         bool is_dirty() { return inserted.get_count() != 0 || removed.get_count() != 0 || dirty; } // return true is index is dirty
     };
 
-    ClarisseToDummyObjectsMapping<DummyGeometryIndex> geometries;
-    ClarisseToDummyObjectsMapping<KubixLightIndex> lights;
-    ClarisseToDummyObjectsMapping<KubixInstancerIndex> instancers;
+    ClarisseToKubixObjectsMapping<KubixGeometryIndex> geometries;
+    ClarisseToKubixObjectsMapping<KubixLightIndex> lights;
+    ClarisseToKubixObjectsMapping<KubixInstancerIndex> instancers;
 };
 
 IMPLEMENT_CLASS(KubixRenderDelegate, R2cRenderDelegate);
@@ -519,12 +519,12 @@ public :
     RenderRegionTask(): progress(nullptr) {}
 
     virtual void execution_entry(const unsigned int& id) {
-        dummy_render_delegate->render_region(data, id);
+        kubix_render_delegate->render_region(data, id);
         if (progress)
             progress->add_float(progress_increment);
     }
     KubixRenderDelegate::RenderData data;
-    const KubixRenderDelegate *dummy_render_delegate;
+    const KubixRenderDelegate *kubix_render_delegate;
 
     // To show the overall render progress
     CoreAtomic32 *progress;
@@ -592,7 +592,7 @@ KubixRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& samplin
             tasks[task_id].data.render_buffer         = render_buffer;
             tasks[task_id].data.buffer_ptr            = next_buffer_entry;
 
-            tasks[task_id].dummy_render_delegate = this;
+            tasks[task_id].kubix_render_delegate = this;
             tasks[task_id].progress             = &m->progress;
             tasks[task_id].progress_increment   = progress_increment;
 

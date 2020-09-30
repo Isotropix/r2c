@@ -46,8 +46,8 @@ public :
         OfAttr *attr_color = object.get_attribute("color");
         if (attr_color->is_textured()) {
             // Evaluate the texture and return the result
-            ModuleTextureKubix *texture_dummy = (ModuleTextureKubix *)attr_color->get_texture()->get_module();
-            return fabs(ray_direction.dot(normal)) * texture_dummy->evaluate();
+            ModuleTextureKubix *texture_kubix = (ModuleTextureKubix *)attr_color->get_texture()->get_module();
+            return fabs(ray_direction.dot(normal)) * texture_kubix->evaluate();
         } else {
             return fabs(ray_direction.dot(normal)) * GMathVec3f(attr_color->get_vec3d());
         }

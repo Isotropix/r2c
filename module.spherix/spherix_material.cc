@@ -38,7 +38,7 @@ namespace MaterialSpherix
     void on_register(OfApp& app, CoreVector<OfClass *>& new_classes)
     {
         // Create the new class
-        OfClass *new_class = IX_DECLARE_MODULE_CLASS(ModuleMaterialSpherix);
+        OfClass *new_class = IX_DECLARE_MODULE_CLASS(MaterialSpherix);
         new_classes.add(new_class);
 
         // Create the ModuleTextureSpherixCallbacks and init it

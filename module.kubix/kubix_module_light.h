@@ -27,7 +27,7 @@ public :
 };
 
 /*! \class ModuleLightKubix
-    \brief This class implements the Dummy Light abstract class in Clarisse. The role
+    \brief This class implements the Kubix Light abstract class in Clarisse. The role
            of the module is to implement what happends when users edit attributes of the
            light item in Clarisse. */
 class ModuleLightKubix : public ModuleLight {

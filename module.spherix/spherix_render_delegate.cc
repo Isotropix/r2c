@@ -28,7 +28,7 @@ public:
     } resources;
 
     template<class INDEX>
-    struct ClarisseToDummyObjectsMapping {
+    struct ClarisseToSpherixObjectsMapping {
         INDEX index; // index of all render object (can be geometries, lights or instancers) which are instances pointing to a object resource
         CoreVector<R2cItemId> inserted; // is filled by SpherixRenderDelegate::insert_xxx when a object is inserted to the scene
         CoreVector<R2cItemId> removed; // is filled by SpherixRenderDelegate::remove_xxx when a object is removed from the scene
@@ -37,18 +37,18 @@ public:
         bool is_dirty() { return inserted.get_count() != 0 || removed.get_count() != 0 || dirty; } // return true is index is dirty
     };
 
-    ClarisseToDummyObjectsMapping<DummyGeometryIndex> geometries;
-    ClarisseToDummyObjectsMapping<SpherixLightIndex> lights;
-    ClarisseToDummyObjectsMapping<SpherixInstancerIndex> instancers;
+    ClarisseToSpherixObjectsMapping<SpherixGeometryIndex> geometries;
+    ClarisseToSpherixObjectsMapping<SpherixLightIndex> lights;
+    ClarisseToSpherixObjectsMapping<SpherixInstancerIndex> instancers;
 };
 
 IMPLEMENT_CLASS(SpherixRenderDelegate, R2cRenderDelegate);
 
 const CoreVector<CoreString> SpherixRenderDelegate::s_supported_cameras      = { "CameraAlembic", "CameraUsd", "CameraPerspective", "CameraPerspectiveAdvanced"};
 const CoreVector<CoreString> SpherixRenderDelegate::s_unsupported_cameras    = {};
-const CoreVector<CoreString> SpherixRenderDelegate::s_supported_lights       = { "LightSpherix", "SpherixLightDistant" };
+const CoreVector<CoreString> SpherixRenderDelegate::s_supported_lights       = { "LightSpherix"};
 const CoreVector<CoreString> SpherixRenderDelegate::s_unsupported_lights     = {};
-const CoreVector<CoreString> SpherixRenderDelegate::s_supported_materials    = { "MaterialSpherix", "SpherixMaterialDiffuse", "SpherixMaterialReflection" };
+const CoreVector<CoreString> SpherixRenderDelegate::s_supported_materials    = { "MaterialSpherix"};
 const CoreVector<CoreString> SpherixRenderDelegate::s_unsupported_materials  = {};
 const CoreVector<CoreString> SpherixRenderDelegate::s_supported_geometries   = { "SceneObject" };
 const CoreVector<CoreString> SpherixRenderDelegate::s_unsupported_geometries = { "GeometryBundle", "GeometryPointArray" };
@@ -133,6 +133,7 @@ SpherixRenderDelegate::remove_geometry(R2cItemDescriptor item)
     SpherixGeometryInfo *geometry = m->geometries.index.is_key_exists(item.get_id());
     if (geometry != nullptr) { // make sure it is indeed in our index
         m->geometries.removed.add(item.get_id());
+        geometry->dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
     }
 }
 
@@ -518,12 +519,12 @@ public :
     RenderRegionTask(): progress(nullptr) {}
 
     virtual void execution_entry(const unsigned int& id) {
-        dummy_render_delegate->render_region(data, id);
+        spherix_render_delegate->render_region(data, id);
         if (progress)
             progress->add_float(progress_increment);
     }
     SpherixRenderDelegate::RenderData data;
-    const SpherixRenderDelegate *dummy_render_delegate;
+    const SpherixRenderDelegate *spherix_render_delegate;
 
     // To show the overall render progress
     CoreAtomic32 *progress;
@@ -591,7 +592,7 @@ SpherixRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampl
             tasks[task_id].data.render_buffer         = render_buffer;
             tasks[task_id].data.buffer_ptr            = next_buffer_entry;
 
-            tasks[task_id].dummy_render_delegate = this;
+            tasks[task_id].spherix_render_delegate = this;
             tasks[task_id].progress             = &m->progress;
             tasks[task_id].progress_increment   = progress_increment;
 
@@ -618,7 +619,7 @@ void raytrace_objects(const GMathRay& ray, const CoreHashTable<R2cItemId, OBJECT
 
         // Transform ray to object space
         GMathMatrix4x4d transform = object_info.transform;
-        transform.translate(resource_info->sphere.get_center());
+        transform.translate_right(resource_info->sphere.get_center());
         GMathMatrix4x4d inverse_transform;
         GMathRay transformed_ray;
         GMathMatrix4x4d::get_inverse(transform, inverse_transform);

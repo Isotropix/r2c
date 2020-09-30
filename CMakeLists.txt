@@ -23,6 +23,7 @@ add_subdirectory (module.layer.r2c.scene)
 # R2c Bbox example
 #-------------------------------------------------------------------------------
 add_subdirectory (module.kubix)
+add_subdirectory (module.spherix)
 
 #-------------------------------------------------------------------------------
 # Documentation

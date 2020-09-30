@@ -25,7 +25,7 @@ public :
 };
 
 /*! \class ModuleMaterialKubix
-    \brief This class implements the Dummy Material abstract class in Clarisse. The role
+    \brief This class implements the Kubix Material abstract class in Clarisse. The role
            of the module is to implement what happends when users edit attributes of the
            material item in Clarisse. */
 class ModuleMaterialKubix : public ModuleMaterial {

@@ -9,9 +9,9 @@
 class OfObject;
 
 /*! \class ModuleRendererSpherix
-    \brief This class implements a small subset of Dummy render settings in Clarisse.
+    \brief This class implements a small subset of Spherix render settings in Clarisse.
            This module a C++ interface to the SpherixRenderer OfClass which exposes
-           Dummy renderer specific attributes/properties. The role of the module
+           Spherix renderer specific attributes/properties. The role of the module
            is to implement what happends when users edit attributes of the renderer
            item in Clarisse. */
 class ModuleRendererSpherix : public ModuleRenderer {

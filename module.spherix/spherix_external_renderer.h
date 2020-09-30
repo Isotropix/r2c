@@ -87,13 +87,10 @@ public :
             delete param;
         }
     }
-    ExternalShader(std::string clarisse_base_name, std::string ext_base_name, std::string name, unsigned int parameter_count) : clarisse_class_name(clarisse_base_name), ext_class_base_name(ext_base_name), class_name(name) { parameters.resize(parameter_count); }
+    ExternalShader(std::string ext_base_name, std::string name, unsigned int parameter_count) : ext_class_base_name(ext_base_name), class_name(name) { parameters.resize(parameter_count); }
 
     // Clarisse important attributes that store the module names
     // It is important to store only XXX instead of ModuleXXX for compability reasons
-
-    // clarisse_class_name is the class name of the Clarisse module from which the external shader will inherit (ModuleMaterial, ModuleLight, ModuleTexture)
-    std::string clarisse_class_name;
 
     // ext_class_base_name is the class name of the new External Clarisse module from which the external shader will inherit (ModuleMaterialSpherix, ModuleLightSpherix, ModuleTextureSpherix)
     std::string ext_class_base_name;
@@ -117,7 +114,7 @@ public :
 class ExternalMaterialShader : public ExternalShader {
 public :
     ExternalMaterialShader() : ExternalShader() {}
-    ExternalMaterialShader(std::string name, unsigned int parameter_count) : ExternalShader("Material", "MaterialSpherix", name, parameter_count) {}
+    ExternalMaterialShader(std::string name, unsigned int parameter_count) : ExternalShader("MaterialSpherix", name, parameter_count) {}
 
     virtual GMathVec3f evaluate(const double *ray_direction, const double *normal) {return GMathVec3f(0.0f);}
 };
@@ -125,7 +122,7 @@ public :
 class ExternalLightShader : public ExternalShader {
 public :
     ExternalLightShader() : ExternalShader() {}
-    ExternalLightShader(std::string name, unsigned int parameter_count) : ExternalShader("Light", "LightSpherix", name, parameter_count) {}
+    ExternalLightShader(std::string name, unsigned int parameter_count) : ExternalShader("LightSpherix", name, parameter_count) {}
 
     virtual GMathVec3f evaluate() { return GMathVec3f(0.0f); }
 };
@@ -133,7 +130,7 @@ public :
 class ExternalTextureShader : public ExternalShader {
 public :
     ExternalTextureShader() : ExternalShader() {}
-    ExternalTextureShader(std::string name, unsigned int parameter_count) : ExternalShader("Texture", "TextureSpherix", name, parameter_count) {}
+    ExternalTextureShader(std::string name, unsigned int parameter_count) : ExternalShader("TextureSpherix", name, parameter_count) {}
 
     virtual double *evaluate(const double *ray_direction, const double *normal) {return value;}
 
@@ -226,7 +223,7 @@ public :
         parameters[0]->is_texturable = true;
 
         // Boolean
-        parameters[1] = new ParameterBool("dummy_category", "dummy_boolean", false);
+        parameters[1] = new ParameterBool("spherix_category", "spherix_boolean", false);
     }
 
     // Here we are evaluating the shader with the stored parameters that are automatically updated when they changed
@@ -235,15 +232,15 @@ public :
     {
         // Get the parameters
         ParameterColor *attr_color = static_cast<ParameterColor *>(parameters[0]);
-        ParameterBool  *attr_dummy_bool = static_cast<ParameterBool *>(parameters[1]);
+        ParameterBool  *attr_spherix_bool = static_cast<ParameterBool *>(parameters[1]);
 
         // Get the value parameters
         const double *color = attr_color->evaluate(ray_direction, normal);
-        const bool dummy_bool = attr_dummy_bool->get_bool();
+        const bool spherix_bool = attr_spherix_bool->get_bool();
 
         GMathVec3f final_color;
         // Compute the final value with a simple shading
-        if (dummy_bool) {
+        if (spherix_bool) {
             final_color = GMathVec3f(color[0] * ray_direction[0], color[1] * ray_direction[1], color[2] * ray_direction[2]);
         } else {
             final_color = GMathVec3f(color[0], color[1], color[2]);
@@ -308,11 +305,11 @@ public :
     {
         // Get the parameters
         ParameterColor  *attr_color        = static_cast<ParameterColor *>(parameters[0]);
-        ParameterDouble *attr_dummy_double = static_cast<ParameterDouble *>(parameters[1]);
+        ParameterDouble *attr_spherix_double = static_cast<ParameterDouble *>(parameters[1]);
 
         // Get the value parameters
         const double *color = attr_color->get_value();
-        const double intensity = attr_dummy_double->get_value();
+        const double intensity = attr_spherix_double->get_value();
 
         return GMathVec3f(color[0], color[1], color[2]) * intensity;
     }

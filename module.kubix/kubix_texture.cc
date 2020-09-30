@@ -14,17 +14,17 @@
 #endif
 
 // Create a class that implements function that will be then pluged to the module callback
-class ModuleTextureDummyCallbacksOverrides : public ModuleTextureKubixCallbacks {
+class ModuleTextureKubixCallbacksOverrides : public ModuleTextureKubixCallbacks {
 public :
     // Here we store the attributes because calling object.get_attribute("attr") can be very slow
-    struct TextureDummyModuleData {
+    struct TextureKubixModuleData {
         const OfAttr *color;
     };
 
     // Create a module data that will exist during the object's lifetime
     static void * create_module_data(const OfObject& object)
     {
-        TextureDummyModuleData *data = new TextureDummyModuleData();;
+        TextureKubixModuleData *data = new TextureKubixModuleData();;
         data->color = object.get_attribute("color");
         return data;
     }
@@ -32,7 +32,7 @@ public :
     // Destroy the module data when the object is destroyed
     static bool destroy_module_data(const OfObject& object, void *data)
     {
-        delete (TextureDummyModuleData *)data;
+        delete (TextureKubixModuleData *)data;
         return true;
     }
 
@@ -40,13 +40,13 @@ public :
     static  GMathVec3f evaluate(OfObject& object)
     {
         // Here we do a very simple example, but you could add arguments to the function and create a complex evaluation method
-        TextureDummyModuleData *data = static_cast<TextureDummyModuleData *>(object.get_module_data());
+        TextureKubixModuleData *data = static_cast<TextureKubixModuleData *>(object.get_module_data());
         return GMathVec3f(data->color->get_vec3d());
     }
 };
 
 // WARNING: do not remove this typedef, it is needed by the macro IX_CREATE_MODULE_CLBK
-typedef ModuleTextureDummyCallbacksOverrides IX_MODULE_CLBK;
+typedef ModuleTextureKubixCallbacksOverrides IX_MODULE_CLBK;
 
 namespace KubixTexture
 {

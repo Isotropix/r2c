@@ -9,9 +9,9 @@
 class OfObject;
 
 /*! \class ModuleRendererKubix
-    \brief This class implements a small subset of Dummy render settings in Clarisse.
+    \brief This class implements a small subset of Kubix render settings in Clarisse.
            This module a C++ interface to the KubixRenderer OfClass which exposes
-           Dummy renderer specific attributes/properties. The role of the module
+           Kubix renderer specific attributes/properties. The role of the module
            is to implement what happends when users edit attributes of the renderer
            item in Clarisse. */
 class ModuleRendererKubix : public ModuleRenderer {

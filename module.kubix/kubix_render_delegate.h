@@ -15,7 +15,7 @@ class KubixGeometryInfo;
 class KubixInstancerInfo;
 
 /*! \class KubixRenderDelegate
- *  \brief This class implements a Dummy render delegate to Clarisse
+ *  \brief This class implements a Kubix render delegate to Clarisse
  *         using the R2C library. While not feature complete, this example
  *         gives a good insight on how to create a 3rd party renderer
  *         in Clarisse. It shows all the different bindings to convert or
@@ -92,15 +92,15 @@ private:
 
     /*! \brief Add a new geometry (never been processed yet) to the render scene and synchronize it
      *  \param cgeometryid id of the new geometry in the scene delegate
-     *  \param rgeometry dummy geometry handle */
+     *  \param rgeometry kubix geometry handle */
     void sync_new_geometry(R2cItemId cgeometryid, KubixGeometryInfo& rgeometry) { _sync_geometry(cgeometryid, rgeometry, true); }
     /*! \brief Synchronize an existing render geometry with the one defined in the scene delegate
      *  \param cgeometryid id of the geometry in the scene delegate
-     *  \param rgeometry dummy geometry handle */
+     *  \param rgeometry kubix geometry handle */
     void sync_geometry(R2cItemId cgeometryid, KubixGeometryInfo& rgeometry) { _sync_geometry(cgeometryid, rgeometry, false); }
     /*! \brief Actual implementation of geometry synchronization whereas it is a new or an existing one
      *  \param cgeometryid id of the geometry in the scene delegate
-     *  \param rgeometry dummy geometry definition handle
+     *  \param rgeometry kubix geometry definition handle
      *  \param is_new set whether the input geometry is new or existing (there are two different codepaths) */
     void _sync_geometry(R2cItemId cgeometryid, KubixGeometryInfo& rgeometry, const bool& is_new);
     /*! \brief Synchronize all needed geometries with the render scene
@@ -109,15 +109,15 @@ private:
 
     /*! \brief Add a new instancer (never been processed yet) to the render scene and synchronize it
      *  \param cinstancerid id of the new instancer in the scene delegate
-     *  \param rinstancer dummy instancer definition handle */
+     *  \param rinstancer kubix instancer definition handle */
     inline void sync_new_instancer(R2cItemId cinstancerid, KubixInstancerInfo& rinstancer) { _sync_instancer(cinstancerid, rinstancer, true); }
     /*! \brief Synchronize an existing instancer with the one defined in the scene delegate
      *  \param cinstancerid id of the instancer in the scene delegate
-     *  \param rinstancer dummy instancer definition handle */
+     *  \param rinstancer kubix instancer definition handle */
     inline void sync_instancer(R2cItemId cinstancerid, KubixInstancerInfo& rinstancer) { _sync_instancer(cinstancerid, rinstancer, false); }
     /*! \brief Actual implementation of instancer synchronization whereas it is a new or an existing one
      *  \param cinstancerid id of the instancer in the scene delegate
-     *  \param rinstancer dummy geometry definition handle
+     *  \param rinstancer kubix geometry definition handle
      *  \param is_new set whether the input instancer is new or existing (there are two different codepaths) */
     void _sync_instancer(R2cItemId cinstancerid, KubixInstancerInfo& rinstancer, const bool& is_new);
     /*! \brief Synchronize all needed instancers with the render scene

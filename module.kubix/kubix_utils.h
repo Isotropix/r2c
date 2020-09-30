@@ -159,7 +159,7 @@ public:
     KubixGeometryInfo() : resource(nullptr), dirtiness(R2cSceneDelegate::DIRTINESS_ALL) {}
 };
 
-typedef CoreHashTable<R2cItemId, KubixGeometryInfo> DummyGeometryIndex;
+typedef CoreHashTable<R2cItemId, KubixGeometryInfo> KubixGeometryIndex;
 
 /*! \class BBInstancerInfo
     \brief internal class holding instancer data which is basically a list of Bbox point clouds instancing a geometry */

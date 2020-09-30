@@ -115,7 +115,7 @@ public:
     SpherixGeometryInfo() : resource(nullptr), dirtiness(R2cSceneDelegate::DIRTINESS_ALL) {}
 };
 
-typedef CoreHashTable<R2cItemId, SpherixGeometryInfo> DummyGeometryIndex;
+typedef CoreHashTable<R2cItemId, SpherixGeometryInfo> SpherixGeometryIndex;
 
 /*! \class SpherixInstancerInfo
     \brief internal class holding instancer data which is basically a list of Spherix point clouds instancing a geometry */

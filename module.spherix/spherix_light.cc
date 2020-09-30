@@ -39,7 +39,7 @@ namespace LightSpherix
     void on_register(OfApp& app, CoreVector<OfClass *>& new_classes)
     {
         // Create the new class
-        OfClass *new_class = IX_DECLARE_MODULE_CLASS(ModuleLightSpherix);
+        OfClass *new_class = IX_DECLARE_MODULE_CLASS(LightSpherix);
         new_classes.add(new_class);
 
         // Create the ModuleTextureSpherixCallbacks and init it

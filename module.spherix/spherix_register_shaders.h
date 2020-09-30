@@ -43,7 +43,7 @@ public :
             OfClass *base_class = application.get_factory().get_classes().get(CoreString(shader->ext_class_base_name.data()));
 
             // Create the actual class
-            OfClass *class_shader = application.get_factory().get_classes().add(CoreString(shader->class_name.data()), CoreString(shader->clarisse_class_name.data()));
+            OfClass *class_shader = application.get_factory().get_classes().add(CoreString(shader->class_name.data()), CoreString(shader->ext_class_base_name.data()));
 
             // Set the callbacks (important, not setting the callbacks will lead to a crash)
             class_shader->set_callbacks(base_class->get_callbacks());
