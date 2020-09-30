@@ -19,6 +19,9 @@ described in the [license](./License.txt).
 - `r2c`: Helper library, stands for "your Renderer to Clarisse"
 - `module.layer.r2c.scene`: Base Clarisse image layer specialized for R2c compliant scene/renderers.
 - `module.redshift`: Example integration of the Redshift renderer into Clarisse, using the 2 previous folders.
+- `module.kubix`: Example integration of a internal Bbox renderer (created from scratch), using the r2c helper library.
+- `module.spherix`: Example integration of a simulated external Spherical renderer, using the r2c helper library.
+- `example_projects`: two example scenes featuring the two previous examples.
 
 More information is available once the documentation has been built. See next section.
 
