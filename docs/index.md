@@ -104,9 +104,41 @@ A lot of DCC allow to create shading networks with multiple outputs per node. In
 
 Everything mentioned in this section have been implemented in the Redshift example. You can take a look at the file redshift_utils.cc in the redshift example library.
 
-## The Redshift example
+## Examples
 
-The R2C library provides a working example of a Redshift integration, found in the `module.redshift` directory.
+The R2C library provides three working examples of integrating a renderer into Clarisse.
+
+### Kubix
+
+Found in the `module.kubix` directory, Kubix serves as a simple example of what it would take to implement a custom renderer from scratch into Clarisse. It only supports basic features, but covers most aspects of a renderer, including:
+- *Geometries* rendered as bounding boxes in Kubix
+- *Lights* used to uniformly illuminate the scene in Kubix
+- *Materials* used to uniformly color the Kubix objects
+- *Textures* used to assign a uniform color to Kubix materials (it doesn't add anything to Kubix, but serves as a demonstration of custom Textures)
+
+The implementation of the *KubixRenderDelegate* can be found in `kubix_render_delegate.h` and `kubix_render_delegate.cc`. Most of the machinery of using R2C can be found in those files.
+
+Despite its simplicity, the Kubix renderer should be seen as a steping stone towards understanding how one would implement a custom renderer into Clarisse, demonstrating the guidelines and general principles of R2C. For more thorough examples, please refer to [`Spherix`](#spherix) and [`Redshift`](#redshift).
+
+### Spherix
+
+Found in the `module.spherix` directory, Spherix serves as a simple example of what it would take to implement an external renderer into Clarisse by simulating one.
+It only supports basic features, but covers most aspects of a renderer, including:
+- *Geometries* rendered as spheres in Spherix
+- *Lights* used to uniformly illuminate the scene in Spherix
+- *Materials* used to uniformly color the Spherix objects
+- *Textures* used to assign a uniform color to Spherix materials (it doesn't add anything to Spherix, but serves as a demonstration of custom Textures)
+
+The implementation of the *SpherixRenderDelegate* can be found in `spherix_render_delegate.h` and `spherix_render_delegate.cc`. Most of the machinery of using R2C can be found in those files.
+
+One interesting topic addressed by the example is the dynamic creation and registration of Clarisse classes describing External shaders used as  materials, lights and texture. The method *register_shader* can be found in `spherix_register_shaders.h`.
+It also show how the external shaders will be automaticaly synchronized when changing a Clarisse attribute.
+
+Despite its simplicity, the Spherix renderer should be seen as a steping stone towards understanding how one would implement a custom renderer into Clarisse, demonstrating the guidelines and general principles of R2C. For more thorough examples, please refer to [`Spherix`](#spherix) and [`Redshift`](#redshift).
+
+### Redshift
+
+Found in the `module.redshift` directory, this examples demonstrates how to integrate a production renderer.
 
 The Redshift integration consists of a *LayerRedshift* which serves as a render scene hub that defines 5 attributes/inputs:
 - A *Camera* where users set the render viewpoint.
