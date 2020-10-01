@@ -43,13 +43,13 @@ public:
 
 IMPLEMENT_CLASS(KubixRenderDelegate, R2cRenderDelegate);
 
-const CoreVector<CoreString> KubixRenderDelegate::s_supported_cameras      = { "CameraAlembic", "CameraUsd", "CameraPerspective", "CameraPerspectiveAdvanced"};
-const CoreVector<CoreString> KubixRenderDelegate::s_unsupported_cameras    = {};
-const CoreVector<CoreString> KubixRenderDelegate::s_supported_lights       = { "KubixLight" };
-const CoreVector<CoreString> KubixRenderDelegate::s_unsupported_lights     = {};
-const CoreVector<CoreString> KubixRenderDelegate::s_supported_materials    = { "KubixMaterial" };
-const CoreVector<CoreString> KubixRenderDelegate::s_unsupported_materials  = {};
-const CoreVector<CoreString> KubixRenderDelegate::s_supported_geometries   = { "SceneObject" };
+const CoreVector<CoreString> KubixRenderDelegate::s_supported_cameras = { "CameraAlembic", "CameraUsd", "CameraPerspective", "CameraPerspectiveAdvanced"};
+const CoreVector<CoreString> KubixRenderDelegate::s_unsupported_cameras = {};
+const CoreVector<CoreString> KubixRenderDelegate::s_supported_lights = { "KubixLight" };
+const CoreVector<CoreString> KubixRenderDelegate::s_unsupported_lights = {};
+const CoreVector<CoreString> KubixRenderDelegate::s_supported_materials = { "KubixMaterial" };
+const CoreVector<CoreString> KubixRenderDelegate::s_unsupported_materials = {};
+const CoreVector<CoreString> KubixRenderDelegate::s_supported_geometries = { "SceneObject" };
 const CoreVector<CoreString> KubixRenderDelegate::s_unsupported_geometries = { "GeometryBundle", "GeometryPointArray" };
 
 KubixRenderDelegate::KubixRenderDelegate(OfApp *app) : R2cRenderDelegate()
@@ -107,6 +107,7 @@ KubixRenderDelegate::remove_instancer(R2cItemDescriptor item)
     KubixInstancerInfo *instancer = m->instancers.index.is_key_exists(item.get_id());
     if (instancer != nullptr) { // make sure it is indeed in our index
         m->instancers.removed.add(item.get_id());
+        instancer->dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
     }
 }
 
@@ -457,7 +458,6 @@ KubixRenderDelegate::sync_lights()
         }
         m->lights.removed.remove_all();
 
-        LOG_INFO_VAR(m->lights.inserted.get_count());
         // creating new lights
         KubixLightInfo light;
         CoreVector<KubixLightInfo> new_lights(0, m->lights.inserted.get_count());
@@ -539,7 +539,7 @@ KubixRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& samplin
 
     // Extract the image dimensions and synchronize our internal scene representation
     R2cRenderBuffer::Region render_region = render_buffer->get_render_region();
-    const unsigned int total_width  = render_buffer->get_width();
+    const unsigned int total_width = render_buffer->get_width();
     const unsigned int total_height = render_buffer->get_height();
 
     sync_camera(total_width, total_height);
@@ -557,7 +557,7 @@ KubixRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& samplin
     ModuleRendererKubix *settings = static_cast<ModuleRendererKubix *>(renderer.get_item()->get_module());
     GMathVec3f background_color = settings->get_background_color();
     
-    /************************ Create render tasks ************************/
+    // Creating render tasks
     const unsigned int task_w = gmath_min(64u, render_region.width);
     const unsigned int task_h = gmath_min(64u, render_region.height);
     const unsigned int bucket_count_x = (unsigned int)gmath_ceil((float)render_region.width / task_w);
@@ -577,24 +577,24 @@ KubixRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& samplin
 
     unsigned int task_id = 0;
     for(unsigned int j = 0; j < bucket_count_y; ++j) {
-        unsigned int offset_y = render_region.offset_y + j * task_h;
-        unsigned int bucket_height = gmath_min(task_h, render_region.offset_y + render_region.height - offset_y);
+        const unsigned int offset_y = render_region.offset_y + j * task_h;
+        const unsigned int bucket_height = gmath_min(task_h, render_region.offset_y + render_region.height - offset_y);
         for(unsigned int i = 0; i < bucket_count_x; ++i) {
-            unsigned int offset_x = render_region.offset_x + i * task_w;
-            unsigned int bucket_width = gmath_min(task_w, render_region.offset_x + render_region.width - offset_x);
+            const unsigned int offset_x = render_region.offset_x + i * task_w;
+            const unsigned int bucket_width = gmath_min(task_w, render_region.offset_x + render_region.width - offset_x);
 
             // Fill task data
-            tasks[task_id].data.width                 = total_width;
-            tasks[task_id].data.height                = total_height;
-            tasks[task_id].data.region                = R2cRenderBuffer::Region(offset_x, offset_y, bucket_width, bucket_height);
-            tasks[task_id].data.light_contribution    = light_contribution;
-            tasks[task_id].data.background_color      = background_color;
-            tasks[task_id].data.render_buffer         = render_buffer;
-            tasks[task_id].data.buffer_ptr            = next_buffer_entry;
+            tasks[task_id].data.width = total_width;
+            tasks[task_id].data.height = total_height;
+            tasks[task_id].data.region = R2cRenderBuffer::Region(offset_x, offset_y, bucket_width, bucket_height);
+            tasks[task_id].data.light_contribution = light_contribution;
+            tasks[task_id].data.background_color = background_color;
+            tasks[task_id].data.render_buffer = render_buffer;
+            tasks[task_id].data.buffer_ptr = next_buffer_entry;
 
             tasks[task_id].kubix_render_delegate = this;
-            tasks[task_id].progress             = &m->progress;
-            tasks[task_id].progress_increment   = progress_increment;
+            tasks[task_id].progress = &m->progress;
+            tasks[task_id].progress_increment = progress_increment;
 
             // Give it to the task manager
             task_manager.add_task(tasks[task_id], false);
@@ -612,8 +612,7 @@ template<class OBJECT_INFO>
 void raytrace_objects(const GMathRay& ray, const CoreHashTable<R2cItemId, OBJECT_INFO>& index, const KubixResourceIndex& resources_index, double &closest_hit_t, GMathVec3d &closest_hit_normal, MaterialData& closest_hit_material)
 {
     // Very simple linear raytracer, only supporting bboxes
-    for (const auto object: index)
-    {
+    for (const auto object: index) {
         const OBJECT_INFO& object_info = object.get_value();
         const KubixResourceInfo *resource_info = resources_index.is_key_exists(object_info.resource);
 
@@ -626,11 +625,9 @@ void raytrace_objects(const GMathRay& ray, const CoreHashTable<R2cItemId, OBJECT
         // Test intersection with bbox
         double tmin, tmax;
         GMathVec3d normal;
-        if (resource_info->bbox.intersect(transformed_ray, tmin, tmax, normal))
-        {
+        if (resource_info->bbox.intersect(transformed_ray, tmin, tmax, normal)) {
             // If hit closer than closest, record hit infos
-            if (tmin < closest_hit_t)
-            {
+            if (tmin < closest_hit_t) {
                 GMathMatrix4x4d inverse_transpose_transform;
                 GMathMatrix4x4d::transpose(inverse_transform, inverse_transpose_transform);
                 GMathVec3d transformed_normal;
@@ -673,13 +670,13 @@ KubixRenderDelegate::render_region(RenderData& render_data, const unsigned int& 
             raytrace_objects(ray, m->geometries.index, m->resources.index, closest_hit_t, closest_hit_normal, closest_hit_material);
             raytrace_objects(ray, m->instancers.index, m->resources.index, closest_hit_t, closest_hit_normal, closest_hit_material);
 
-            if (closest_hit_t != gmath_infinity)
-            {
+            if (closest_hit_t != gmath_infinity) {
                 // If the object doesn't have an assigned material, use default color
-                if (closest_hit_material.material_module)
+                if (closest_hit_material.material_module) {
                     final_color = closest_hit_material.material_module->shade(GMathVec3f(ray.get_direction()), GMathVec3f(closest_hit_normal)) * render_data.light_contribution;
-                else
+                } else {
                     final_color = GMathVec3f(1.0f, 0.0f, 1.0f) * render_data.light_contribution;
+                }
             }
 
             const unsigned int pixel_index = (pixel_y * render_data.region.width + pixel_x) * 4;

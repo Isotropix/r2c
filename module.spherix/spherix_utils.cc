@@ -20,7 +20,7 @@ void SpherixCamera::init_ray_generator(const R2cSceneDelegate& delegate, const u
     m_ray_generator->init(width, height, 1, 1);
 }
 
-GMathRay SpherixCamera::generate_ray(const unsigned int width, const unsigned int height, const unsigned int x, const unsigned int y)
+GMathRay SpherixCamera::generate_ray(const unsigned int width, const unsigned int height, const unsigned int x, const unsigned int y) const
 {
     // Create image sampler
     GMathVec2d image_sample, min, max;

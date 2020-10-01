@@ -108,6 +108,7 @@ SpherixRenderDelegate::remove_instancer(R2cItemDescriptor item)
     SpherixInstancerInfo *instancer = m->instancers.index.is_key_exists(item.get_id());
     if (instancer != nullptr) { // make sure it is indeed in our index
         m->instancers.removed.add(item.get_id());
+        instancer->dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
     }
 }
 
@@ -513,24 +514,6 @@ SpherixRenderDelegate::get_supported_geometries(CoreVector<CoreString>& supporte
 	unsupported_geometries = s_unsupported_geometries;
 }
 
-// Multithread task to render a region of the image
-class RenderRegionTask : public SysThreadTask {
-public :
-    RenderRegionTask(): progress(nullptr) {}
-
-    virtual void execution_entry(const unsigned int& id) {
-        spherix_render_delegate->render_region(data, id);
-        if (progress)
-            progress->add_float(progress_increment);
-    }
-    SpherixRenderDelegate::RenderData data;
-    const SpherixRenderDelegate *spherix_render_delegate;
-
-    // To show the overall render progress
-    CoreAtomic32 *progress;
-    float progress_increment;
-};
-
 void
 SpherixRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampling_quality)
 {
@@ -543,152 +526,20 @@ SpherixRenderDelegate::render(R2cRenderBuffer *render_buffer, const float& sampl
     sync_camera(width, height);
     sync();
 
-    // Browse all the light in the scene and compute the light contribution (very simple lighting)
-    GMathVec3f light_contribution = GMathVec3f(0.0f, 0.0f, 0.0f);
-    for (auto light : m->lights.index) {
-        const LightData& light_data = light.get_value().light_data;
-        light_contribution += light_data.shader_light->evaluate();
-    }
 
     // Get the background color from the renderer, to demonstrate render settings usage
     R2cItemDescriptor renderer = get_scene_delegate()->get_render_settings();
     ModuleRendererSpherix *settings = static_cast<ModuleRendererSpherix *>(renderer.get_item()->get_module());
     GMathVec3f background_color = settings->get_background_color();
-    
-    /************************ Create render tasks ************************/
 
-    // The bucket size needs to be 64x64 (this will be fix in the futur)
-    const unsigned int task_w = gmath_min(64u, width);
-    const unsigned int task_h = gmath_min(64u, height);
-    const unsigned int bucket_count_x = (unsigned int)gmath_ceil((float)width / task_w);
-    const unsigned int bucket_count_y = (unsigned int)gmath_ceil((float)height / task_h);
-    const unsigned int task_count = bucket_count_x * bucket_count_y;
-    const float progress_increment = 1.0f / task_count;
-
-    // To use Clarisse's multi threading capabilities, we create a list of tasks
-    // and feed them to the task manager
-    // Our tasks only consists of a set of data, and a execution_entry() method.
-    SysThreadTaskManager task_manager(&m->app->get_thread_manager());
-    CoreVector<RenderRegionTask> tasks(task_count);
-
-    // This should be created the least amount of times (when the image size is updated for example)
-    float* image_buffer = new float[width * height * 4];
-    float *next_buffer_entry = image_buffer;
-
-    unsigned int task_id = 0;
-    for(unsigned int j = 0; j < bucket_count_y; ++j) {
-        unsigned int offset_y = j * task_h;
-        unsigned int bucket_height = gmath_min(task_h, height - offset_y);
-        for(unsigned int i = 0; i < bucket_count_x; ++i) {
-            unsigned int offset_x = i * task_w;
-            unsigned int bucket_width = gmath_min(task_w, width - offset_x);
-
-            // Fill task data
-            tasks[task_id].data.width                 = width;
-            tasks[task_id].data.height                = height;
-            tasks[task_id].data.region                = R2cRenderBuffer::Region(offset_x, offset_y, bucket_width, bucket_height);
-            tasks[task_id].data.light_contribution    = light_contribution;
-            tasks[task_id].data.background_color      = background_color;
-            tasks[task_id].data.render_buffer         = render_buffer;
-            tasks[task_id].data.buffer_ptr            = next_buffer_entry;
-
-            tasks[task_id].spherix_render_delegate = this;
-            tasks[task_id].progress             = &m->progress;
-            tasks[task_id].progress_increment   = progress_increment;
-
-            // Give it to the task manager
-            task_manager.add_task(tasks[task_id], false);
-            next_buffer_entry += bucket_width * bucket_height * 4;
-            ++task_id;
-        }
-    }
-    // Join threads
-    task_manager.wait_until_completed();
-    render_buffer->finalize();
-    delete[] image_buffer;
-}
-
-template<class OBJECT_INFO>
-void raytrace_objects(const GMathRay& ray, const CoreHashTable<R2cItemId, OBJECT_INFO>& index, const SpherixResourceIndex& resources_index, double &closest_hit_t, GMathVec3d &closest_hit_normal, MaterialData& closest_hit_material)
-{
-    // Very simple linear raytracer, only supporting spheres
-    for (const auto object: index)
-    {
-        const OBJECT_INFO& object_info = object.get_value();
-        const SpherixResourceInfo *resource_info = resources_index.is_key_exists(object_info.resource);
-
-        // Transform ray to object space
-        GMathMatrix4x4d transform = object_info.transform;
-        transform.translate_right(resource_info->sphere.get_center());
-        GMathMatrix4x4d inverse_transform;
-        GMathRay transformed_ray;
-        GMathMatrix4x4d::get_inverse(transform, inverse_transform);
-        transformed_ray.transform(ray, inverse_transform);
-
-        // Test intersection with sphere
-        double t;
-        GMathVec3d normal;
-        if (resource_info->sphere.intersect(transformed_ray, t, normal))
-        {
-            // If hit closer than closest, record hit infos
-            if (t < closest_hit_t)
-            {
-                GMathMatrix4x4d inverse_transpose_transform;
-                GMathMatrix4x4d::transpose(inverse_transform, inverse_transpose_transform);
-                GMathVec3d transformed_normal;
-                GMathMatrix4x4d::multiply(transformed_normal, normal, inverse_transpose_transform);
-
-                closest_hit_t = t;
-                closest_hit_normal = transformed_normal;
-                closest_hit_material = object_info.material;
-            }
-        }
-    }
-}
-
-void
-SpherixRenderDelegate::render_region(RenderData& render_data, const unsigned int& thread_id) const
-{
-    // Used to display a green box around the rendered region
-    render_data.render_buffer->notify_start_render_region(render_data.region, true, thread_id);
-
-    // Browse our image and for each pixel we compute a ray and raytrace the scene
-    for (unsigned int pixel_y = 0; pixel_y < render_data.region.height; ++pixel_y) {
-        for (unsigned int pixel_x = 0; pixel_x < render_data.region.width; ++pixel_x) {
-            // Compute ray for the pixel [X, Y]
-            GMathRay ray = m->camera.generate_ray(render_data.width,
-                                                  render_data.height,
-                                                  pixel_x + render_data.region.offset_x,
-                                                  pixel_y + render_data.region.offset_y);
-            
-            GMathVec3f final_color = render_data.background_color;
-
-            // Use this ray to raytrace the scene
-            // If we hit something we take the color from the intersected material Sphere and multiply it per all the lights contribution
-            // If nothing is hit we return the background renderer color
-            double closest_hit_t = gmath_infinity;
-            GMathVec3d closest_hit_normal;
-            MaterialData closest_hit_material;
-
-            // For simplicity, we handle instancers and geometries the same way
-            raytrace_objects(ray, m->geometries.index, m->resources.index, closest_hit_t, closest_hit_normal, closest_hit_material);
-            raytrace_objects(ray, m->instancers.index, m->resources.index, closest_hit_t, closest_hit_normal, closest_hit_material);
-
-            if (closest_hit_t != gmath_infinity)
-            {
-                // If the object doesn't have an assigned material, use default color
-                if (closest_hit_material.material)
-                    final_color = closest_hit_material.material->evaluate(ray.get_direction().get_data(), closest_hit_normal.get_data()) * render_data.light_contribution;
-                else
-                    final_color = GMathVec3f(1.0f, 0.0f, 1.0f) * render_data.light_contribution;
-            }
-            const unsigned int pixel_index = (pixel_y * render_data.region.width + pixel_x) * 4;
-            render_data.buffer_ptr[pixel_index + 0] = final_color[0];
-            render_data.buffer_ptr[pixel_index + 1] = final_color[1];
-            render_data.buffer_ptr[pixel_index + 2] = final_color[2];
-            render_data.buffer_ptr[pixel_index + 3] = 1.0f;
-        }
-    }
-    // Write the new buffer to the image
-    render_data.render_buffer->fill_rgba_region(render_data.buffer_ptr, render_data.region.width, render_data.region, true);
+    ExternalRenderer::render(m->app,
+                             m->camera,
+                             width, height,
+                             m->geometries.index.get_values(),
+                             m->instancers.index.get_values(),
+                             m->resources.index,
+                             m->lights.index.get_values(),
+                             background_color,
+                             m->progress,
+                             render_buffer);
 }

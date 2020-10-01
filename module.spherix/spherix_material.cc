@@ -32,13 +32,13 @@ public :
 // WARNING: do not remove this typedef, it is needed by the macro IX_CREATE_MODULE_CLBK
 typedef ModuleMaterialSpherixCallbackOverrides IX_MODULE_CLBK;
 
-namespace MaterialSpherix
+namespace SpherixMaterial
 {
     // This method is called when opening Clarisse and it register the module
     void on_register(OfApp& app, CoreVector<OfClass *>& new_classes)
     {
         // Create the new class
-        OfClass *new_class = IX_DECLARE_MODULE_CLASS(MaterialSpherix);
+        OfClass *new_class = IX_DECLARE_MODULE_CLASS(SpherixMaterial);
         new_classes.add(new_class);
 
         // Create the ModuleTextureSpherixCallbacks and init it

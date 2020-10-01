@@ -65,9 +65,9 @@ namespace KubixRenderer
 
         IX_MODULE_CLBK *module_callbacks;
         IX_CREATE_MODULE_CLBK(new_class, module_callbacks)
-        module_callbacks->cb_create_module              = IX_MODULE_CLBK::declare_module;
-		module_callbacks->cb_get_supported_lights       = IX_MODULE_CLBK::get_supported_lights;
-		module_callbacks->cb_get_supported_geometries   = IX_MODULE_CLBK::get_supported_geometries;
-		module_callbacks->cb_get_supported_materials    = IX_MODULE_CLBK::get_supported_materials;
+        module_callbacks->cb_create_module = IX_MODULE_CLBK::declare_module;
+		module_callbacks->cb_get_supported_lights = IX_MODULE_CLBK::get_supported_lights;
+		module_callbacks->cb_get_supported_geometries = IX_MODULE_CLBK::get_supported_geometries;
+		module_callbacks->cb_get_supported_materials = IX_MODULE_CLBK::get_supported_materials;
     }
 }

@@ -24,7 +24,6 @@ ModuleMaterialSpherix::~ModuleMaterialSpherix()
 // Create the External Shader associated with the class name
 ExternalMaterialShader *create_material_shader(const std::string class_name)
 {
-
     if (class_name == "SpherixMaterialDiffuse") {
         return new SpherixMaterialDiffuse();
     } else if (class_name == "SpherixMaterialReflection") {
@@ -32,7 +31,6 @@ ExternalMaterialShader *create_material_shader(const std::string class_name)
     }
 
     CORE_ASSERT(false);
-
     return nullptr;
 }
 

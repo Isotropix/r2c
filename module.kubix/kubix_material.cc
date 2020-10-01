@@ -72,8 +72,8 @@ namespace KubixMaterial
         IX_CREATE_MODULE_CLBK(new_class, module_callbacks)
 
         // Plug the previous defined function to the module callback created above
-        module_callbacks->cb_create_module_data     = IX_MODULE_CLBK::create_module_data;
-        module_callbacks->cb_destroy_module_data    = IX_MODULE_CLBK::destroy_module_data;
-        module_callbacks->cb_shade                  = IX_MODULE_CLBK::shade;
+        module_callbacks->cb_create_module_data = IX_MODULE_CLBK::create_module_data;
+        module_callbacks->cb_destroy_module_data = IX_MODULE_CLBK::destroy_module_data;
+        module_callbacks->cb_shade = IX_MODULE_CLBK::shade;
     }
 }

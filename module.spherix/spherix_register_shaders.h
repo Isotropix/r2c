@@ -36,8 +36,7 @@ public :
         shaders.add(new SpherixTextureColor());
 
         // Create the classes and attributes associated to the shaders
-        for (const ExternalShader *shader : shaders)
-        {
+        for (const ExternalShader *shader : shaders) {
             // Get the base class, this is the Clarisse class from which the shader inherits.
             // It is important to have this class to create the callbacks
             OfClass *base_class = application.get_factory().get_classes().get(CoreString(shader->ext_class_base_name.data()));

@@ -159,6 +159,7 @@ RedshiftRenderDelegate::remove_instancer(R2cItemDescriptor item)
     RSInstancerInfo *instancer = m->instancers.index.is_key_exists(item.get_id());
     if (instancer != nullptr) { // make sure it is indeed in our index
         m->instancers.removed.add(item.get_id());
+        instancer->dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
     }
 }
 
@@ -184,6 +185,7 @@ RedshiftRenderDelegate::remove_geometry(R2cItemDescriptor item)
     RSGeometryInfo *geometry = m->geometries.index.is_key_exists(item.get_id());
     if (geometry != nullptr) { // make sure it is indeed in our index
         m->geometries.removed.add(item.get_id());
+        geometry->dirtiness = R2cSceneDelegate::DIRTINESS_NONE;
     }
 }
 

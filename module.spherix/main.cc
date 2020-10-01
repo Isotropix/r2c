@@ -11,9 +11,9 @@
 // Forward declarations of module registration functions
 namespace SpherixRenderer     { void on_register(OfApp &, CoreVector<OfClass *> &); }
 namespace SpherixLayer        { void on_register(OfApp &, CoreVector<OfClass *> &); }
-namespace MaterialSpherix     { void on_register(OfApp &, CoreVector<OfClass *> &); }
-namespace LightSpherix        { void on_register(OfApp &, CoreVector<OfClass *> &); }
-namespace TextureSpherix      { void on_register(OfApp &, CoreVector<OfClass *> &); }
+namespace SpherixMaterial     { void on_register(OfApp &, CoreVector<OfClass *> &); }
+namespace SpherixLight        { void on_register(OfApp &, CoreVector<OfClass *> &); }
+namespace SpherixTexture      { void on_register(OfApp &, CoreVector<OfClass *> &); }
 
 IX_BEGIN_EXTERN_C
 
@@ -23,9 +23,9 @@ IX_BEGIN_EXTERN_C
         SpherixRenderer::on_register(app, new_classes);
         SpherixLayer::on_register(app, new_classes);
 
-        LightSpherix::on_register(app, new_classes);
-        TextureSpherix::on_register(app, new_classes);
-        MaterialSpherix::on_register(app, new_classes);
+        SpherixLight::on_register(app, new_classes);
+        SpherixTexture::on_register(app, new_classes);
+        SpherixMaterial::on_register(app, new_classes);
 
         SpherixRegisterShaders::register_shaders(app);
     }

@@ -116,7 +116,7 @@ public :
     ExternalMaterialShader() : ExternalShader() {}
     ExternalMaterialShader(std::string name, unsigned int parameter_count) : ExternalShader("MaterialSpherix", name, parameter_count) {}
 
-    virtual GMathVec3f evaluate(const double *ray_direction, const double *normal) {return GMathVec3f(0.0f);}
+    virtual GMathVec3f evaluate(const double *ray_direction, const double *normal) const {return GMathVec3f(0.0f);}
 };
 
 class ExternalLightShader : public ExternalShader {
@@ -124,7 +124,7 @@ public :
     ExternalLightShader() : ExternalShader() {}
     ExternalLightShader(std::string name, unsigned int parameter_count) : ExternalShader("LightSpherix", name, parameter_count) {}
 
-    virtual GMathVec3f evaluate() { return GMathVec3f(0.0f); }
+    virtual GMathVec3f evaluate() const { return GMathVec3f(0.0f); }
 };
 
 class ExternalTextureShader : public ExternalShader {
@@ -136,7 +136,6 @@ public :
 
     double value[3];
 };
-
 
 /************************************* Parameter *******************************/
 
@@ -228,7 +227,7 @@ public :
 
     // Here we are evaluating the shader with the stored parameters that are automatically updated when they changed
     // Note : We are passing a ray_direction and a normal but we could add more arguments or remove them like in the SpherixLightDistant
-    GMathVec3f evaluate(const double *ray_direction, const double *normal)
+    GMathVec3f evaluate(const double *ray_direction, const double *normal) const
     {
         // Get the parameters
         ParameterColor *attr_color = static_cast<ParameterColor *>(parameters[0]);
@@ -261,7 +260,7 @@ public :
         parameters[0]->is_texturable = true;
     }
 
-    virtual GMathVec3f evaluate(const double *ray_direction, const double *normal) final
+    virtual GMathVec3f evaluate(const double *ray_direction, const double *normal) const final
     {
         // Get the parameters
         ParameterColor *attr_color = static_cast<ParameterColor *>(parameters[0]);
@@ -301,7 +300,7 @@ public :
         parameters[1]->max_numeric_ui_range = 10.0;
     }
 
-    virtual GMathVec3f evaluate() final
+    virtual GMathVec3f evaluate() const final
     {
         // Get the parameters
         ParameterColor  *attr_color        = static_cast<ParameterColor *>(parameters[0]);
@@ -338,5 +337,218 @@ public :
         value[2] = color[2];
 
         return value;
+    }
+};
+
+/********************* RENDERER ***********************/
+
+// Here we are simulating an external renderer that will raytrace and shade the object using the external shaders
+// To simplify we are using Clarisse camera and Clarisse thread management
+
+#include <of_app.h>
+#include <sys_thread_lock.h>
+#include <sys_thread_task_manager.h>
+#include <r2c_render_buffer.h>
+#include <spherix_render_delegate.h>
+
+struct RenderData {
+    RenderData(): region(0,0,0,0) {}
+    // Sub-image related data
+    unsigned int width;
+    unsigned int height;
+    R2cRenderBuffer::Region region;
+
+    // Shading data
+    GMathVec3f light_contribution;
+    GMathVec3f background_color;
+
+    // Buffers
+    R2cRenderBuffer *render_buffer; // <-- used to interface with Clarisse image view
+    float* buffer_ptr;
+
+    // Camera
+    const SpherixCamera *camera;
+};
+
+// Function that will raytrace the geometries and instancers (in this example we are doing the same for the geometries and instancers)
+template<class OBJECT_INFO>
+void raytrace_objects(const GMathRay& ray, const CoreArray<OBJECT_INFO>& infos, const SpherixResourceIndex& resources_index, double &closest_hit_t, GMathVec3d &closest_hit_normal, MaterialData& closest_hit_material)
+{
+    // Very simple linear raytracer, only supporting spheres
+    for (auto object_info : infos) {
+        const SpherixResourceInfo *resource_info = resources_index.is_key_exists(object_info.resource);
+        // Transform ray to object space
+        GMathMatrix4x4d transform = object_info.transform;
+        transform.translate_right(resource_info->sphere.get_center());
+        GMathMatrix4x4d inverse_transform;
+        GMathRay transformed_ray;
+        GMathMatrix4x4d::get_inverse(transform, inverse_transform);
+        transformed_ray.transform(ray, inverse_transform);
+
+        // Test intersection with sphere
+        double t;
+        GMathVec3d normal;
+        if (resource_info->sphere.intersect(transformed_ray, t, normal)) {
+            // If hit closer than closest, record hit infos
+            if (t < closest_hit_t) {
+                GMathMatrix4x4d inverse_transpose_transform;
+                GMathMatrix4x4d::transpose(inverse_transform, inverse_transpose_transform);
+                GMathVec3d transformed_normal;
+                GMathMatrix4x4d::multiply(transformed_normal, normal, inverse_transpose_transform);
+
+                closest_hit_t = t;
+                closest_hit_normal = transformed_normal;
+                closest_hit_material = object_info.material;
+            }
+        }
+    }
+}
+
+// Multithread task to render a region of the image
+class RenderRegionTask : public SysThreadTask {
+public :
+    RenderRegionTask(): progress(nullptr) {}
+
+    void
+    render_region(RenderData& render_data, const unsigned int& thread_id)
+    {
+        // Used to display a green box around the rendered region
+        render_data.render_buffer->notify_start_render_region(render_data.region, true, thread_id);
+
+        // Browse our image and for each pixel we compute a ray and raytrace the scene
+        for (unsigned int pixel_y = 0; pixel_y < render_data.region.height; ++pixel_y) {
+            for (unsigned int pixel_x = 0; pixel_x < render_data.region.width; ++pixel_x) {
+                // Compute ray for the pixel [X, Y]
+                GMathRay ray = render_data.camera->generate_ray(render_data.width,
+                                                                render_data.height,
+                                                                pixel_x + render_data.region.offset_x,
+                                                                pixel_y + render_data.region.offset_y);
+
+                GMathVec3f final_color = render_data.background_color;
+
+                // Use this ray to raytrace the scene
+                // If we hit something we take the color from the intersected material Sphere and multiply it per all the lights contribution
+                // If nothing is hit we return the background renderer color
+                double closest_hit_t = gmath_infinity;
+                GMathVec3d closest_hit_normal;
+                MaterialData closest_hit_material;
+
+                // For simplicity, we handle instancers and geometries the same way
+                raytrace_objects(ray, *geometries, *resources_index, closest_hit_t, closest_hit_normal, closest_hit_material);
+                raytrace_objects(ray, *instancers, *resources_index, closest_hit_t, closest_hit_normal, closest_hit_material);
+
+                if (closest_hit_t != gmath_infinity) {
+                    // If the object doesn't have an assigned material, use default color
+                    if (closest_hit_material.material) {
+                        final_color = closest_hit_material.material->evaluate(ray.get_direction().get_data(), closest_hit_normal.get_data()) * render_data.light_contribution;
+                    } else {
+                        final_color = GMathVec3f(1.0f, 0.0f, 1.0f) * render_data.light_contribution;
+                    }
+                }
+                const unsigned int pixel_index = (pixel_y * render_data.region.width + pixel_x) * 4;
+                render_data.buffer_ptr[pixel_index + 0] = final_color[0];
+                render_data.buffer_ptr[pixel_index + 1] = final_color[1];
+                render_data.buffer_ptr[pixel_index + 2] = final_color[2];
+                render_data.buffer_ptr[pixel_index + 3] = 1.0f;
+            }
+        }
+        // Write the new buffer to the image
+        render_data.render_buffer->fill_rgba_region(render_data.buffer_ptr, render_data.region.width, render_data.region, true);
+    }
+
+    virtual void execution_entry(const unsigned int& id) {
+        render_region(data, id);
+        if (progress)
+            progress->add_float(progress_increment);
+    }
+
+
+    RenderData data;
+    const SpherixRenderDelegate *spherix_render_delegate;
+
+    // To show the overall render progress
+    CoreAtomic32 *progress;
+    float progress_increment;
+
+    // Objects
+    const CoreArray<SpherixGeometryInfo> *geometries;
+    const CoreArray<SpherixInstancerInfo> *instancers;
+    const SpherixResourceIndex *resources_index;
+};
+
+/**
+ * @brief The ExternalRenderer class used to declared a static method to raytrace the scene and render it into a render buffer
+ */
+class ExternalRenderer {
+public :
+    static void render(OfApp *application, const SpherixCamera& camera, const unsigned int image_width, const unsigned int image_height,
+                const CoreArray<SpherixGeometryInfo>& geometries,
+                const CoreArray<SpherixInstancerInfo>& instancers,
+                const SpherixResourceIndex& resources_index,
+                const CoreArray<SpherixLightInfo>& lights,
+                const GMathVec3f& background_color,
+                CoreAtomic32& progress,
+                R2cRenderBuffer *render_buffer)
+     {
+        // Browse all the light in the scene and compute the light contribution (very simple lighting)
+        GMathVec3f light_contribution = GMathVec3f(0.0f, 0.0f, 0.0f);
+        for (const SpherixLightInfo& light_index : lights) {
+            light_contribution += light_index.light_data.shader_light->evaluate();
+        }
+
+        // Creating render tasks
+        // The bucket size needs to be 64x64 (this will be fix in the futur)
+        const unsigned int task_w = gmath_min(64u, image_width);
+        const unsigned int task_h = gmath_min(64u, image_height);
+        const unsigned int bucket_count_x = (unsigned int)gmath_ceil((float)image_width / task_w);
+        const unsigned int bucket_count_y = (unsigned int)gmath_ceil((float)image_height / task_h);
+        const unsigned int task_count = bucket_count_x * bucket_count_y;
+        const float progress_increment = 1.0f / task_count;
+
+        // To use Clarisse's multi threading capabilities, we create a list of tasks
+        // and feed them to the task manager
+        // Our tasks only consists of a set of data, and a execution_entry() method.
+        SysThreadTaskManager task_manager(&application->get_thread_manager());
+        CoreVector<RenderRegionTask> tasks(task_count);
+
+        // This should be created the least amount of times (when the image size is updated for example)
+        float* image_buffer = new float[image_width * image_height * 4];
+        float *next_buffer_entry = image_buffer;
+
+        unsigned int task_id = 0;
+        for(unsigned int j = 0; j < bucket_count_y; ++j) {
+            const unsigned int offset_y = j * task_h;
+            const unsigned int bucket_height = gmath_min(task_h, image_height - offset_y);
+            for(unsigned int i = 0; i < bucket_count_x; ++i) {
+                const unsigned int offset_x = i * task_w;
+                const unsigned int bucket_width = gmath_min(task_w, image_width - offset_x);
+
+                // Fill task data
+                tasks[task_id].data.width = image_width;
+                tasks[task_id].data.height = image_height;
+                tasks[task_id].data.region = R2cRenderBuffer::Region(offset_x, offset_y, bucket_width, bucket_height);
+                tasks[task_id].data.light_contribution = light_contribution;
+                tasks[task_id].data.background_color = background_color;
+                tasks[task_id].data.render_buffer = render_buffer;
+                tasks[task_id].data.buffer_ptr = next_buffer_entry;
+                tasks[task_id].data.camera = &camera;
+
+                tasks[task_id].geometries = &geometries;
+                tasks[task_id].instancers = &instancers;
+                tasks[task_id].resources_index = &resources_index;
+
+                tasks[task_id].progress = &progress;
+                tasks[task_id].progress_increment = progress_increment;
+
+                // Give it to the task manager
+                task_manager.add_task(tasks[task_id], false);
+                next_buffer_entry += bucket_width * bucket_height * 4;
+                ++task_id;
+            }
+        }
+        // Join threads
+        task_manager.wait_until_completed();
+        render_buffer->finalize();
+        delete[] image_buffer;
     }
 };

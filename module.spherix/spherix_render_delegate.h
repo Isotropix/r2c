@@ -57,26 +57,6 @@ public:
 
     /*************************************************** END R2C methods ****************************************************/
 
-    struct RenderData {
-        RenderData(): region(0,0,0,0) {}
-        // Sub-image related data
-        unsigned int width;
-        unsigned int height;
-        R2cRenderBuffer::Region region;
-
-        // Shading data
-        GMathVec3f light_contribution;
-        GMathVec3f background_color;
-
-        // Buffers
-        R2cRenderBuffer *render_buffer; // <-- used to interface with Clarisse image view
-        float* buffer_ptr;
-
-    };
-
-    /*! Used to trace rays through the scene and render a region of the final image (see \ref RenderData). This is thread safe. */
-    void render_region(RenderData& render_data, const unsigned int& thread_id) const;
-
 	static const CoreVector<CoreString> s_supported_cameras;
 	static const CoreVector<CoreString> s_unsupported_cameras;
 	static const CoreVector<CoreString> s_supported_lights;
