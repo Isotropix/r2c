@@ -111,6 +111,7 @@ The R2C library provides three working examples of integrating a renderer into C
 ### Kubix
 
 Found in the `module.kubix` directory, Kubix serves as a simple example of what it would take to implement a custom renderer from scratch into Clarisse.
+
 ![Spherix image](kubix_render.png)
 
 It only supports basic features, but covers most aspects of a renderer, including:
@@ -126,8 +127,8 @@ Despite its simplicity, the Kubix renderer should be seen as a steping stone tow
 ### Spherix
 
 Found in the `module.spherix` directory, Spherix serves as a simple example of what it would take to integrate an existing external renderer into Clarisse by simulating one.
-![Spherix image](spherix_render.png)
 
+![Spherix image](spherix_render.png)
 
 It only supports basic features, but covers most aspects of a renderer, including:
 - *Geometries* rendered as spheres in Spherix
