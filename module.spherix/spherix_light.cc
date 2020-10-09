@@ -12,7 +12,7 @@
 #include "./spherix_light.cma"
 
 // WARNING: keep those lines for compatibility reasons
-#if ISOTROPIX_VERSION_NUMBER >= IX_BUILD_VERSION_NUMBER(4, 0, 2, 0, 0, 0)
+#if ISOTROPIX_VERSION_NUMBER >= IX_BUILD_VERSION_NUMBER(4, 9)
 #define MODULE_CLASS OfModule
 #else
 #define MODULE_CLASS ModuleObject

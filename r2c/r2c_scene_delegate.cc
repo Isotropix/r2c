@@ -10,6 +10,7 @@
 #include <module_material_default.h>
 #include <module_scene_object.h>
 #include <module_scene_object_tree.h>
+#include <module_shading_layer.h>
 #include <module_geometry.h>
 #include <module_texture.h>
 #include <geometry_object.h>

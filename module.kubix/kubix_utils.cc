@@ -20,6 +20,7 @@ void KubixCamera::init_ray_generator(const R2cSceneDelegate& delegate, const uns
 
 GMathRay KubixCamera::generate_ray(const unsigned int width, const unsigned int height, const unsigned int x, const unsigned int y)
 {
+#if ISOTROPIX_VERSION_NUMBER < IX_BUILD_VERSION_NUMBER(4, 5)
     // Create image sampler
     GMathVec2d image_sample, min, max;
     ImagePixelSample pixel_sample;
@@ -31,7 +32,19 @@ GMathRay KubixCamera::generate_ray(const unsigned int width, const unsigned int 
     GMathRay ray;
     unsigned int index = 0;
     m_ray_generator->get_rays(&image_sample, &pixel_sample, 1, &ray, &index);
+#else
+    // Create image sampler
+    ImageSample image_sample;
+    GMathVec2d min, max;
+    ImageSampler image_sampler;
+    image_sampler.init(width, height);
+    image_sampler.get_pixel_samples(x, y, &image_sample, min, max);
 
+    // Compute the ray
+    GMathRay ray;
+    unsigned int index = 0;
+    m_ray_generator->get_rays(&image_sample, 1, &ray, &index);
+#endif
     return ray;
 }
 
