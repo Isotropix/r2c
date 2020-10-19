@@ -20,7 +20,7 @@ void KubixCamera::init_ray_generator(const R2cSceneDelegate& delegate, const uns
 
 GMathRay KubixCamera::generate_ray(const unsigned int width, const unsigned int height, const unsigned int x, const unsigned int y)
 {
-#if ISOTROPIX_VERSION_NUMBER < IX_BUILD_VERSION_NUMBER(4, 5)
+#if ISOTROPIX_VERSION_NUMBER < IX_VERSION_NUMBER(4, 5)
     // Create image sampler
     GMathVec2d image_sample, min, max;
     ImagePixelSample pixel_sample;

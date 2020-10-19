@@ -13,7 +13,7 @@
 
 #include "layer_r2c_scene.cma"
 
-#if ISOTROPIX_VERSION_NUMBER >= IX_BUILD_VERSION_NUMBER(4, 9)
+#if ISOTROPIX_VERSION_NUMBER >= IX_VERSION_NUMBER(5, 0)
 #define MODULE_CLASS  OfModule
 #define QUALITY       ModuleImageQuality
 #define QUALITY_LEVEL ModuleImageQuality::Level

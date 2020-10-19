@@ -11,7 +11,7 @@
 #include "./spherix_texture.cma"
 
 // WARNING: keep those lines for compatibility reasons
-#if ISOTROPIX_VERSION_NUMBER >= IX_BUILD_VERSION_NUMBER(4, 9)
+#if ISOTROPIX_VERSION_NUMBER >= IX_VERSION_NUMBER(5, 0)
 #define MODULE_CLASS OfModule
 #else
 #define MODULE_CLASS ModuleObject
